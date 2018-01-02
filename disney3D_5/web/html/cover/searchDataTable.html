@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+<!-- saved from url=(0014)about:internet -->
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+    <title> 属性 </title>
+    <meta name="Generator" content="EditPlus">
+    <meta name="Author" content="">
+    <meta name="Keywords" content="">
+    <meta name="Description" content="">
+    <link rel="stylesheet" href="../../css/table.css"/>
+    <script type="text/javascript" src="../../js/common.js"></script>
+
+</head>
+<body>
+<table id="dataTable" width="100%"  border="0px" style=" background-color:#D5E3F8; text-align:left;  margin-bottom:20px; margin-top:10px"      >
+    <thead>
+    <tr>
+        <td  class="maintextclass" width="50%">属性</td>
+        <td    class="maintextclass" width="50%"> 属性值</td>
+    </tr>
+    </thead>
+
+    <tbody>
+    </tbody>
+</table>
+
+
+
+<div  style="height: 20px;margin-top: 20px; text-align: right" >
+    <a style="text-decoration:underline ;color:blue; cursor: hand;"  id="importExcelBtn"  onclick="importExcel()">导出Excel</a>
+
+</div>
+
+
+<script src="../../js/lib/jquery.js"></script>
+<script>
+
+
+
+
+    function postData(obj){
+
+        if(obj){
+           var length = obj.childNodes.length;
+            for(var i=0;i<length;i++){
+                if(obj.childNodes[i].nodeName==="SHAPE"||obj.childNodes[i].nodeName=="OBJECTID"||obj.childNodes[i].nodeName=="FID_"||obj.childNodes[i].nodeName=="CODE"){
+                    continue;
+                }
+                var nodeText ="";
+                var str = toData(obj.childNodes[i].text);
+                if(str){
+                    nodeText = str;
+                } else{
+                    nodeText =obj.childNodes[i].text;
+                }
+                if(!isNaN(Number(nodeText))){
+                    nodeText = Number(nodeText).toFixed(2);
+                }
+                var fieldname=   getfieldname(obj.childNodes[i].nodeName);
+                if(fieldname!=""){
+                    if(nodeText!=0)   {
+                var html = '<tr ><td class="texttdclass">'+getfieldname(obj.childNodes[i].nodeName)+'</td><td  class="texttdclass">'+nodeText+'</td></tr>'  ;}
+                    else
+                    {
+                        var html = '<tr ><td class="texttdclass">'+getfieldname(obj.childNodes[i].nodeName)+'</td><td  class="texttdclass"></td></tr>'  ;
+                    }
+
+                $("#dataTable").append(html);
+                }
+            }
+        }
+        //append后需要重新加载一下html元素 保证滚动条能正常显示
+        var bodyHtml = $("body").html();
+        $("body").html(bodyHtml);
+    }
+    function toData(str){
+        var data = new Date(str);
+        var year = data.getFullYear();
+        var month = data.getMonth();
+        var day = data.getDate();
+        var hour = data.getHours();
+        var minute = data.getMinutes();
+        var second = data.getSeconds();
+        var dataStr = "";
+        if(year&&month&&day){
+            dataStr = year + "/" + month + "/" + day +" "+hour + ":" + minute + ":" + second;
+        }
+        return  dataStr;
+
+    }
+
+
+    function getfieldname    (nodetext)
+    {
+        var name="";
+        var  nodetextUpperCase=nodetext.toUpperCase();
+        //规划用地字段
+    if(nodetextUpperCase=="DKBH"){
+        name="地块编号";
+    }else if(nodetextUpperCase=="YDMJ"){
+        name="用地面积（平方米）";
+    }else if(nodetextUpperCase=="YDXZDM"){
+        name="用地性质代码";
+    }else if(nodetextUpperCase=="RJL"){
+        name="容积率";
+    }else if(nodetextUpperCase=="JZMJ"){
+        name="建筑面积（平方米）";
+    }else if(nodetextUpperCase=="JZGD"){
+        name="建筑高度（米）/局部建筑高度";
+    }else if(nodetextUpperCase=="TCBW"){
+        name="停车泊位（辆）";
+
+
+    }else if(nodetextUpperCase=="BZ"){
+        name="备注";
+    }
+        //规划绿地字段
+//    else if(nodetextUpperCase=="ZMJ"){
+//        name="面积";
+//    }
+       return name;
+    }
+
+    /**
+     * 功能：【导出Excel】按钮onclick事件
+     */
+    function importExcel(){
+        var tabObj = $("#dataTable>tbody")[0];
+        var columns = ["名称","属性"];
+        importExcelByCommonTable(tabObj,columns);
+    }
+
+</script>
+</body>
+</html>

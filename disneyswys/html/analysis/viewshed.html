@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>视域分析</title>
+
+
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/common.css"/>
+
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+</head>
+
+<body style="overflow:auto;">
+<div style="margin-top: 20px;">
+    <input id="chkModel" name="type" type="checkbox" checked/><label for="chkModel">建筑物</label>
+    <input id="chkDem" name="type" type="checkbox"/><label for="chkDem">地形</label>
+</div>
+<div style="margin-top: 20px;">
+    <span>视角:</span>
+    <input id="angle" name="angle" type="text" value="360"/>
+    <span>度</span>
+</div>
+<div style="margin-top: 5px;">
+    <span>高度:</span>
+    <input  id="height" name="height" type="text" value="2"/>
+    <span>米</span>
+</div>
+<div style="height: 18px;margin-top: 20px;">
+    <input type="checkbox"  id="chk" style="position: absolute;right:65px;" value="30" checked/>
+    <label style="float:right;" >仅分析方案 </label>
+</div>
+<div style="text-align: center;margin-top: 20px;">
+    <!--<button class="normal2Btn"  id="selectPolygon" >选取范围</button>-->
+    <!--<button class="normal2Btn"  id="btnStart" >开始分析</button>-->
+
+    <button class="normal2Btn"  id="btnStart" >开始分析</button>
+    <button  class="normal2Btn" id="clear"  >退出</button>
+   <!--<button id="clear"  >退出</button>-->
+</div>
+<script src="../../js/CITYPLAN_config.js"></script>
+
+<script src="../../js/project.js"></script>
+<script src="../../js/common.js"></script>
+<script src="../../js/analysis.js"></script>
+
+
+<script>
+    var earth = parent.earth;
+    var analysis = CITYPLAN.Analysis(earth);
+
+        var resArr=parent.resArr;
+        var btn = [$("#btnStart"),$("#chkModel"),$("#chkDem"),$("#angle"),$("#height"),$("#clear")];
+
+
+        $(function(){
+            $("#btnStart").click(function(){
+                if(check()){
+                    if($("#btnStart").text()==="开始分析"){
+
+                        analysis.viewShed(($("#chkModel")[0].checked?2:0)+($("#chkDem")[0].checked?1:0), $("#angle").val(), $("#height").val(),btn);
+                        //$("#btnStart").text("结束分析");
+                        $("#btnStart").attr("disabled","disabled");
+                        $("#chkModel").attr("disabled","disabled") ;
+                        $("#chkDem").attr("disabled","disabled") ;
+                        $("#angle").attr("disabled","disabled") ;
+                        $("#height").attr("disabled","disabled") ;
+                        $("#clear").attr("disabled","disabled") ;
+                    }
+                }
+                /*else{
+                 $("#btnStart").text("开始分析");
+
+                 }*/
+            });
+//            $("#btnStop").click(function(){
+//                analysis.clear();
+//                $("#btnStop").attr("disabled","disabled") ;
+//                $("#btnStart").removeAttr("disabled") ;
+//                $("#chkModel").removeAttr("disabled") ;
+//                $("#chkDem").removeAttr("disabled")  ;
+//                $("#angle").removeAttr("disabled") ;
+//                $("#height").removeAttr("disabled")  ;
+//                $("#clear").removeAttr("disabled")  ;
+//            });
+            $("#clear").click(function(){
+                analysis.clear();
+//                analysis.clearHtmlBallon(earth.htmlBallon);
+            });
+            window.onunload=function(){
+                analysis.clear();
+            };
+
+        }) ;
+
+    function check(){
+        if(isNaN($("#angle").val()) == true){
+            alert("无效的视角");
+            $("#angle").select();
+            $("#angle").focus();
+            return false;
+        }
+        if(isNaN($("#height").val()) == true){
+            alert("无效的高度");
+            $("#height").select();
+            $("#height").focus();
+            return false;
+        }
+        return true;
+    }
+</script>
+</body>
+</html>

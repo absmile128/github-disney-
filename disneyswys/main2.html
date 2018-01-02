@@ -1,0 +1,478 @@
+﻿<!--<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN""http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+
+		<title>上海国际旅游度假区规划招商展示系统</title>
+		<!--                       CSS                       -->
+
+
+		<!-- jQeury EasyUI Style sheet -->
+	    <link rel="stylesheet" type="text/css" href="js/util/easyui/themes/default/easyui.css"/>
+        <link rel="stylesheet" href="css/easyui/gray/easyui.css"/>
+	    <link rel="stylesheet" type="text/css" href="js/util/easyui/themes/icon.css"/>
+        <link rel="stylesheet" href="css/zTree/zTreeStyle.css"/>
+       <link rel="stylesheet" href="css/table.css"/>
+
+<!--		 Main Style sheet -->	    
+<!-- 	    <link rel="stylesheet" type="text/css" href="css/common.css"/> -->
+	    <link rel="stylesheet" type="text/css" href="css/reset.css"/>
+		<!-- BreadCrumbs button in TopMenu Style sheet -->
+<!-- 	    <link rel="stylesheet" type="text/css" href="css/breadcrumbs.css"/>  -->
+	    <link rel="stylesheet" type="text/css" href="css/main.css"/> 
+
+		<!--                       Javascripts                       -->
+		<!--          jQuery        -->
+    <script src="js/lib/jquery.js"></script>
+    <script src="js/lib/jquery.easyui.min.js"></script>
+    <script src="js/lib/jquery.ztree.all.min.js"></script>
+    <script src="js/lib/jquery.xml2json.js"></script>
+    <script type="text/javascript" src="js/generalQuery.js"></script>
+
+		
+	        <!--<script type="text/javascript" src="js/main.js"></script> -->
+            <!--<script type="text/javascript" src="js/common.js"></script> -->
+            <!--<script type="text/javascript" src="js/measure/measure.js"></script>	-->
+       
+<!-- 		<script type="text/javascript" src="js/statistics.js"></script>	 -->
+<!-- 		<script type="text/javascript" src="js/approvalMgr.js"></script>	 -->
+<!-- 属性查询 -->
+		<!--<script type="text/javascript" src="js/query/query_Attribute.js"></script> -->
+<!-- 		<script type="text/javascript" src="js/measure.js"></script>		 -->
+<!-- 		<script type="text/javascript" src="js/marked.js"></script>		 -->
+		<!--<script type="text/javascript" src="js/view.js"></script>-->
+<!-- 		<script type="text/javascript" src="js/analysis.js"></script> -->
+<!-- 		<script type="text/javascript" src="js/file.js"></script> -->
+<!-- 		<script type="text/javascript" src="js/PipelineStandard.js"></script> -->
+<!-- 		<script type="text/javascript" src="js/edit/terrainExcavate.js"></script> -->
+<!-- 		<script type="text/javascript" src="js/view/displayModes.js"></script> -->
+<!-- 		<script type="text/javascript" src="js/view/flowDirection.js"></script> -->
+
+
+</head>
+	<body id="container" class="easyui-layout" >
+         <!--工具栏-->
+		<!--<div region="north" border="false" style="z-index:99; height: 102px; background: #000;">-->
+        <div region="north" border="false" style="z-index:99; height: 102px;background:url(css/images/bj.png) repeat-x; ">
+  
+
+
+
+
+        <div id="topmenu" style="z-index:99;">
+            <!-- Main top menu -->
+				<table id="TopMenuTbl">
+					<tr>
+						<td id="topTblLeft" style=" vertical-align: top;   ">    <!-- cy:左侧总长 600px 是暂定，window.resize 还会调整-->
+                            <div    id="word_bj"     style="position:absolute;top:0px ; width:580px;height:51px;  background-image: url(css/images/word_bj.png) ; "   />  <!-- cy:左侧上文字-->
+                            <div style="  position:absolute;margin:55px 0 0 50px; width:510px; ">    <!-- cy:左侧下按钮-->
+								<!--<a href="javascript:transClick('trans_button')" ><span><img id="trans_button" tag="selected" src="images/linkbutton1.png"  alt="调节地面透明度" /> </span></a>-->
+								<!--<a href="javascript:undergroundModeClick('underground_button')"><span> <img id="underground_button" tag="unselected" src="images/linkbutton2_1.png"  alt="平整开挖" /> </span></a>-->
+		  						<!--<a href="javascript:showLargeDialog('html/scene/layer.html','图层管理')"><span> <img src="css/images/toolbar/btn_layerManager.png" onmouseover="this.src='css/images/toolbar/btn_layerManager_mouseover.png'" onmouseout="this.src='css/images/toolbar/btn_layerManager.png'" alt="管线图层管理" /> </span></a>-->
+
+                                <!--<a id="btn_fillAlt" href="javascript:fillAlt();"><span> <img src="css/images/toolbar/btn_fillAll.png" onmouseover="this.src='css/images/toolbar/btn_fillAll_mouseover.png'" onmouseout="this.src='css/images/toolbar/btn_fillAll.png'"    alt="平整开挖" /> </span></a>-->
+
+                                <!--<a href="javascript:EagleEyeClick('EagleEyes_button');"><span> <img id="EagleEyes_button" tag="unselected" src="images/linkbutton4_1.png"  alt="地面透明度" /> </span></a>-->
+							<!--<a href="javascript:DisplayModes.legendShowing(true)"><span> <img src="images/linkbutton3_1.png" onmouseover="this.src='images/linkbutton3.png'" onmouseout="this.src='images/linkbutton3_1.png'" alt="图层管理" /> </span></a>-->
+                          </div>
+						</td>
+						<td id="topTblCenter" >   <!-- cy:右侧tab-->
+
+                        <!--cy:10.31   改右侧tab宽度为700px-->
+                        <!--<div id="tt" class="easyui-tabs" tools="#tab-tools"	style="fit: true; margin: 0; height: 95px; width: 650px; ">-->
+                        <div id="tt" class="easyui-tabs" tools="#tab-tools"	style="fit: true; margin: 0; height: 95px; width:900px; ">
+								<div title="漫 游"  >
+									<div>
+										<ul class="shortcut-buttons-set">
+                                            <!--漫游-->
+											<!--<li>-->
+
+                                                <!--<a class="shortcut-button"-->
+                                                   <!--href="javascript:showLargeDialog('html/scene/track2.html','园区漫游');"><span> <img-->
+                                                        <!--src="css/images/toolbar/tab_pro_fly.png" alt="园区漫游"-->
+                                                        <!--title="园区漫游" /> </span> </a>-->
+											<!--</li>-->
+
+                                            <!--//人机交互漫游-->
+                                            <li>
+                                                <a class="shortcut-button"  id="frontview"
+                                                   href="javascript:flytodisneyClick();"><span> <img
+                                                        src="css/images/toolbar/flytodisney.png" alt="迪士尼区域"
+                                                        title="迪士尼区域" /> </span> </a>
+
+                                            </li>
+
+                                            <li>
+
+                                                <a class="shortcut-button"
+                                                   href="javascript:showLargeDialog('html/scene/maketrack/track.html','飞行设置');"><span> <img
+                                                        src="css/images/toolbar/tab_pro_makefly.png" alt="飞行设置"
+                                                        title="飞行设置" /> </span> </a>
+                                            </li>
+
+
+                                            <li>
+
+                                                <a class="shortcut-button"
+                                                   href="javascript:showLargeDialog('html/scene/roam/dynamicObj.html','园区漫游');"><span> <img
+                                                        src="css/images/toolbar/tab_pro_fly.png" alt="园区漫游"
+                                                        title="园区漫游" /> </span> </a>
+                                            </li>
+
+
+
+											<li>
+												<a class="shortcut-button"
+													href="javascript:showLargeDialog('html/scene/layer.html','图层管理')"><span> <img
+															src="css/images/toolbar/tab_pro_layers.png" alt="图层管理"
+															title="图层管理" /> </span> </a>
+											</li>
+
+
+
+                                            <li>
+                                                <a     id="TerrainTransparency" class="shortcut-button"
+                                                   href="javascript:TerrainTransparency_Click();"><span> <img
+                                                        src="css/images/toolbar/TerrainTransparency.png" alt="地面透明度"
+                                                        title="地面透明度" /> </span> </a>
+                                            </li>
+                                            <li>
+                                                <a     id="ViewOpenCollision" class="shortcut-button"
+                                                       href="javascript:ViewOpenCollision_Click();"><span> <img
+                                                        src="css/images/toolbar/ViewOpenCollision.png" alt="开启碰撞"
+                                                        title="开启碰撞" /> </span> </a>
+                                            </li>
+
+
+                                            <li>
+                                                <a     id="ViewUndergroundMode" class="shortcut-button"
+                                                       href="javascript:ViewUndergroundMode_Click();"><span> <img
+                                                        src="css/images/toolbar/tab_pro_pipe.png" alt="开启地下浏览"
+                                                        title="开启地下浏览" /> </span> </a>
+                                            </li>
+                                            <li>
+                                                <a class="shortcut-button"  id="modelAlt"
+                                                   href="javascript:modelAlt();"><span>
+														<img src="css/images/toolbar/tab_pro_building.png"
+                                                             alt="关闭所有模型" title="关闭所有模型" /> </span> </a>
+                                            </li>
+
+                                            <!--<li>-->
+                                                <!--<a class="shortcut-button"-->
+                                                   <!--href="javascript:recoverclosemodel();"><span>-->
+														<!--<img src="css/images/tab_pro_building.png"-->
+                                                             <!--alt="还原已关闭模型" title="还原已关闭模型" /> </span> </a>-->
+                                            <!--</li>-->
+
+
+                                            <!--<li>-->
+                                                <!--<a class="shortcut-button"  id="QueryProperty"-->
+                                                   <!--href="javascript:QueryProperty();"><span> <img-->
+                                                        <!--src="css/images/toolbar/medelAttr.png" alt="建筑属性查询"-->
+                                                        <!--title="建筑属性查询" /> </span> </a>-->
+
+                                            <!--</li>-->
+
+
+                                            <!--<li>-->
+                                                <!--<a class="shortcut-button"  id="fillAlt"-->
+                                                <!--href="javascript:fillAlt();"><span> <img-->
+                                                <!--src="css/images/toolbar/tiedi.png" alt="平整开挖"-->
+                                                <!--title="平整开挖" /> </span> </a>-->
+
+											<!--</li>-->
+
+
+
+
+                                            <li>
+                                                <a class="shortcut-button"  id="mScreenShot"
+                                                   href="javascript:ScreenShot();"><span> <img
+                                                        src="css/images/toolbar/screenshot.png" alt="截屏"
+                                                        title="截屏" /> </span> </a>
+
+                                            </li>
+
+
+                                            <li>
+                                                <a class="shortcut-button"  id="historyData"
+                                                   href="javascript: showHistoryData();"><span> <img
+                                                        src="css/images/toolbar/historydata.png" alt="查看历史"
+                                                        title="查看历史" /> </span> </a>
+
+                                            </li>
+                                        </ul>
+										<!-- End .shortcut-buttons-set -->
+									</div>
+								</div>
+
+                               <!--场景特效代码可用-->
+                                <div title="场景特效"  >
+                                <div>
+                                <ul class="shortcut-buttons-set">
+
+
+
+                                    <!--<li>-->
+
+                                        <!--<a class="shortcut-button" id="sun"-->
+                                           <!--href="javascript: tranSettingClick('sun')"><span> <img-->
+                                                <!--src="css/images/toolbar/rain.png" alt="光影"-->
+                                                <!--title="光影" /> </span> </a>-->
+                                    <!--</li>-->
+
+
+                                <li>
+
+                                    <a class="shortcut-button" id="rain"
+                                       href="javascript: tranSettingClick('rain')"><span> <img
+                                            src="css/images/toolbar/rain.png" alt="雨"
+                                            title="雨" /> </span> </a>
+                                </li>
+                                    <li>
+
+                                        <a class="shortcut-button" id="snow"
+                                           href="javascript: tranSettingClick('snow')"><span> <img
+                                                src="css/images/toolbar/snow.png" alt="雪"
+                                                title="雪" /> </span> </a>
+                                    </li>
+                                    <li>
+
+                                        <a class="shortcut-button" id="fog"
+                                           href="javascript: tranSettingClick('fog')"><span> <img
+                                                src="css/images/toolbar/fog.png" alt="雾"
+                                                title="雾" /> </span> </a>
+                                    </li>
+                                </ul>
+                                </div>
+                                 </div>
+                                <!--场景特效代码可用-->
+
+                                <!--<div title="部件查询">-->
+                                    <!--<div>-->
+                                        <!--<ul class="shortcut-buttons-set">-->
+
+                                            <!--<li>-->
+
+                                                <!--<a class="shortcut-button"-->
+                                                   <!--href="javascript:showLargeDialog('html/part/wglistlayer.html','网格部件图层');"><span> <img-->
+                                                        <!--src="css/images/toolbar/partlayers.png" alt="加载部件列表"-->
+                                                        <!--title="加载部件列表" /> </span> </a>-->
+                                            <!--</li>-->
+
+                                            <!--<li>-->
+                                                <!--<a class="shortcut-button"-->
+                                                   <!--href="javascript:PartQueryPropertyClick();"><span> <img-->
+                                                        <!--src="css/images/toolbar/pickpartsearch.png" alt="部件查询"-->
+                                                        <!--title="部件查询" /> </span> </a>-->
+                                            <!--</li>-->
+
+
+                                        <!--</ul>-->
+                                        <!--&lt;!&ndash; End .shortcut-buttons-set &ndash;&gt;-->
+                                    <!--</div>-->
+                                <!--</div>-->
+								<div title="辅助分析">
+									<div>
+										<ul class="shortcut-buttons-set">
+
+                                            <li>
+
+                                                <a class="shortcut-button"
+                                                   href="javascript:horizontalDisClick();"><span> <img
+                                                        src="css/images/toolbar/Image_HorizontalRange.png" alt="水平距离"
+                                                        title="水平距离" /> </span> </a>
+                                            </li>
+
+                                            <li>
+                                                <a class="shortcut-button"
+                                                   href="javascript:verticalDisClick();"><span> <img
+                                                        src="css/images/toolbar/Image_VerticalRange.png" alt="垂直距离"
+                                                        title="垂直距离" /> </span> </a>
+                                            </li>
+
+                                            <li>
+                                                <a class="shortcut-button"
+                                                   href="javascript:spaceDisClick();" ><span> <img
+                                                        src="css/images/toolbar/Image_SpatialRange.png" alt="空间距离"
+                                                        title="空间距离" /> </span> </a>
+                                            </li>
+
+
+
+
+
+                                            <li>
+                                                <a class="shortcut-button"
+                                                   href="javascript:flatAreaClick();"><span> <img
+                                                        src="css/images/toolbar/Image_HorizontalArea.png" alt="水平面积"
+                                                        title="水平面积" /> </span> </a>
+                                            </li>
+
+                                            <!--<li>-->
+                                                <!--<a class="shortcut-button"-->
+                                                   <!--href="javascript:surfaceAreaClick();" ><span> <img-->
+                                                        <!--src="css/images/toolbar/Image_SurfaceArea.png" alt="地表面积"-->
+                                                        <!--title="地表面积" /> </span> </a>-->
+                                            <!--</li>-->
+
+
+                                            <li>
+
+                                                <a class="shortcut-button"    id="surround"
+                                                   href="javascript:surround_Click();"><span> <img
+                                                        src="css/images/toolbar/tab_circlefly.png" alt="环绕飞行"
+                                                        title="环绕飞行" /> </span> </a>
+                                            </li>
+                                            <li>
+                                                <a class="shortcut-button" id="shiyefenxi"
+                                                   href="javascript:shiyefenxi_Click();"><span> <img
+                                                        src="css/images/toolbar/Image_FixedPointObserve.png" alt="视野分析"
+                                                        title="视野分析" /> </span> </a>
+                                            </li>
+                                            <!--<li>-->
+												<!--<a class="shortcut-button" id="tongshifenxi"-->
+												<!--href="javascript:showLargeDialog('html/analysis/linesight.html', '通视分析')"><span> <img-->
+															<!--src="css/images/toolbar/Image_ViewAnalyst.png" alt="通视分析"-->
+															<!--title="通视分析" /> </span> </a>-->
+											<!--</li>-->
+
+                                            <li>
+                                                <a class="shortcut-button" id="mViewshed"
+
+                                                   href="javascript:mViewshed_Click();"><span> <img
+                                                        src="css/images/toolbar/Image_shiyu.png" alt="视域分析"
+                                                        title="视域分析" /> </span> </a>
+                                            </li>
+
+											<li>
+												<a class="shortcut-button" id="yinyingfenxi"
+                                                   href="javascript:yinyingfenxi_Click();"><span> <img
+															src="css/images/toolbar/Image_SunshineAnalyst.png"
+															alt="阴影分析" title="阴影分析" /> </span> </a>
+											</li>
+
+                                            <li>
+                                                <a class="shortcut-button" id="shipinjiankong"
+                                                   href="javascript:shipinjiankong_Click();"><span> <img
+                                                        src="css/images/toolbar/Image_Camera.png"
+                                                        alt="视频监控" title="视频监控" /> </span> </a>
+                                            </li>
+
+                                            <li>
+                                                <a class="shortcut-button" id="shipinjiankong2"
+                                                   href="javascript:shipinjiankong2_Click();"><span> <img
+                                                        src="css/images/toolbar/Image_Camera3D.png"
+                                                        alt="视频监控" title="视频监控" /> </span> </a>
+                                            </li>
+
+
+										</ul>
+										<!-- End .shortcut-buttons-set -->
+									</div>
+								</div>
+								<div title="规划要素">
+									<div>
+										<ul class="shortcut-buttons-set">
+
+
+                                            <li>
+                                                <a id="ctrPlanInfo" class="shortcut-button"
+                                                   href="javascript:ctrPlanInfo_Click();"><span> <img
+                                                        src="css/images/toolbar/Image_PlanInfo.png" alt="规划信息图"
+                                                        title="规划信息图" /> </span> </a>
+                                            </li>
+
+
+                                            <li>
+												<a id="ctrPlanQuery" class="shortcut-button"
+                                                   href="javascript:ctrPlanQuery_Click();"><span> <img
+															src="css/images/toolbar/Image_PlanAnalysis.png" alt="规划用地信息"
+															title="规划用地信息" /> </span> </a>
+											</li>
+                                            <li>
+                                                <a  id="greenLandAly" class="shortcut-button"
+                                                    href="javascript:greenLandAly_Click();"><span> <img
+                                                        src="css/images/toolbar/Image_GreenbeltAnalysis.png" alt="规划绿地信息"
+                                                        title="规划绿地信息" /> </span> </a>
+                                            </li>
+
+                                            <li>
+                                                <a id="ctrPlanElement" class="shortcut-button"
+                                                   href="javascript:ctrPlanElement_Click();"><span> <img
+                                                        src="css/images/toolbar/Image_ElementAnalysis.png" alt="规划要素信息"
+                                                        title="规划要素信息" /> </span> </a>
+                                            </li>
+
+                                        </ul>
+										<!-- End .shortcut-buttons-set -->
+									</div>
+								</div>
+						</div>
+						</td>
+						</td>
+					</tr>
+				</table>
+               <div id="logoutDiv" style=" position:absolute; top:70px; right:5px; z-index:999">
+                  <a style="text-decoration:underline; cursor: hand; font-size:15px; " onclick="logout()">退出</a>
+               </div>
+        </div>
+			</div>
+		 </div>
+
+
+         <!--左侧面板：固定面板，项目管理 -->
+         <div region="west" title="图层管理" style="width:250px; height: 800px"  >
+        <!--<div id="west" region="west" border="false" split="true" title="项目管理"	href="" style="width: 300px; height: 800px">-->
+            <iframe   id="fixediframe"        frameborder="0"	style="width:100%; height:100%;"></iframe>
+        </div>
+        <!-- 三维地图 -->
+        <div region="center" style="margin:0;padding:0;">
+            <!--<iframe name="ifEarth"  src="html/scene/test.html" frameborder="0" style="width: 100%; height: 99.6%;"></iframe>-->
+            <iframe name="ifEarth" id="ifEarth" frameborder="0" style="width: 100%; height: 99.6%;"></iframe>
+        </div>
+
+        <!-- 弹出大面板 -->
+        <div id="dlgResult" title="面板" style="padding:5px;width:250px;">
+            <iframe name="ifResult" id="ifResult" frameborder="0" style="width: 100%;height: 100%;"></iframe>
+        </div>
+         <div id="dlgScreen2D" style="overflow-y:hidden">
+             <iframe name="ifScreen2D" id="ifScreen2D" frameborder="0" style="overflow-y:hidden;width: 100%;height: 100%;"></iframe>
+         </div>
+
+         <div id="impDialog" class="easyui-dialog" title="导入项目"  data-options="iconCls:'icon-save',modal:true,closed:true" style="width:200px;height:150px;padding:10px;" >
+             <label id="impDialogTxt">正在导入中......</label>
+         </div>
+        <!--数据处理插件 cy:客户端的2个dll，里面有接口，在调用里面的接口前，需先初始化  后面有load的函数-->
+        <object id="dataProcess" classid="clsid:DDA7E893-8EEE-4A1E-A506-867932BD0FB9" style="display:none;"></object>
+        <object id="generateEdit" classid="clsid:422A8D29-FF52-4C65-8EDF-F6DC3008E8A0" style="display:none;"></object>
+
+
+         <script src="js/CITYPLAN_config.js"></script>
+         <script src="js/part.js"></script>
+          <script src="js/search.js"></script>
+
+         <script src="js/common.js"></script>
+         <script src="js/measure.js"></script>
+         <script src="js/analysis.js"></script>
+         <script src="js/project.js"></script>
+         <script src="js/editor.js"></script>
+         <script src="js/layer.js"></script>
+         <script src="js/index.js"></script>
+         <script src="js/historySliderMgr.js"></script>
+
+         <script src="js/searchAnalysis.js"></script>
+         <script src="js/attachment_64.js"></script>
+         <script src="js/project2.js"></script>
+         <script type="text/javascript" src="js/mapMgr.js"></script>
+         <script   type="text/javascript"  src="js/authentication.js"></script>
+         <script src="js/sliderMgr.js"></script>
+
+         <script src="js/generalQuery.js"></script>
+
+
+	</body>
+</html>

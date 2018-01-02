@@ -1,0 +1,139 @@
+﻿<!--<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN""http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+
+		<title>上海国际旅游度假区三维智能市政平台</title>
+		<!--                       CSS                       -->
+
+
+		<!-- jQeury EasyUI Style sheet -->
+	    <link rel="stylesheet" type="text/css" href="../js/util/easyui/themes/default/easyui.css"/>
+        <link rel="stylesheet" href="../css/easyui/gray/easyui.css"/>
+	    <link rel="stylesheet" type="text/css" href="../js/util/easyui/themes/icon.css"/>
+        <link rel="stylesheet" href="../css/zTree/zTreeStyle.css"/>
+       <link rel="stylesheet" href="../css/table.css"/>
+
+<!--		 Main Style sheet -->	    
+<!-- 	    <link rel="stylesheet" type="text/css" href="css/common.css"/> -->
+	    <link rel="stylesheet" type="text/css" href="../css/reset.css"/>
+		<!-- BreadCrumbs button in TopMenu Style sheet -->
+<!-- 	    <link rel="stylesheet" type="text/css" href="css/breadcrumbs.css"/>  -->
+	    <link rel="stylesheet" type="text/css" href="../css/main.css"/>
+
+		<!--                       Javascripts                       -->
+		<!--          jQuery        -->
+    <script src="../js/lib/jquery.js"></script>
+    <script src="../js/lib/jquery.easyui.min.js"></script>
+    <script src="../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../js/lib/jquery.xml2json.js"></script>
+    <script type="text/javascript" src="../js/generalQuery.js"></script>
+
+
+
+</head>
+	<body id="container" class="easyui-layout" >
+         <!--logo-->
+        <div data-options="region:'north'" border="false"  style="margin:0;padding:0; height: 113px;overflow-y: hidden;">
+            <img src="../image/test/title.png" width="100%" height="113px"  />
+
+            <div   style=" position:absolute; bottom:5px; right:5px; z-index:999">
+
+                <div id="toolbar"   style=" float:left;">
+                    <ul>
+                        <li><a  href="javascript:flytodisneyClick();"  ><img src="../image/test/location.png" alt="迪士尼区域"/> </a></li>
+                        <li><a href="javascript:TerrainTransparency_Click();"   ><img src="../image/test/location.png" alt="地面透明度"/> </a></li>
+                        <li><a href="javascript: showRegionWest('html/layer/layer.html','图层管理');"   ><img src="../image/test/location.png" alt="图层管理"/> </a></li>
+                        <li><a href="javascript: showRegionWest('html/maketrack/track.html','园区漫游');"   ><img src="../image/test/location.png" alt="园区漫游"/> </a></li>
+                  </ul>
+
+
+
+                </div>
+
+            <div id="logoutDiv" style=" float:left;vertical-align: bottom; margin-left: 30px; font-weight: bold">
+                <a style="text-decoration:underline; cursor: hand; font-size:15px; " onclick="logout()">退出</a>
+            </div>
+          </div>
+         </div>
+
+         <!-- 三维地图 -->
+         <div data-options="region:'center'" style="margin:0;padding:0;">
+             <div id="menu" >
+                 <ul>
+                     <li><a href="javascript: funcClicked('CoverInfo');" id="menu-upload" >智能市政简介</a></li>
+                     <li><a href="javascript: showEarthTools();" id="menu-tools" >智能井盖</a></li>
+
+                    <li><a  href="javascript: funcClicked('HistoryCaseSituation');" id="menu-query">历史案件</a></li>
+                     <li><a href="javascript: funcClicked('UserSituation');" id="menu-apply">巡查人员表</a></li>
+                     <!--<li><a href="javascript:void(0)" id="menu-upload">历史处理记录</a></li>-->
+                     <li><a href="javascript: showRegionWest('html/media/shexiangtouSearch3_pt.html','园区视频');"  id="menu-media">园区视频</a></li>
+                     <li><a href="javascript: showRegionWest('html/analysis/AnalysisExcave.html','三维掘路开挖');"  id="menu-dig">三维掘路开挖</a></li>
+                 </ul>
+
+
+
+             </div>
+             <iframe name="ifEarth" id="ifEarth" frameborder="0" style="width: 100%; height: 95.5%;"></iframe>
+         </div>
+         <!--左侧面板：固定面板 -->
+         <div  data-options="region:'west',split:true,collapsed:true" title="图层管理" style="width:250px; height: 500px; "  >
+             <iframe  id="fixediframe" frameborder="0"	style="width:100%; height:100%;"></iframe>
+
+             <!--<div id="divWest" class="easyui-layout" fit="true" border="false">-->
+                 <!--<div region="center" border="false"  style="overflow:hidden;">-->
+                     <!--<iframe  id="funPenel" frameborder="0"	style="width:100%; height:100%;"></iframe>-->
+                 <!--</div>-->
+                 <!--<div region="south" title="园区市政传感器概况" split="false" border="false" collapsible="false"  style="padding:5px; height: 250px;overflow:hidden;">-->
+                     <!--<iframe   id="infoPanel" frameborder="0" allowtransparency="true"	 style="width: 100%;height: 100%;"></iframe>-->
+                 <!--</div>-->
+             <!--</div>-->
+         </div>
+
+
+
+
+
+        <!-- 弹出大面板 -->
+        <div id="dlgResult" title="面板" style="padding:5px;width:250px;">
+            <iframe name="ifResult" id="ifResult" frameborder="0" style="width: 100%;height: 100%;"></iframe>
+        </div>
+         <div id="dlgScreen2D" style="overflow-y:hidden">
+             <iframe name="ifScreen2D" id="ifScreen2D" frameborder="0" style="overflow-y:hidden;width: 100%;height: 100%;"></iframe>
+         </div>
+
+         <div id="impDialog" class="easyui-dialog" title="导入项目"  data-options="iconCls:'icon-save',modal:true,closed:true" style="width:200px;height:150px;padding:10px;" >
+             <label id="impDialogTxt">正在导入中......</label>
+         </div>
+        <!--数据处理插件 cy:客户端的2个dll，里面有接口，在调用里面的接口前，需先初始化  后面有load的函数-->
+        <object id="dataProcess" classid="clsid:DDA7E893-8EEE-4A1E-A506-867932BD0FB9" style="display:none;"></object>
+        <object id="generateEdit" classid="clsid:422A8D29-FF52-4C65-8EDF-F6DC3008E8A0" style="display:none;"></object>
+
+
+         <script src="../js/CITYPLAN_config.js"></script>
+         <script src="../js/part.js"></script>
+          <script src="../js/search.js"></script>
+         <script src="../js/common.js"></script>
+         <script src="../js/measure.js"></script>
+         <script src="../js/analysis.js"></script>
+         <script src="../js/project.js"></script>
+         <script src="../js/editor.js"></script>
+         <script src="../js/layer.js"></script>
+         <script src="../js/index.js"></script>
+         <script src="../js/historySliderMgr.js"></script>
+
+         <script src="../js/searchAnalysis.js"></script>
+         <script src="../js/attachment_64.js"></script>
+         <script src="../js/project2.js"></script>
+         <script type="text/javascript" src="../js/mapMgr.js"></script>
+         <script   type="text/javascript"  src="../js/authentication.js"></script>
+         <script src="../js/sliderMgr.js"></script>
+
+         <script src="../js/generalQuery.js"></script>
+
+
+	</body>
+</html>

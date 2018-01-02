@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>开挖深度</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css" />
+    <link rel="stylesheet" href="../../css/easyui/icon.css" />
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css" />
+    <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+
+</head>
+<body >
+<div  style="margin-top: 30px; text-align: center">
+   <label>开挖深度：</label> <input id="height_input" value="10"  width="60px"/><label>米</label>
+</div>
+
+<div  style="   margin-top: 30px; text-align: center">
+
+    <button    id="btnconfirm"   onclick="getheight()" style="width: 70px;">确定</button>
+    <button    id="btncancel"  onclick="window.close();window.returnValue=false;" style="width: 70px;">取消</button>
+</div>
+
+
+<script type="text/javascript">
+
+   function getheight(){
+
+       window.returnValue=$("#height_input").val();
+       window.close();
+
+
+
+   }
+
+</script>
+
+
+</body>
+
+
+
+
+
+
+</html>

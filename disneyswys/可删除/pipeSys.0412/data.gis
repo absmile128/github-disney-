@@ -1,0 +1,723 @@
+<?xml version="1.0" encoding="gbk"?>
+
+<xml> 
+	<Project id="e8bc5aac-2839-4fb7-82dc-e037b944dbc6" name="基础数据"> 
+		<SpatialReference>/home/stamp/stampmanager/wgs84.spatial</SpatialReference> 
+	</Project>  
+	<Project id="9435a053-dff4-4012-ae72-232c90e07c81" name="xuzhou"> 
+		<SpatialReference>/home/smbdata/data_project/xuzhou/pipeline/resource/config/xuzhou.spatial</SpatialReference>  
+		<ISO_Depth>/home/stamp/stampmanager/ISO_Depth.xml</ISO_Depth>  
+		<ISO_Horizontal_Spacing>/home/stamp/stampmanager/ISO_Horizontal_Spacing.xml</ISO_Horizontal_Spacing>  
+		<ISO_Vertical_Spacing>/home/stamp/stampmanager/ISO_Vertical_Spacing.xml</ISO_Vertical_Spacing>  
+		<Building_Horizontal_Spacing>/home/stamp/stampmanager/Building_Horizontal_Spacing.xml</Building_Horizontal_Spacing>  
+		<Table> 
+			<Canton3>quhua</Canton3>  
+			<Road>daolu</Road>  
+			<Street_area>konggui</Street_area>  
+			<Building>buildingxz</Building>  
+			<Company>point</Company> 
+		</Table>  
+		<Host>172.26.36.71</Host>  
+		<Port>1521</Port>  
+		<User>sde</User>  
+		<Password>sde</Password>  
+		<GISPolylineLayer id="4d2469db-7ea5-4bbb-8d40-011f42edb913" name="daolu"> 
+			<Table>DAOLU</Table>  
+			<Style>/home/stamp/stampmanager/1399780880786.polyline</Style> 
+		</GISPolylineLayer>  
+		<GISPOILayer id="34828038-4942-47d5-bfb4-ee49ea623674" name="point"> 
+			<Table>POINT</Table>  
+			<Style>/home/stamp/stampmanager/1399780907168.poi</Style> 
+		</GISPOILayer>  
+		<GISPolygonLayer id="50e7d22f-8c5b-48bc-ad7d-d70f486b6814" name="building"> 
+			<Table>BUILDINGXZ</Table>  
+			<Style>/home/stamp/stampmanager/1399780942312.polygon</Style> 
+		</GISPolygonLayer>  
+		<GISPolygonLayer id="18d6ddfa-be8a-42c0-8202-bbd4e4c58fe5" name="konggui"> 
+			<Table>KONGGUI</Table>  
+			<Style>/home/stamp/stampmanager/1406662287176.polygon</Style> 
+		</GISPolygonLayer>  
+		<GISPolygonLayer id="1a292e1e-fb81-4dcc-997b-20f4f34b3f60" name="quhua"> 
+			<Table>QUHUA</Table>  
+			<Style>/home/stamp/stampmanager/1399780653463.polygon</Style> 
+		</GISPolygonLayer>  
+		<GISPolygonLayer id="03fc2063-a6b7-404e-a573-c9d802e83603" name="xianzhuang"> 
+			<Table>XIANZHUANG</Table>  
+			<Style>/home/stamp/stampmanager/1399780561889.polygon</Style> 
+		</GISPolygonLayer>  
+		<GISPolygonLayer id="a957b0fc-fcb8-45be-b666-e2063a09d599" name="green"> 
+			<Table>GREEN_AREA</Table>  
+			<Style>/home/stamp/stampmanager/1406746248484.polygon</Style> 
+		</GISPolygonLayer>  
+		<PipelineServer id="0dce1338-4b2b-4091-ab38-6126dc781cb2" name="rq_line"> 
+			<PolylineTable>rq_line</PolylineTable>  
+			<PointTable>rq_poi</PointTable>  
+			<PolygonTable/>  
+			<Code>5000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="901e48c5-424b-4040-a905-5a4fb0816943" name="dl_line"> 
+			<PolylineTable>dl_line</PolylineTable>  
+			<PointTable>dl_poi</PointTable>  
+			<PolygonTable/>  
+			<Code>1000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="ffa71108-3a56-4b8e-b832-22d02030c27d" name="js_line"> 
+			<PolylineTable>js_line</PolylineTable>  
+			<PointTable>js_poi</PointTable>  
+			<PolygonTable/>  
+			<Code>3000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="b5f2b6c1-45f8-465b-a5f7-937cee09214d" name="ps_line"> 
+			<PolylineTable>ps_line</PolylineTable>  
+			<PointTable>ps_poi</PointTable>  
+			<PolygonTable/>  
+			<Code>4000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="aea3c8ca-474a-4313-96c7-38c533d5fa16" name="dx_line"> 
+			<PolylineTable>dx_line</PolylineTable>  
+			<PointTable>dx_poi</PointTable>  
+			<PolygonTable/>  
+			<Code>2000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="6b4d77d5-8682-40ce-9c03-c519ae71e48e" name="rl_line"> 
+			<PolylineTable>rl_line</PolylineTable>  
+			<PointTable>rl_poi</PointTable>  
+			<PolygonTable/>  
+			<Code>6000</Code> 
+		</PipelineServer>  
+		<FieldMap>/home/smbdata/data_project/xuzhou/pipeline/resource/config/FieldMap.config</FieldMap>  
+		<SID>ORCL</SID>  
+		<PipelineServer id="d97ebd11-5fc6-444b-8959-a2003e356d1a" name="ii_pm3_zm_l"> 
+			<PolylineTable>ii_pm3_zm_l</PolylineTable>  
+			<PointTable>ii_pm3_zm_p</PointTable>  
+			<PolygonTable/>  
+			<Code>1000</Code> 
+		</PipelineServer>  
+		<ValueMap>/home/smbdata/data_project/xuzhou/pipeline/resource/config/ValueMap.config</ValueMap> 
+	</Project>  
+	<Project id="f4b845b3-8f63-4183-8277-2a069ca9d389" name="度假区地上建筑"> 
+		<SpatialReference>/home/smbdata/disney.spatial</SpatialReference>  
+		<SID>orcl</SID>  
+		<Host>172.26.36.71</Host>  
+		<Port>1521</Port>  
+		<User>sde</User>  
+		<Password>sde</Password>  
+		<Table> 
+			<Canton3>block84</Canton3>  
+			<Road>LOOPPTC</Road> 
+		</Table>  
+		<ISO_Depth>/home/stamp/stampmanager/ISO_Depth.xml</ISO_Depth>  
+		<ISO_Horizontal_Spacing>/home/stamp/stampmanager/ISO_Horizontal_Spacing.xml</ISO_Horizontal_Spacing>  
+		<ISO_Vertical_Spacing>/home/stamp/stampmanager/ISO_Vertical_Spacing.xml</ISO_Vertical_Spacing>  
+		<Building_Horizontal_Spacing>/home/stamp/stampmanager/Building_Horizontal_Spacing.xml</Building_Horizontal_Spacing>  
+		<FieldMap>/home/smbdata/data_project/disney/pipe_test_output/resource/config/FieldMap.config</FieldMap>  
+		<ValueMap>/home/smbdata/data_project/disney/pipe_test_output/resource/config/ValueMap.config</ValueMap>  
+		<ClampPath>/home/smbdata/data_project/disney/disney_dem_tin_cutmc/layer.desc</ClampPath>  
+		<PipelineServer id="9bc74dbe-7abe-4be0-b93e-c9eb37de6d9e" name="GHYS_L"> 
+			<PolylineTable>GHYS_L</PolylineTable>  
+			<PointTable>GHYS_P</PointTable>  
+			<PolygonTable/>  
+			<Code>4100</Code> 
+		</PipelineServer>  
+		<PipelineServer id="2dd76bce-3463-4e56-9b4b-eb3987937b4d" name="GHRQ_L"> 
+			<PolylineTable>GHRQ_L</PolylineTable>  
+			<PointTable>GHRQ_P</PointTable>  
+			<PolygonTable/>  
+			<Code>5000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="4be350d6-2fd2-42da-aa0e-47d655239160" name="GHDL_L"> 
+			<PolylineTable>GHDL_L</PolylineTable>  
+			<PointTable>GHDL_P</PointTable>  
+			<PolygonTable>GHDL_G</PolygonTable>  
+			<Code>1000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="b807181e-9c48-4013-a917-4b67df386db5" name="GHJS_L"> 
+			<PolylineTable>GHJS_L</PolylineTable>  
+			<PointTable>GHJS_P</PointTable>  
+			<PolygonTable/>  
+			<Code>3000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="669774b1-cd14-46a3-a5a0-6005e4d98083" name="SJYS_L"> 
+			<PolylineTable>SJYS_L</PolylineTable>  
+			<PointTable>SJYS_P</PointTable>  
+			<PolygonTable/>  
+			<Code>4100</Code> 
+		</PipelineServer>  
+		<PipelineServer id="da4eee65-0051-4b7d-aaeb-b9c1753c4ae1" name="SJDL_L"> 
+			<PolylineTable>SJDL_L</PolylineTable>  
+			<PointTable>SJDL_P</PointTable>  
+			<PolygonTable>SJDL_G</PolygonTable>  
+			<Code>1000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="8fe88a35-c2ad-4901-bf7c-6f5d59912cee" name="SJRQ_L"> 
+			<PolylineTable>SJRQ_L</PolylineTable>  
+			<PointTable>SJRQ_P</PointTable>  
+			<PolygonTable/>  
+			<Code>5000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="6cac64c8-bac2-4393-98d7-7b0d7c758782" name="GCDL_L"> 
+			<PolylineTable>GCDL_L</PolylineTable>  
+			<PointTable>GCDL_P</PointTable>  
+			<PolygonTable>GCDL_G</PolygonTable>  
+			<Code>1000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="cdaa64c5-9b18-4b1b-9d8c-cb0034dc6619" name="GCRQ_L"> 
+			<PolylineTable>GCRQ_L</PolylineTable>  
+			<PointTable>GCRQ_P</PointTable>  
+			<PolygonTable/>  
+			<Code>5000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="d7c67beb-3c18-44d8-af4a-195ae4ef05e4" name="GCJS_L"> 
+			<PolylineTable>GCJS_L</PolylineTable>  
+			<PointTable>GCJS_P</PointTable>  
+			<PolygonTable/>  
+			<Code>3000</Code> 
+		</PipelineServer> 
+	</Project>  
+	<Project id="4895eb45-21cf-4f40-8773-8a2811b2f342" name="度假区规划要素"> 
+		<SpatialReference>/home/smbdata/data_project/disney/pipe_test_output/resource/config/disney.spatial</SpatialReference>  
+		<SID>orcl</SID>  
+		<Host>172.26.36.71</Host>  
+		<Port>1521</Port>  
+		<User>sde</User>  
+		<Password>sde</Password>  
+		<ClampPath>/home/smbdata/data_project/disney/disney_tin_cutall/out/layer.desc</ClampPath>  
+		<GISPolygonLayer id="c3bb32a8-55c8-4b80-ab5d-c1662e49f22a" name="规划绿地"> 
+			<Table>GREEN</Table>  
+			<Style>/home/stamp/stampmanager/1452883957036.polygon</Style> 
+		</GISPolygonLayer>  
+		<GISPolygonLayer id="aaa9ed67-006a-4e3e-a36b-ef44538b791b" name="规划用地"> 
+			<Table>DK_2PART</Table>  
+			<Style>/home/stamp/stampmanager/1452883711968.polygon</Style> 
+		</GISPolygonLayer> 
+	</Project>  
+	<Project id="351e8ceb-bcd8-4470-b445-ebae98dbe115" name="跟测管线"> 
+		<Host>172.26.36.71</Host>  
+		<Port>1521</Port>  
+		<User>sde</User>  
+		<Password>sde</Password>  
+		<SpatialReference>/home/smbdata/data_project/model/pipe/gc/hx1/resource/config/SpatialReference.spatial</SpatialReference>  
+		<ISO_Depth>/home/stamp/stampmanager/ISO_Depth.xml</ISO_Depth>  
+		<ISO_Horizontal_Spacing>/home/stamp/stampmanager/ISO_Horizontal_Spacing.xml</ISO_Horizontal_Spacing>  
+		<ISO_Vertical_Spacing>/home/stamp/stampmanager/ISO_Vertical_Spacing.xml</ISO_Vertical_Spacing>  
+		<SID>ORCL</SID>  
+		<FieldMap>/home/smbdata/data_project/model/pipe/gc/hx1/resource/config/FieldMap.config</FieldMap>  
+		<ValueMap>/home/smbdata/data_project/model/pipe/gc/hx1/resource/config/ValueMap.config</ValueMap>  
+		<Table> 
+			<Road>disneyRoad</Road> 
+		</Table>  
+		<PipelineServer id="4b95f398-f5d3-4c1b-a423-dfe9c1b222b4" name="雨水管线"> 
+			<PolylineTable>hx1gc_YS_ln</PolylineTable>  
+			<PointTable>hx1gc_YS_pt</PointTable>  
+			<PolygonTable>hx1gc_YS_bn</PolygonTable>  
+			<Code>4100</Code> 
+		</PipelineServer>  
+		<PipelineServer id="8afa535c-a37c-42c4-9c41-24b6934d1fec" name="燃气管线"> 
+			<PolylineTable>hx1gc_RQ_ln</PolylineTable>  
+			<PointTable>hx1gc_RQ_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>5200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="6bd664aa-ec66-4e1b-94ed-df482885f35a" name="给水管线"> 
+			<PolylineTable>hx1gc_JS_ln</PolylineTable>  
+			<PointTable>hx1gc_JS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="719c5442-9e59-4f31-ab26-2b1f08d08227" name="电力管线"> 
+			<PolylineTable>hx1gc_DL_ln</PolylineTable>  
+			<PointTable>hx1gc_DL_pt</PointTable>  
+			<PolygonTable>hx1gc_DL_bn</PolygonTable>  
+			<Code>1000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="357fee3a-c384-434c-aca2-ae88c1f9e777" name="热力管线"> 
+			<PolylineTable>hx1gc_RL_ln</PolylineTable>  
+			<PointTable>hx1gc_RL_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>6000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="11c781fb-d7ee-466d-99eb-89844fba2218" name="污水管线"> 
+			<PolylineTable>hx1gc_WS_ln</PolylineTable>  
+			<PointTable>hx1gc_WS_pt</PointTable>  
+			<PolygonTable>hx1gc_WS_bn</PolygonTable>  
+			<Code>4200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="8a035b73-842a-4e68-973b-f39ee0155026" name="灌溉管线"> 
+			<PolylineTable>hx1gc_GG_ln</PolylineTable>  
+			<PointTable>hx1gc_GG_pt</PointTable>  
+			<PolygonTable>hx1gc_GG_bn</PolygonTable>  
+			<Code>3500</Code> 
+		</PipelineServer>  
+		<PipelineServer id="2d7448e7-e870-477b-b6e8-0c64bffcdc18" name="电信管线"> 
+			<PolylineTable>hx1gc_DX_ln</PolylineTable>  
+			<PointTable>hx1gc_DX_pt</PointTable>  
+			<PolygonTable>hx1gc_DX_bn</PolygonTable>  
+			<Code>2000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="02f003df-4862-45a8-9425-9ba8678587e6" name="电力管线"> 
+			<PolylineTable>hx2_DL_ln</PolylineTable>  
+			<PointTable>hx2_DL_pt</PointTable>  
+			<PolygonTable>hx2_DL_bn</PolygonTable>  
+			<Code>1000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="b51608cb-f14d-4e57-8729-273efe7b0643" name="燃气管线"> 
+			<PolylineTable>hx2_RQ_ln</PolylineTable>  
+			<PointTable>hx2_RQ_pt</PointTable>  
+			<PolygonTable>hx2_RQ_bn</PolygonTable>  
+			<Code>5200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="1ace20b0-bcd4-44d1-81cf-61cb2c3978f9" name="污水管线"> 
+			<PolylineTable>hx2_WS_ln</PolylineTable>  
+			<PointTable>hx2_WS_pt</PointTable>  
+			<PolygonTable>hx2_WS_bn</PolygonTable>  
+			<Code>4200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="b6191e69-6d4e-4d01-9748-d74682377d7f" name="灌溉管线"> 
+			<PolylineTable>hx2_GG_ln</PolylineTable>  
+			<PointTable>hx2_GG_pt</PointTable>  
+			<PolygonTable>hx2_GG_bn</PolygonTable>  
+			<Code>3500</Code> 
+		</PipelineServer>  
+		<PipelineServer id="242e91d1-8906-4873-9a3b-4064e1c004f7" name="雨水管线"> 
+			<PolylineTable>hx2_YS_ln</PolylineTable>  
+			<PointTable>hx2_YS_pt</PointTable>  
+			<PolygonTable>hx2_YS_bn</PolygonTable>  
+			<Code>4100</Code> 
+		</PipelineServer>  
+		<PipelineServer id="fa869bfd-5281-4688-8b66-35b00385c5f2" name="电信管线"> 
+			<PolylineTable>hx2_DX_ln</PolylineTable>  
+			<PointTable>hx2_DX_pt</PointTable>  
+			<PolygonTable>hx2_DX_bn</PolygonTable>  
+			<Code>2000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="57f69f00-09b1-465c-9648-72561a97531b" name="电信管线"> 
+			<PolylineTable>DX_fzgn_gc_ln</PolylineTable>  
+			<PointTable>DX_fzgn_gc_pt</PointTable>  
+			<PolygonTable>DX_fzgn_gc_bn</PolygonTable>  
+			<Code>2000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="9cb7ac6d-30c8-4788-9f89-e90f16e9ba15" name="给水管线"> 
+			<PolylineTable>SS_fzgn_gc_ln</PolylineTable>  
+			<PointTable>SS_fzgn_gc_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="6b30a527-995a-460c-8103-f2b19656884a" name="雨水管线"> 
+			<PolylineTable>YS_fzgn_gc_ln</PolylineTable>  
+			<PointTable>YS_fzgn_gc_pt</PointTable>  
+			<PolygonTable></PolygonTable>  
+			<Code>4100</Code> 
+		</PipelineServer>  
+		<PipelineServer id="617c4ff0-71bc-4ef4-b164-74dc87c42b7e" name="燃气管线"> 
+			<PolylineTable>RQ_fzgn_gc_ln</PolylineTable>  
+			<PointTable>RQ_fzgn_gc_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>5200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="6bf4e63c-8b14-42e6-ab84-81a89cc55037" name="污水管线"> 
+			<PolylineTable>WS_fzgn_gc_ln</PolylineTable>  
+			<PointTable>WS_fzgn_gc_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4200</Code> 
+		</PipelineServer> 
+	</Project>  
+	<Project id="fc44ed4e-16c5-4fb9-aed3-e43cfb0cbc39" name="设计管线"> 
+		<Host>172.26.36.71</Host>  
+		<Port>1521</Port>  
+		<User>sde</User>  
+		<Password>sde</Password>  
+		<SpatialReference>/home/smbdata/data_project/model/pipe/sj/ztly/resource/config/SpatialReference.spatial</SpatialReference>  
+		<ISO_Depth>/home/stamp/stampmanager/ISO_Depth.xml</ISO_Depth>  
+		<ISO_Horizontal_Spacing>/home/stamp/stampmanager/ISO_Horizontal_Spacing.xml</ISO_Horizontal_Spacing>  
+		<ISO_Vertical_Spacing>/home/stamp/stampmanager/ISO_Vertical_Spacing.xml</ISO_Vertical_Spacing>  
+		<SID>ORCL</SID>  
+		<FieldMap>/home/smbdata/data_project/model/pipe/sj/ztly/resource/config/FieldMap.config</FieldMap>  
+		<ValueMap>/home/smbdata/data_project/model/pipe/sj/ztly/resource/config/ValueMap.config</ValueMap>  
+		<Table> 
+			<Road>disneyRoad</Road> 
+		</Table>  
+		<PipelineServer id="cd327f2c-fc31-4b11-953d-f041bf3e7f07" name="电信管线"> 
+			<PolylineTable>hx1sj_XX_ln</PolylineTable>  
+			<PointTable>hx1sj_XX_pt</PointTable>  
+			<PolygonTable>hx1sj_XX_bn</PolygonTable>  
+			<Code>2000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="a325f4d2-2753-443b-b63f-bf354e0ba579" name="电力管线"> 
+			<PolylineTable>hx1sj_DL_ln</PolylineTable>  
+			<PointTable>hx1sj_DL_pt</PointTable>  
+			<PolygonTable>hx1sj_DL_bn</PolygonTable>  
+			<Code>1000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="f3bdfd12-b69f-450e-8c18-a470ab5aefd7" name="给水管线"> 
+			<PolylineTable>hx1sj_JS_ln</PolylineTable>  
+			<PointTable>hx1sj_JS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="acad3cc8-b40e-4a63-a7a4-90636f5b6133" name="污水管线"> 
+			<PolylineTable>hx1sj_WS_ln</PolylineTable>  
+			<PointTable>hx1sj_WS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="7de5eff9-610a-4aed-8e66-5e1755300046" name="燃气管线"> 
+			<PolylineTable>hx1sj_RQ_ln</PolylineTable>  
+			<PointTable>hx1sj_RQ_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>5200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="5915136d-9ad3-4a70-864c-72ceb3e0be13" name="压缩空气管线"> 
+			<PolylineTable>hx1sj_YSKQ_ln</PolylineTable>  
+			<PointTable>hx1sj_YSKQ_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>6001</Code> 
+		</PipelineServer>  
+		<PipelineServer id="3acc538e-6ae7-4fb5-90e5-79ca0f686c49" name="灌溉管线"> 
+			<PolylineTable>hx1sj_GG_ln</PolylineTable>  
+			<PointTable>hx1sj_GG_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3500</Code> 
+		</PipelineServer>  
+		<PipelineServer id="4fcc2c37-d29f-464f-a2ea-47d3b9c9356f" name="热水回流管线"> 
+			<PolylineTable>hx1sj_RSHL_ln</PolylineTable>  
+			<PointTable>hx1sj_RSHL_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>6202</Code> 
+		</PipelineServer>  
+		<PipelineServer id="a474235b-c016-42ed-b048-d058e40f52b4" name="热水备用管线"> 
+			<PolylineTable>hx1sj_RSBY_ln</PolylineTable>  
+			<PointTable>hx1sj_RSBY_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>6203</Code> 
+		</PipelineServer>  
+		<PipelineServer id="8bc6d273-ad5c-4117-84a4-1632359f4bfc" name="热水供给管线"> 
+			<PolylineTable>hx1sj_RSGJ_ln</PolylineTable>  
+			<PointTable>hx1sj_RSGJ_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>6201</Code> 
+		</PipelineServer>  
+		<PipelineServer id="d7a0f423-9ea7-487b-a1e4-617042059fd9" name="冷水回流管线"> 
+			<PolylineTable>hx1sj_LSHL_ln</PolylineTable>  
+			<PointTable>hx1sj_LSHL_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>6102</Code> 
+		</PipelineServer>  
+		<PipelineServer id="7ca0bd50-78b0-4217-8254-234702048641" name="雨水管线"> 
+			<PolylineTable>hx1sj_YS_ln</PolylineTable>  
+			<PointTable>hx1sj_YS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4100</Code> 
+		</PipelineServer>  
+		<PipelineServer id="25d58c7d-8791-431b-a9d0-33e561fe4c07" name="冷水供给管线"> 
+			<PolylineTable>hx1sj_LSGJ_ln</PolylineTable>  
+			<PointTable>hx1sj_LSGJ_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>6101</Code> 
+		</PipelineServer>  
+		<PipelineServer id="739f37a5-bba9-442d-b3c4-8b47622254cd" name="压缩空气管线"> 
+			<PolylineTable>ztlySJ_YSKQ_ln</PolylineTable>  
+			<PointTable>ztlySJ_YSKQ_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>6001</Code> 
+		</PipelineServer>  
+		<PipelineServer id="772f0880-472c-4179-9505-eb443ccbf6c1" name="应急供电管线"> 
+			<PolylineTable>ztlySJ_YJDL_ln</PolylineTable>  
+			<PointTable>ztlySJ_YJDL_pt</PointTable>  
+			<PolygonTable>ztlySJ_YJDL_bn</PolygonTable>  
+			<Code>1101</Code> 
+		</PipelineServer>  
+		<PipelineServer id="8181b2c2-f976-4d37-a7fa-7d719a9b2311" name="电力管线"> 
+			<PolylineTable>ztlySJ_DL_ln</PolylineTable>  
+			<PointTable>ztlySJ_DL_pt</PointTable>  
+			<PolygonTable>ztlySJ_DL_bn</PolygonTable>  
+			<Code>1000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="02c0b87c-31d5-4343-9f43-b47922228f70" name="冷水回流管线"> 
+			<PolylineTable>ztlySJ_LSHL_ln</PolylineTable>  
+			<PointTable>ztlySJ_LSHL_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>6102</Code> 
+		</PipelineServer>  
+		<PipelineServer id="b2c2c410-f745-4140-801d-9b3ea12bed44" name="燃气管线"> 
+			<PolylineTable>ztlySJ_RQ_ln</PolylineTable>  
+			<PointTable>ztlySJ_RQ_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>5200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="1717042b-55ba-4543-9aac-7c76d9c2878d" name="室内消防管线"> 
+			<PolylineTable>ztlySJ_SNXF_ln</PolylineTable>  
+			<PointTable>ztlySJ_SNXF_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3401</Code> 
+		</PipelineServer>  
+		<PipelineServer id="b3d0a309-92bc-4856-aadb-118044a877b6" name="雨水管线"> 
+			<PolylineTable>ztlySJ_YS_ln</PolylineTable>  
+			<PointTable>ztlySJ_YS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4100</Code> 
+		</PipelineServer>  
+		<PipelineServer id="9db7138a-3d36-464a-b6f3-be761fc99619" name="热水供给管线"> 
+			<PolylineTable>ztlySJ_RSGJ_ln</PolylineTable>  
+			<PointTable>ztlySJ_RSGJ_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>6201</Code> 
+		</PipelineServer>  
+		<PipelineServer id="51690ced-7cb9-472f-8612-bdfd3b53df0c" name="绿化水管线"> 
+			<PolylineTable>ztlySJ_LHS_ln</PolylineTable>  
+			<PointTable>ztlySJ_LHS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4320</Code> 
+		</PipelineServer>  
+		<PipelineServer id="b875e3a0-b6cf-4f54-9c18-669ab4f14e89" name="电信管线"> 
+			<PolylineTable>ztlySJ_DX_ln</PolylineTable>  
+			<PointTable>ztlySJ_DX_pt</PointTable>  
+			<PolygonTable>ztlySJ_DX_bn</PolygonTable>  
+			<Code>2000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="11ecf3ec-2364-4776-8295-90e284c4fcfd" name="热水回流管线"> 
+			<PolylineTable>ztlySJ_RSHL_ln</PolylineTable>  
+			<PointTable>ztlySJ_RSHL_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>6202</Code> 
+		</PipelineServer>  
+		<PipelineServer id="5a645896-147b-4c15-91d9-2023c23ce0a7" name="河道排水管线"> 
+			<PolylineTable>ztlySJ_HDPS_ln</PolylineTable>  
+			<PointTable>ztlySJ_HDPS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4310</Code> 
+		</PipelineServer>  
+		<PipelineServer id="b515eba1-0cea-449f-afc7-ad918705ba0f" name="室外消防管线"> 
+			<PolylineTable>ztlySJ_SWXF_ln</PolylineTable>  
+			<PointTable>ztlySJ_SWXF_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3402</Code> 
+		</PipelineServer>  
+		<PipelineServer id="4a111bc0-1826-4094-b851-ac4096e4ac16" name="污水管线"> 
+			<PolylineTable>ztlySJ_WS_ln</PolylineTable>  
+			<PointTable>ztlySJ_WS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="702cf2ca-805e-4e7b-a05b-1debf1660a5c" name="冷水供给管线"> 
+			<PolylineTable>ztlySJ_LSGJ_ln</PolylineTable>  
+			<PointTable>ztlySJ_LSGJ_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>6101</Code> 
+		</PipelineServer>  
+		<PipelineServer id="246a42cf-36ea-479a-b7b7-b6cdfc61d634" name="灌溉管线"> 
+			<PolylineTable>ztlySJ_GG_ln</PolylineTable>  
+			<PointTable>ztlySJ_GG_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3500</Code> 
+		</PipelineServer>  
+		<PipelineServer id="8278e5e9-b371-44d2-8b01-270e9734ff6e" name="纯净水管线"> 
+			<PolylineTable>ztlySJ_CJS_ln</PolylineTable>  
+			<PointTable>ztlySJ_CJS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3101</Code> 
+		</PipelineServer>  
+		<PipelineServer id="9474d2fe-7426-40c9-9b82-5ec55ff7469d" name="正常供电管线"> 
+			<PolylineTable>ztlySJ_ZCDL_ln</PolylineTable>  
+			<PointTable>ztlySJ_ZCDL_pt</PointTable>  
+			<PolygonTable>ztlySJ_ZCDL_bn</PolygonTable>  
+			<Code>1102</Code> 
+		</PipelineServer> 
+	</Project>  
+	<Project id="2620c98d-ae9f-404f-8b19-2445533a37c5" name="规划管线"> 
+		<Host>172.26.36.71</Host>  
+		<Port>1521</Port>  
+		<User>sde</User>  
+		<Password>sde</Password>  
+		<SpatialReference>/home/smbdata/data_project/model/pipe/gh/hx1/resource/config/SpatialReference.spatial</SpatialReference>  
+		<ISO_Depth>/home/stamp/stampmanager/ISO_Depth.xml</ISO_Depth>  
+		<ISO_Horizontal_Spacing>/home/stamp/stampmanager/ISO_Horizontal_Spacing.xml</ISO_Horizontal_Spacing>  
+		<ISO_Vertical_Spacing>/home/stamp/stampmanager/ISO_Vertical_Spacing.xml</ISO_Vertical_Spacing>  
+		<Building_Horizontal_Spacing>/home/stamp/stampmanager/Building_Horizontal_Spacing.xml</Building_Horizontal_Spacing>  
+		<SID>ORCL</SID>  
+		<FieldMap>/home/smbdata/data_project/model/pipe/gh/hx1/resource/config/FieldMap.config</FieldMap>  
+		<ValueMap>/home/smbdata/data_project/model/pipe/gh/hx1/resource/config/ValueMap.config</ValueMap>  
+		<Table> 
+			<Road>disneyRoad</Road> 
+		</Table>  
+		<PipelineServer id="ed079a82-8689-4f66-931f-b274b05ae378" name="给水管线"> 
+			<PolylineTable>ztlyGH_JS_ln</PolylineTable>  
+			<PointTable>ztlyGH_JS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="b88fbbdd-c20c-4725-9563-02b637071510" name="雨水管线"> 
+			<PolylineTable>ztlyGH_YS_ln</PolylineTable>  
+			<PointTable>ztlyGH_YS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4100</Code> 
+		</PipelineServer>  
+		<PipelineServer id="1bc2c552-7983-4eaf-9b6d-a1d68238e650" name="燃气管线"> 
+			<PolylineTable>ztlyGH_RQ_ln</PolylineTable>  
+			<PointTable>ztlyGH_RQ_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>5200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="5730a6ef-bae7-4111-af18-675275c7a5e5" name="污水管线"> 
+			<PolylineTable>ztlyGH_WS_ln</PolylineTable>  
+			<PointTable>ztlyGH_WS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="2a49690b-91e3-4db1-9146-35b76296658b" name="室外消防管线"> 
+			<PolylineTable>ztlyGH_SWXF_ln</PolylineTable>  
+			<PointTable>ztlyGH_SWXF_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3402</Code> 
+		</PipelineServer>  
+		<PipelineServer id="3c276eb5-c31d-4c05-969e-ef0667c7a095" name="电力管线"> 
+			<PolylineTable>ztlyGH_DL_ln</PolylineTable>  
+			<PointTable>ztlyGH_DL_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>1000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="bee6218b-a6b3-48bb-9429-51f9f299080a" name="灌溉管线"> 
+			<PolylineTable>ztlyGH_GG_ln</PolylineTable>  
+			<PointTable>ztlyGH_GG_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3500</Code> 
+		</PipelineServer>  
+		<PipelineServer id="9ae7e6bc-5f32-4f2c-991f-5a1800846f4d" name="电信管线"> 
+			<PolylineTable>ztlyGH_DX_ln</PolylineTable>  
+			<PointTable>ztlyGH_DX_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>2000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="52c67b11-4ea5-4945-890c-19dab53b5a06" name="室内消防管线"> 
+			<PolylineTable>ztlyGH_SNXF_ln</PolylineTable>  
+			<PointTable>ztlyGH_SNXF_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3401</Code> 
+		</PipelineServer>  
+		<PipelineServer id="a016bab2-9f72-4f5d-8f74-f7061d05f26f" name="给水管线"> 
+			<PolylineTable>hx1GH_JS_ln</PolylineTable>  
+			<PointTable>hx1GH_JS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="51831a4b-79f6-4c15-9442-2e466b5dc516" name="热力管线"> 
+			<PolylineTable>hx1GH_RL_ln</PolylineTable>  
+			<PointTable>hx1GH_RL_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>6000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="d0598b8e-1bbe-4fd5-a9cc-87e048bb8b84" name="灌溉管线"> 
+			<PolylineTable>hx1GH_GG_ln</PolylineTable>  
+			<PointTable>hx1GH_GG_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3500</Code> 
+		</PipelineServer>  
+		<PipelineServer id="f8003905-aae9-4ac2-9149-26d73ccd43de" name="电力管线"> 
+			<PolylineTable>hx1GH_DL_ln</PolylineTable>  
+			<PointTable>hx1GH_DL_pt</PointTable>  
+			<PolygonTable>hx1GH_DL_bn</PolygonTable>  
+			<Code>1000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="69aae14c-5dcb-4f7b-908d-190b09f5adf6" name="雨水管线"> 
+			<PolylineTable>hx1GH_YS_ln</PolylineTable>  
+			<PointTable>hx1GH_YS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4100</Code> 
+		</PipelineServer>  
+		<PipelineServer id="41cd0f5d-39e4-4065-80e4-52973cc026c3" name="电信管线"> 
+			<PolylineTable>hx1GH_TX_ln</PolylineTable>  
+			<PointTable>hx1GH_TX_pt</PointTable>  
+			<PolygonTable>hx1GH_TX_bn</PolygonTable>  
+			<Code>2000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="a4f18432-a428-4226-9636-8cc87ae35cb7" name="污水管线"> 
+			<PolylineTable>hx1GH_WS_ln</PolylineTable>  
+			<PointTable>hx1GH_WS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="15959d43-3e2a-4f96-aad0-0b7fa5765c34" name="燃气管线"> 
+			<PolylineTable>hx1GH_RQ_ln</PolylineTable>  
+			<PointTable>hx1GH_RQ_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>5200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="ff6bd5e0-8d2f-42a4-af28-b529f2a0935f" name="污水管线"> 
+			<PolylineTable>hx2ghWS_ln</PolylineTable>  
+			<PointTable>hx2ghWS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="5ac2e142-0d78-4648-ad9e-365ab526ecd5" name="给水管线"> 
+			<PolylineTable>hx2ghJS_ln</PolylineTable>  
+			<PointTable>hx2ghJS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="e540035f-7a31-4bcb-b66e-3aff0613eb3f" name="雨水管线"> 
+			<PolylineTable>hx2ghYS_ln</PolylineTable>  
+			<PointTable>hx2ghYS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4100</Code> 
+		</PipelineServer>  
+		<PipelineServer id="141cd113-bd88-440a-b953-a5cfd02fad9b" name="燃气管线"> 
+			<PolylineTable>hx2ghRQ_ln</PolylineTable>  
+			<PointTable>hx2ghRQ_pt</PointTable>  
+			<PolygonTable>hx2ghRQ_bn</PolygonTable>  
+			<Code>5200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="281e608a-bcdf-4c8a-b024-c4073c6fdcc1" name="电信管线"> 
+			<PolylineTable>hx2ghDX_ln</PolylineTable>  
+			<PointTable>hx2ghDX_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>2000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="0954775a-2513-4039-8bc7-d085d27347a2" name="灌溉管线"> 
+			<PolylineTable>hx2ghGG_ln</PolylineTable>  
+			<PointTable>hx2ghGG_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3500</Code> 
+		</PipelineServer>  
+		<PipelineServer id="485bf615-68bd-4963-9422-05c04a1a5e27" name="电力管线"> 
+			<PolylineTable>hx2ghDL_ln</PolylineTable>  
+			<PointTable>hx2ghDL_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>1000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="ddac5097-890e-4ff2-b844-c336c606c1d2" name="给水管线"> 
+			<PolylineTable>fzgnGH_JS_ln</PolylineTable>  
+			<PointTable>fzgnGH_JS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>3000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="5e5a244d-b6ce-4ff5-af71-4c01217b19bb" name="燃气管线"> 
+			<PolylineTable>fzgnGH_RQ_ln</PolylineTable>  
+			<PointTable>fzgnGH_RQ_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>5200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="6f5b81a9-9cfc-417c-afe4-d168f33431c2" name="污水管线"> 
+			<PolylineTable>fzgnGH_WS_ln</PolylineTable>  
+			<PointTable>fzgnGH_WS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4200</Code> 
+		</PipelineServer>  
+		<PipelineServer id="6e275905-192f-46c5-b587-fe938a4c02f8" name="电力管线"> 
+			<PolylineTable>fzgnGH_DL_ln</PolylineTable>  
+			<PointTable>fzgnGH_DL_pt</PointTable>  
+			<PolygonTable>fzgnGH_DL_bn</PolygonTable>  
+			<Code>1000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="ae648885-a71f-46fb-8521-bdb187bce911" name="电信管线"> 
+			<PolylineTable>fzgnGH_DX_ln</PolylineTable>  
+			<PointTable>fzgnGH_DX_pt</PointTable>  
+			<PolygonTable>fzgnGH_DX_bn</PolygonTable>  
+			<Code>2000</Code> 
+		</PipelineServer>  
+		<PipelineServer id="d9f02f30-c250-4704-8cc5-17e742af51ad" name="雨水管线"> 
+			<PolylineTable>fzgnGH_YS_ln</PolylineTable>  
+			<PointTable>fzgnGH_YS_pt</PointTable>  
+			<PolygonTable/>  
+			<Code>4100</Code> 
+		</PipelineServer> 
+	</Project>
+</xml>

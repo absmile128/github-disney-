@@ -1,0 +1,331 @@
+<!DOCTYPE HTML>
+<html>
+<!-- saved from url=(0014)about:internet -->
+ <head>
+  <meta charset="utf-8"/>
+     <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+  <title> 建筑属性 </title>
+  <meta name="Generator" content="EditPlus">
+  <meta name="Author" content="">
+  <meta name="Keywords" content="">
+  <meta name="Description" content="">
+     <link rel="stylesheet" href="../../css/table.css"/>
+     <script type="text/javascript" src="../../js/common.js"></script>
+ </head>
+
+ <body>
+ <table id="tblResult" width="100%"  border="0px" style=" background-color:#D5E3F8; text-align:left;  margin-bottom:20px; margin-top:10px"      >
+ <caption><strong>建&nbsp;筑&nbsp;属&nbsp;性</strong></caption>
+     <thead>
+ <tr>
+     <td width="50%"  class="maintextclass"  colspan="2">指标</td>
+     <td  class="maintextclass" width="25%">指标值</td>
+     <td    class="maintextclass" width="25%"> 单位</td>
+ </tr>
+ </thead>
+     <tbody>
+     <tr>
+         <td width="50%"  class="texttdclass"  colspan="2" ><strong>建筑名称</strong></td>
+         <td id="buildMc" class="texttdclass" width="25%"></td>
+         <td  class="texttdclass" width="25%">---</td>
+     </tr>
+     <tr>
+         <td width="50%"  class="texttdclass"  colspan="2" ><strong>建筑性质</strong></td>
+         <td  id="buildXz" class="texttdclass" width="25%"></td>
+         <td class="texttdclass" width="25%">---</td>
+     </tr>
+     <tr>
+         <td width="50%"  class="texttdclass"   colspan="2"><strong>建筑基底面积</strong></td>
+         <td  id="buildMj" class="texttdclass" width="25%"></td>
+         <td   class="texttdclass" width="25%">平方米</td>
+     </tr>
+     <tr>
+         <td width="50%"  class="texttdclass"   colspan="2"><strong>总建筑面积</strong></td>
+         <td  id="buildZmj" class="texttdclass" width="25%"></td>
+         <td   class="texttdclass" width="25%">平方米</td>
+     </tr>
+     <tr>
+         <td width="50%"  class="texttdclass"   colspan="2"><strong>地上建筑面积</strong></td>
+         <td  id="buildDsjzmj" class="texttdclass" width="25%"></td>
+         <td   class="texttdclass" width="25%">平方米</td>
+     </tr>
+
+
+
+
+
+
+     <tr>
+         <td width="15%"  class="texttdclass"    rowspan="4"><strong>其中</strong></td>
+         <td  class="texttdclass" width="35%"><strong>住宅</strong></td>
+         <td  id="buildZz" class="texttdclass" width="25%"></td>
+         <td    class="texttdclass" width="25%">平方米</td>
+     </tr>
+     <tr>
+         <td  class="texttdclass" width="35%"><strong>商业</strong></td>
+         <td id="buildSy" class="texttdclass" width="25%"></td>
+        <td   class="texttdclass" width="25%">平方米</td>
+    </tr>
+ <tr>
+     <td  class="texttdclass" width="35%"><strong>幼儿园</strong></td>
+     <td id="buildYey"  class="texttdclass" width="25%"></td>
+     <td   class="texttdclass" width="25%">平方米</td>
+ </tr>
+ <tr>
+     <td  class="texttdclass" width="35%"><strong>社区服务中心</strong></td>
+     <td  id="buildSqfwzx" class="texttdclass" width="25%"></td>
+     <td   class="texttdclass" width="25%">平方米</td>
+ </tr>
+ <tr>
+     <td width="50%"  class="texttdclass"   colspan="2"><strong>地下建筑面积</strong></td>
+     <td  id="buildDxjzmj" class="texttdclass" width="25%"></td>
+     <td   class="texttdclass" width="25%">平方米</td>
+ </tr>
+ <tr>
+     <td width="15%"  class="texttdclass"    rowspan="3"><strong>其中</strong></td>
+     <td   class="texttdclass" width="35%"><strong>地下商业面积</strong></td>
+     <td id="buildDxsymj" class="texttdclass" width="25%"></td>
+     <td    class="texttdclass" width="25%">平方米</td>
+ </tr>
+ <tr>
+     <td  class="texttdclass" width="35%"><strong>地下停车场面积</strong></td>
+     <td id="buildDxtccmj" class="texttdclass" width="25%"></td>
+     <td   class="texttdclass" width="25%">平方米</td>
+ </tr>
+ <tr>
+     <td  class="texttdclass" width="25%"><strong>其他面积</strong></td>
+     <td id="buildQtmj"  class="texttdclass" width="25%"></td>
+     <td  class="texttdclass" width="25%">平方米</td>
+ </tr>
+ <tr>
+     <td width="50%"  class="texttdclass"   colspan="2"><strong>建筑高度</strong></td>
+     <td id="buildJzgd" class="texttdclass" width="25%"></td>
+     <td  class="texttdclass" width="25%">米</td>
+ </tr>
+ <tr>
+     <td width="50%"  class="texttdclass"   colspan="2"><strong>建筑层数</strong></td>
+     <td   id="buildJzcs" class="texttdclass" width="25%"></td>
+     <td   class="texttdclass" width="25%">层</td>
+ </tr>
+
+ <tr>
+     <td width="15%"  class="texttdclass"    rowspan="2"><strong>其中</strong></td>
+     <td  class="texttdclass" width="35%"><strong>地上</strong></td>
+     <td   id="buildDscs" class="texttdclass" width="25%"></td>
+     <td    class="texttdclass" width="25%">层</td>
+ </tr>
+ <tr>
+     <td  class="texttdclass" width="35%"><strong>地下</strong></td>
+     <td   id="buildDxcs" class="texttdclass" width="25%"></td>
+     <td   class="texttdclass" width="25%">层</td>
+ </tr>
+
+ <tr>
+     <td width="50%"  class="texttdclass"   colspan="2"><strong>规划户数</strong></td>
+     <td id="buildGhhs"  class="texttdclass" width="25%"></td>
+     <td  class="texttdclass" width="25%">户</td>
+ </tr>
+ <tr>
+     <td width="50%"  class="texttdclass"   colspan="2"><strong>平均人口</strong></td>
+     <td  id="buildHjrk" class="texttdclass" width="25%"></td>
+     <td   class="texttdclass" width="25%">人</td>
+ </tr>
+ <tr>
+     <td width="50%"  class="texttdclass"   colspan="2"><strong>规划人数</strong></td>
+     <td   id="buildGhrs" class="texttdclass" width="25%"></td>
+     <td   class="texttdclass" width="25%">人</td>
+ </tr>
+
+ <tr>
+     <td width="50%"  class="texttdclass"   colspan="2"><strong>总停车位</strong></td>
+     <td id="buildZtcw"  class="texttdclass" width="25%"></td>
+     <td  class="texttdclass" width="25%">个</td>
+ </tr>
+
+ <tr>
+     <td width="15%"  class="texttdclass"    rowspan="3"><strong>其中</strong></td>
+     <td  class="texttdclass" width="35%"><strong>地上停车位</strong></td>
+     <td id="buildDstcw"  class="texttdclass" width="25%"></td>
+     <td     class="texttdclass" width="25%">个</td>
+ </tr>
+ <tr>
+     <td  class="texttdclass" width="35%"><strong>地下停车位</strong></td>
+     <td id="buildDxtcw" class="texttdclass" width="25%"></td>
+     <td   class="texttdclass" width="25%">个</td>
+ </tr>
+
+
+     </tbody>
+
+    </table>
+
+
+
+ <div  style="height: 20px;margin-top: 20px; text-align: right" >
+     <a style="text-decoration:underline ;color:blue; cursor: hand;"  id="importExcelBtn"  onclick="importExcelByTable()">导出Excel</a>
+
+ </div>
+
+  <script src="../../js/lib/jquery.js"></script>
+ <script>
+     //$("buildMc").innerHtml="wwwww";//("gefhewf");
+     function postData(obj){
+        if(obj){
+
+
+
+            $("#buildMc").text(obj["CPBUILDING.NAME"]||"");
+            $("#buildXz").text(obj["CPBUILDING.JZXZ"]||"");
+            $("#buildMj").text(obj["CPBUILDING.JZJDMJ"]||"");
+            $("#buildZmj").text(obj["CPBUILDING.ZJZMJ"]||"");
+            $("#buildDsjzmj").text(obj["CPBUILDING.DSJZMJ"]||"");
+            $("#buildZz").text(obj["CPBUILDING.ZZJZMJ"]||"");
+            $("#buildSy").text(obj["CPBUILDING.SYJZMJ"]||"");
+            $("#buildYey").text(obj["CPBUILDING.YEYJZMJ"]||"");
+            $("#buildSqfwzx").text(obj["CPBUILDING.SQFWZXJZMJ"]||"");
+            $("#buildDxjzmj").text(obj["CPBUILDING.DXJZMJ"]||"");
+            $("#buildDxsymj").text(obj["CPBUILDING.DXSYMJ"]||"");
+            $("#buildDxtccmj").text(obj["CPBUILDING.DXTCCMJ"]||"");
+            $("#buildQtmj").text(obj["CPBUILDING.DXQTMJ"]||"");
+            $("#buildJzgd").text(obj["CPBUILDING.JZGD"]||"");
+            $("#buildJzcs").text(obj["CPBUILDING.JZCS"]||"");
+            $("#buildDscs").text(obj["CPBUILDING.DSCS"]||"");
+            $("#buildDxcs").text(obj["CPBUILDING.DXCS"]||"");
+            $("#buildGhhs").text(obj["CPBUILDING.GHHS"]||"");
+            $("#buildHjrk").text(obj["CPBUILDING.HJRK"]||"");
+            $("#buildGhrs").text(obj["CPBUILDING.GHRS"]||"");
+            $("#buildZtcw").text(obj["CPBUILDING.ZTCW"]||"");
+            $("#buildDstcw").text(obj["CPBUILDING.DSTCW"]||"");
+            $("#buildDxtcw").text(obj["CPBUILDING.DXTCW"]||"");
+        }
+     }
+
+
+
+     /**
+      * 功能：将table导出成Excel文档
+      * 参数：tableId - 要导出的表对象; columns - 列标题数组
+      * 返回：无
+      */
+     var importExcelByTable = function(){
+         var xls = null;
+         try{
+             xls = new ActiveXObject("Excel.Application");
+         }catch(e){
+             alert("无法启动Excel\n\n如果您确信您的电脑中已经安装了Excel, 那么请调整IE的安全级别\n" +
+                     "具体的操作：\n" +
+                     "工具 -> Internet选项 -> 安全 -> 自定义级别 -> 对没有标记为安全的ActiveX进行初始化和脚本运行 -> 启用");
+             return;
+         }
+         xls.visible = true;
+
+
+
+         try{
+         var rootpath=   getRootPath()
+         var path=rootpath+"/xls/BuildData.xlsx"  ;
+             var newBook = xls.Workbooks.Open(path);//这里的Add方法里的参数是模板的路径
+//         var path2="C:/Users/Administrator/Desktop/codetest/disney3D/xls/BuildData.xlsx";
+//         var newBook = xls.Workbooks.Open(path2);//这里的Add方法里的参数是模板的路径
+         var  oSheet=newBook.ActiveSheet;
+
+
+         var  rowlength=oSheet.UsedRange.Columns.Rows.Count;
+         var columnlength= 3;
+
+         for (var i=1;i< rowlength+1;i++)
+         {
+             for (var j=1;j< columnlength+1;j++)
+             {
+                  var cell=  oSheet.Cells(i,j);
+                  var celltext= cell.value;
+                 switch(celltext)
+                 {
+                     case "{buildMc}":
+                         oSheet.Cells(i,j).value =$("#buildMc").text();
+                         break;
+                     case "{buildXz}":
+                         oSheet.Cells(i,j).value =$("#buildXz").text();
+                         break;
+                     case "{buildMj}":
+                         oSheet.Cells(i,j).value =$("#buildMj").text();
+                         break;
+                     case "{buildZmj}":
+                         oSheet.Cells(i,j).value =$("#buildZmj").text();
+                         break;
+                     case "{buildDsjzmj}":
+                         oSheet.Cells(i,j).value =$("#buibuildDsjzmjldMc").text();
+                         break;
+                     case "{buildZz}":
+                         oSheet.Cells(i,j).value =$("#buildZz").text();
+                         break;
+                     case "{buildYey}":
+                         oSheet.Cells(i,j).value =$("#buildYey").text();
+                         break;
+                     case "{buildSy}":
+                         oSheet.Cells(i,j).value =$("#buildSy").text();
+                         break;
+                     case "{buildSqfwzx}":
+                         oSheet.Cells(i,j).value =$("#buildSqfwzx").text();
+                         break;
+                     case "{buildDxjzmj}":
+                         oSheet.Cells(i,j).value =$("#buildDxjzmj").text();
+                         break;
+                     case "{buildDxsymj}":
+                         oSheet.Cells(i,j).value =$("#buildDxsymj").text();
+                         break;
+                     case "{buildDxtccm}":
+                     oSheet.Cells(i,j).value =$("#buildDxtccm").text();
+                     break;
+                     case "{buildQtmj}":
+                         oSheet.Cells(i,j).value =$("#buildQtmj").text();
+                         break;
+                     case "{buildJzgd}":
+                         oSheet.Cells(i,j).value =$("#buildJzgd").text();
+                         break;
+                     case "{buildJzcs}":
+                         oSheet.Cells(i,j).value =$("#buildJzcs").text();
+                         break;
+                     case "{buildDscs}":
+                         oSheet.Cells(i,j).value =$("#buildDscs").text();
+                         break;
+                     case "{buildDxcs}":
+                         oSheet.Cells(i,j).value =$("#buildDxcs").text();
+                         break;
+                     case "{buildGhhs}":
+                         oSheet.Cells(i,j).value =$("#buildGhhs").text();
+                         break;
+
+                     case "{buildHjrk}":
+                         oSheet.Cells(i,j).value =$("#buildHjrk").text();
+                         break;
+                     case "{buildGhrs}":
+                         oSheet.Cells(i,j).value =$("#buildGhrs").text();
+                         break;
+                     case "{buildZtcw}":
+                         oSheet.Cells(i,j).value =$("#buildZtcw").text();
+                         break;
+                     case "{buildDstcw}":
+                         oSheet.Cells(i,j).value =$("#buildDstcw").text();
+                         break;
+                     case "{buildDxtcw}":
+                         oSheet.Cells(i,j).value =$("#buildDxtcw").text();
+                         break;
+                 }
+
+             }
+         }
+         }
+         catch(e){
+             alert("导出Excel错误！");
+             return;
+         }
+
+         xls.UserControl = true;
+         xls = null;
+         alert("成功导出Excel");
+
+     } ;
+ </script>
+ </body>
+</html>

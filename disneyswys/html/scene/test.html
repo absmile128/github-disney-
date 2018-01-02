@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <!-- jQeury EasyUI Style sheet -->
+    <link rel="stylesheet" type="text/css" href="../../js/util/easyui/themes/default/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" type="text/css" href="../../js/util/easyui/themes/icon.css"/>
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+</head>
+<body>
+<div id="dlg" class="easyui-dialog" title="导入项目"  data-options="iconCls:'icon-save',modal:true,closed:true" style="width:200px;height:150px;padding:10px;" >
+    <label id="impDialogTxt">正在导入中......</label>
+</div>
+    <button value="打开" onclick="internalFun();"></button>
+<!--<div id="dlg" class="easyui-dialog" title="Complex Toolbar on Dialog" style="width:400px;height:200px;padding:10px"-->
+     <!--data-options=" modal:true, closed:true ,-->
+				<!--iconCls: 'icon-save',-->
+				<!--toolbar: '#dlg-toolbar',-->
+				<!--buttons: '#dlg-buttons'-->
+			<!--">-->
+    <!--The dialog content.-->
+<!--</div>-->
+
+<script>
+var internalFun = function(){
+// top.$("body").append('<div id="impDialog" class="easyui-dialog" title="导入项目"  data-options=\"iconCls:'icon-save'\" style="width:200px;height:150px;padding:10px;" ><label id="impDialogTxt">正在导入中......</label></div>');
+top.$('#dlg').dialog({
+closed: false,
+modal:true
+});
+//window.showModalDialog("html/view/modal.html",null,"dialogWidth=200px;dialogHeight=100px");
+//setTimeout("msgFrm.location.reload();",1500);
+};
+//$(function(){
+//    internalFun();
+//});
+
+</script>
+</body>
+</html>

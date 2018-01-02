@@ -1,0 +1,442 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+    <meta charset="UTF-8"/>
+    <title>规划要素信息</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/common.css"/>
+
+
+    <script type="text/javascript" src="../../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.xml2json.js"></script>
+    <script src="../../js/generalQuery.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>
+    <script src="../../js/common.js"></script>
+    <script src="../../js/searchAnalysis.js"></script>
+</head>
+<body >
+<div style="margin-top: 10px;    ">
+<fieldset >
+<legend style="font-weight:bold;">规划要素图层</legend>
+<div  id="ctrParcelLayer_div" style="margin-top: 20px;  margin-left: 20px;">
+    <input type="checkbox" name="checkbox"  id="dk" value="规划地块图层"  style="width:30px"  onclick="layerchange(this)">规划地块图层
+</div>
+
+<div  id="greenbeltAnalysisLayer_div"   style="margin-top: 20px; margin-left: 20px;">
+    <input type="checkbox" name="checkbox"  id="ld" value="规划绿地图层"  style="width:30px" onclick="layerchange(this)">规划绿地图层
+</div>
+
+<div   id="indicatorAccountingLayer_div"  style="margin-top: 20px; margin-left:20px; margin-bottom: 10px;">
+    <input type="checkbox" name="checkbox"  id="jz" value="现状建筑图层" style="width:30px" onclick="layerchange(this)">现状建筑图层
+</div>
+
+</fieldset>
+</div>
+
+
+
+
+            <!--<div style="padding-bottom: 5px;margin-top: 20px;  font-weight:bold;  font-size:15px  ">-->
+               <!--<label> 规划要素图层：  </label>-->
+             <!--</div>-->
+            <!--<div  style="margin-top: 20px;  margin-left: 10px;">-->
+                <!--<input type="checkbox" name="checkbox"  id="dk" value="规划地块图层"  style="width:30px"  onclick="layerchange(this)">规划地块图层-->
+            <!--</div>-->
+
+            <!--<div  style="margin-top: 20px; margin-left: 10px;">-->
+                <!--<input type="checkbox" name="checkbox"  id="ld" value="规划绿地图层"  style="width:30px" onclick="layerchange(this)">规划绿地图层-->
+            <!--</div>-->
+
+            <!--<div  style="margin-top: 20px; margin-left: 10px;">-->
+                <!--<input type="checkbox" name="checkbox"  id="jz" value="现状建筑图层" style="width:30px" onclick="layerchange(this)">现状建筑图层-->
+            <!--</div>-->
+
+
+            <div style="height: 20px;margin-top: 20px;" >
+                <a style="text-decoration:underline ;color:blue; cursor: hand;"  id="chk"  onclick="chk_change()">关闭无关图层</a>
+            </div>
+
+
+
+            <div style="border-bottom:1px dashed #000000;  margin-top:10px;"></div>        <!--虚线-->
+            <div  style=" text-align:center;  margin-top: 5px;">
+                <!--<button class="largeBtn"    id="schData" disabled >按条件查询</button>-->
+                <!--<button class="largeBtn"    id="btnParcelSelect"  disabled >拾取要素查询</button>-->
+                <button class="normal2Btn"    id="btnParcelSelect"  disabled >拾取要素查询</button>
+            </div>
+
+
+
+
+<script type="text/javascript">
+    var earth = parent.earth;
+    var searchAnalysis = CITYPLAN.searchAnalysis(earth);
+    var ctrParcelLayerdata=     parent.ctrPlanLayer;//规划土地 shape文件
+    var greenbeltAnalysisLayerdata=     parent.greenbeltAnalysisLayer;//规划绿地 shape文件
+    var indicatorAccountingLayerdata= parent.indicatorAccountingLayer;//现状建筑 shape文件
+
+     var LayerArray=[];
+
+    var dataDoc=null;
+    var showDataArr = [];
+    var bufPolygon = null;
+
+    var ctrParcelLayer=null;
+    var greenbeltAnalysisLayer=null;
+    var indicatorAccountingLayer=null;
+    $(function(){
+
+        if(ctrParcelLayerdata.length>0)  {
+         var ctrParcelLayerid=   ctrParcelLayerdata[0].id;
+        ctrParcelLayer = earth.LayerManager.GetLayerByGUID(ctrParcelLayerid);   //规划土地图层
+        LayerArray.push(ctrParcelLayer);  }
+
+        else
+        {
+            $("#ctrParcelLayer_div").css("display","none");
+        }
+
+
+        if(greenbeltAnalysisLayerdata.length>0)  {
+            var greenbeltAnalysisLayerid=   greenbeltAnalysisLayerdata[0].id;
+        greenbeltAnalysisLayer = earth.LayerManager.GetLayerByGUID(greenbeltAnalysisLayerid);   //规划绿地 shape文件
+        LayerArray.push(greenbeltAnalysisLayer); }
+        else
+        {
+            $("#greenbeltAnalysisLayer_div").css("display","none");
+        }
+
+        if(indicatorAccountingLayerdata.length>0)  {
+        var indicatorAccountingLayerid=   indicatorAccountingLayerdata[0].id;
+        indicatorAccountingLayer = earth.LayerManager.GetLayerByGUID(indicatorAccountingLayerid);   //现状建筑 shape文件
+        LayerArray.push(indicatorAccountingLayer);   }
+            else
+            {
+                $("#indicatorAccountingLayer_div").css("display","none");
+            }
+
+
+        $("#btnParcelSelect").click(function(){
+            if(bufPolygon){
+                earth.DetachObject(bufPolygon);
+            }
+
+            earth.Event.OnCreateGeometry = function(p,t){
+                if(p == null){
+                    return;
+                }
+
+                var spatial = generateGeoPoints(p);
+
+
+
+
+
+                  for(var i=0;i<LayerArray.length;i++){
+
+                  var VisibleLayerArray=    getvisiblelayers();
+
+
+                var Result = getPolygonInfo(VisibleLayerArray[i], null, 17, null, spatial);
+                      if(Result != null && Result.RecordCount > 0){
+
+                          var ResultDoc = loadXMLStr(Result.GotoPage(0));
+
+                          var obj={};
+                          var coor = ResultDoc.getElementsByTagName("Polygon")[0].getElementsByTagName("Coordinates")[0].text;
+                          obj.coor=coor;
+                          var id = earth.Factory.createGuid();
+                          obj.id=id;
+                          showDataArr[id]=ResultDoc.documentElement.firstChild.childNodes[0];
+                          goToParse(obj) ;
+
+                          earth.ShapeCreator.Clear();
+
+                          break;
+
+                      }
+                  }
+
+
+            };
+            earth.ShapeCreator.CreatePoint();
+
+
+        });
+
+        window.onunload=function(){
+            if(parent.earth == null){
+                return;
+            }
+            if(bufPolygon){
+                earth.DetachObject(bufPolygon);
+            }
+
+            searchAnalysis.clear();
+            recoverhide(true);
+
+
+        }
+    });
+
+
+
+    function layerchange(obj)
+    {
+
+        var objid= $(obj)[0].id;
+
+
+
+        switch(objid)
+        {
+            case "dk":
+                    if(this.ctrParcelLayer!=null){
+                this.ctrParcelLayer.Visibility  =$(obj).is(':checked');
+                    }
+                break;
+            case "ld":
+                if(this.greenbeltAnalysisLayer!=null){
+                this.greenbeltAnalysisLayer.Visibility=  $(obj).is(':checked');
+
+
+                }
+                break;
+            case "jz":
+                    if(this.indicatorAccountingLayer!=null){
+                this.indicatorAccountingLayer.Visibility= $(obj).is(':checked') ;
+
+
+                    }
+                break;
+
+        }
+
+
+        var _chks = document.getElementsByName("checkbox");
+
+        var isabled=false;
+        for (var i = 0; i < _chks.length; i++) {
+
+                if (_chks[i].checked) {
+                    isabled = true;
+                    break;}
+        }
+
+        if(isabled==true)  {  $("#btnParcelSelect").removeAttr("disabled") ;}
+        else{    $("#btnParcelSelect").attr("disabled","disabled") ;}
+
+    }
+
+
+
+    function hideallelementlayers()
+    {
+
+        for(var i=0;i<LayerArray.length;i++)
+        {
+            LayerArray[i].Visibility  =false;
+//        this.ctrParcelLayer.Visibility  =false;
+//        this.greenbeltAnalysisLayer.Visibility=false;
+//        this.indicatorAccountingLayer.Visibility=false;
+        }
+    }
+
+
+    function  getvisiblelayers()
+    {
+     var   VisibleLayerArray=[];
+
+          for(var i=0;i<LayerArray.length;i++)
+          {
+               if(LayerArray[i].Visibility==true)
+                 {
+                       VisibleLayerArray.push(LayerArray[i]);
+
+                  }
+
+
+
+      }
+        return   VisibleLayerArray;
+    }
+
+    function chk_change()
+    {
+
+        var txt=$("#chk").text();
+        if(txt=="关闭无关图层")
+        {
+
+            hide();
+//            keepPlanElementLayerState();
+//            $("#btnParcelSelect").removeAttr("disabled") ;
+            $("#chk").text("还原已关闭图层");
+
+        }
+        else
+
+        {
+            recoverhide(false);
+//            keepPlanElementLayerState();
+//            $("#btnParcelSelect").attr("disabled","disabled") ;
+            $("#chk").text("关闭无关图层");
+        }
+
+
+
+
+    }
+    var  hideedlayer=[];
+    function hide()
+    {
+        var ctrParcelLayerstate=  null;
+        var greenbeltAnalysisLayerstate= null;
+        var indicatorAccountingLayerstate=   null;
+        if(this.ctrParcelLayer!=null){
+        var ctrParcelLayerstate=  this.ctrParcelLayer.Visibility  ;
+        }
+        if(this.greenbeltAnalysisLayer!=null){
+            var greenbeltAnalysisLayerstate=  this.greenbeltAnalysisLayer.Visibility;
+        }
+        if(this.indicatorAccountingLayer!=null){
+            var indicatorAccountingLayerstate=  this.indicatorAccountingLayer.Visibility  ;
+        }
+        parent.setalllayersvisibility(false);  //关闭所有地上模型
+
+        if(this.ctrParcelLayer!=null){
+         this.ctrParcelLayer.Visibility=   ctrParcelLayerstate;
+        }
+        if(this.greenbeltAnalysisLayer!=null){
+            this.greenbeltAnalysisLayer.Visibility=  greenbeltAnalysisLayerstate;
+        }
+        if(this.indicatorAccountingLayer!=null){
+            this.indicatorAccountingLayer.Visibility= indicatorAccountingLayerstate;
+        }
+
+    }
+    function recoverhide(iswindowclose )
+    {
+        if(iswindowclose==false)
+        {
+        var ctrParcelLayerstate=  null;
+        var greenbeltAnalysisLayerstate= null;
+        var indicatorAccountingLayerstate=   null;
+        if(this.ctrParcelLayer!=null){
+            var ctrParcelLayerstate=  this.ctrParcelLayer.Visibility  ;
+        }
+        if(this.greenbeltAnalysisLayer!=null){
+            var greenbeltAnalysisLayerstate=  this.greenbeltAnalysisLayer.Visibility;
+        }
+        if(this.indicatorAccountingLayer!=null){
+            var indicatorAccountingLayerstate=  this.indicatorAccountingLayer.Visibility  ;
+        }
+        }
+        for(var i=0;i<parent.hidedlayers.length;i++)
+        {
+            var layer=  parent.hidedlayers[i];
+            layer.Visibility=true;
+
+        }
+
+        //cy:10.10
+
+        var elistarray1= parent.currentLayerObjList[parent.currentApproveProjectGuid];
+        if(elistarray1!=null&&elistarray1.length>0){
+            parent.hideXZ(); //抠现状
+        }
+        //cy:10.10
+
+
+
+        if(iswindowclose==false)
+        {
+        if(this.ctrParcelLayer!=null){
+            this.ctrParcelLayer.Visibility=   ctrParcelLayerstate;
+        }
+        if(this.greenbeltAnalysisLayer!=null){
+            this.greenbeltAnalysisLayer.Visibility=  greenbeltAnalysisLayerstate;
+        }
+        if(this.indicatorAccountingLayer!=null){
+            this.indicatorAccountingLayer.Visibility= indicatorAccountingLayerstate;
+        }
+        }
+        else
+        {
+            if(this.ctrParcelLayer!=null){
+                this.ctrParcelLayer.Visibility=   false;
+            }
+            if(this.greenbeltAnalysisLayer!=null){
+                this.greenbeltAnalysisLayer.Visibility=  false;
+            }
+            if(this.indicatorAccountingLayer!=null){
+                this.indicatorAccountingLayer.Visibility= false;
+            }
+
+        }
+    }
+//
+//    function   keepPlanElementLayerState()
+//    {         if(this.ctrParcelLayer!=null){
+//        var ctrParcelLayerstate=  this.ctrParcelLayer.Visibility  ;
+//        this.ctrParcelLayer.Visibility=   ctrParcelLayerstate;
+//    }
+//        if(this.greenbeltAnalysisLayer!=null){
+//        var greenbeltAnalysisLayerstate=  this.greenbeltAnalysisLayer.Visibility;
+//        this.greenbeltAnalysisLayer.Visibility=  greenbeltAnalysisLayerstate;
+//        }
+//        if(this.indicatorAccountingLayer!=null){
+//        var indicatorAccountingLayerstate=  this.indicatorAccountingLayer.Visibility  ;
+//        this.indicatorAccountingLayer.Visibility= indicatorAccountingLayerstate;
+//        }
+//    }
+
+
+       //定位
+    function goToParse(obj){
+        if(bufPolygon){
+            earth.DetachObject(bufPolygon);
+        }
+        var vecs=obj.coor.split(",");
+        var v3s = earth.Factory.CreateVector3s();
+        for(var j = 0; j<vecs.length; j+=3){
+            var v3 = earth.Factory.CreateVector3();
+            v3.X =vecs[j];
+            v3.Y =vecs[j+1];
+            v3.Z =vecs[j+2];
+            v3s.AddVector(v3);
+        }
+
+        bufPolygon = earth.Factory.CreateElementPolygon(earth.Factory.CreateGUID(), "");
+        bufPolygon.BeginUpdate();
+        bufPolygon.SetExteriorRing(v3s);   // SECoordinateUnit.Degree
+
+        bufPolygon.LineStyle.LineWidth = 1;
+        bufPolygon.LineStyle.LineColor = parseInt("0xFFFF0000");
+        bufPolygon.FillStyle.FillColor = parseInt("0x2500FF00");
+        bufPolygon.AltitudeType = 1;   // SEAltitudeType.ClampToTerrain
+        bufPolygon.EndUpdate();
+        earth.AttachObject(bufPolygon);
+
+        var lon =bufPolygon.SphericalTransform.Longitude;
+        var lat = bufPolygon.SphericalTransform.Latitude;
+        var alt = bufPolygon.SphericalTransform.Altitude;
+//        earth.GlobeObserver.FlytoLookat(lon, lat, alt, 0, 60, 0, 100, 2);
+//        earth.GlobeObserver.GotoLookat(lon, lat,400, 0, 70, 0, 2);
+        earth.GlobeObserver.GotoLookat(lon, lat,2000, 0, 200, 0, 2);
+        var location ={
+            lon:lon,
+            lat:lat,
+            alt:alt
+        }
+        searchAnalysis.createHtmlBollon ("searchDataTable.html",showDataArr[obj.id],location,350,250)
+    }
+
+</script>
+
+</body>
+
+</html>

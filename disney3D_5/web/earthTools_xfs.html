@@ -1,0 +1,175 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" href="css/mainpagestyle.css" />
+
+    <script type="text/javascript" src=" js/lib/jquery.js"></script>
+    <script type="text/javascript" src=" js/lib/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src=" js/CITYPLAN_config.js"></script>
+    <script type="text/javascript" src=" js/moment.min.js"></script>
+    <script src=" js/md5.js"></script>
+    <script type="text/javascript">
+
+		var earthToolHeight = 0;
+
+		var app_id = '310100';
+		var time = new Date;
+		//setFunc_xfs();
+		/***
+		 * 计算MD5
+		 ***/
+		function return_md5(time) {
+			var src = 'app_key=eba8cf67ff587fff&app_id=310100&time=' + time;
+			return hex_md5(src);
+		}
+		//返回时间字符串
+		function return_time() {
+			return moment().format('YYYY-MM-DD HH');
+		}
+
+        function setFunc_xfs(tparams) {
+            getxfsdata();
+            setInterval("getxfsdata()", 2000);
+
+            var  clickItem = tparams.clickItem;
+            earthToolHeight = tparams.earthToolHeight;
+            $(".toolItem li a").click(function(){
+                clickItem($(this).attr("id"), $("#earthTools"));
+            });
+ 
+        }
+		//======================初次链接数据，获取所有传感器最新信号，并筛选异常信号
+        function getxfsdata(){
+			var ajax = {};
+			ajax.data = {};
+			var time = return_time();
+			ajax.url = 'http://disney.fubangyun.cn:9999/sh_disney/getData';
+			ajax.data = {
+				"app_id": app_id,
+				"time": time,
+				"sign": return_md5(time),
+			}
+			ajax.success_fn = function (data) {
+				$("#state").html("已连接");
+			}
+			ajax.failed_fn = function (msg) {
+				$("#state").html("断开");
+			}
+			get_ajax_getall(ajax);
+        }
+		/***
+		 * 封装ajax请求
+		 * ajax 请求数据
+		 **/
+
+		function get_ajax_getall(ajax) {
+			<!-- $.post(ajax.url, JSON.stringify(ajax.data), function (result) { -->
+				<!-- if (result.code == '1') { -->
+					<!-- if (ajax.success_fn) { -->
+						<!-- ajax.success_fn(result.data); -->
+						<!-- var temp = getJsonLength(result.data); -->
+						<!-- $("#totalcount").html(temp); -->
+						<!-- temp = getAbnormalLength(result.data); -->
+						<!-- $("#AbnormalCovertotalcount").html(temp);					 -->
+					<!-- } -->
+				<!-- } else { -->
+					<!-- if (ajax.failed_fn) { -->
+						<!-- ajax.failed_fn(result.msg); -->
+						<!-- $("#totalcount").html('加载中'); -->
+						<!-- $("#AbnormalCovertotalcount").html('加载中');					 -->
+					<!-- } -->
+				<!-- } -->
+			<!-- },'json') -->
+			
+			var xmlhttp = null;
+			if (window.XMLHttpRequest) { // code for IE7, Firefox, Opera, etc.
+				xmlhttp = new XMLHttpRequest();
+			} else if (window.ActiveXObject) { // code for IE6, IE5
+				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			if (xmlhttp != null) {
+				xmlhttp.onreadystatechange = function () {
+					if (xmlhttp.readyState == 4) { // 4 = "loaded"
+						if (xmlhttp.status == 200) { // 200 = "OK"
+							var result = JSON.parse(xmlhttp.responseText);
+							if (result.code == '1') {
+								if (ajax.success_fn) {
+									ajax.success_fn(result.data);
+									var temp = getJsonLength(result.data); 
+									$("#totalcount").html(temp); 
+									temp = getAbnormalLength(result.data); 
+									$("#AbnormalCovertotalcount").html(temp);
+								}
+							} else {
+								if (ajax.failed_fn) {
+									ajax.failed_fn(result.msg);
+									$("#totalcount").html('加载中'); 
+									$("#AbnormalCovertotalcount").html('加载中');								
+								}
+							}
+						} else {
+							//alert("ajxa请求错误:" + xmlhttp.statusText);
+							$("#totalcount").html('加载中'); 
+							$("#AbnormalCovertotalcount").html('加载中');								
+						}
+					}
+				};
+				xmlhttp.open("POST", ajax.url, true);
+				xmlhttp.send(JSON.stringify(ajax.data));
+			}else{
+				alert("你的浏览器不支持ajax.");
+			}			
+		}	
+		
+		function getJsonLength(jsonData) {  
+			var length=0;  
+			for(var ever in jsonData) {  
+			    length++;  
+			}  
+			return length;  
+		}  				
+		function getAbnormalLength(jsonData) {  
+			var length=0;  
+			for(var ever in jsonData) {  
+			    var wp=jsonData[ever].value;//水压
+				var bv=jsonData[ever].status;//电压
+				if(wp>2500 || wp<150 ||bv != '1'){
+					length++;  				
+				}
+			}  
+			return length;  
+		}  		
+
+    </script>
+</head>
+<body>
+    <div id="earthTools">
+
+        <!--<embed src="1.mp3" autostart="true" loop="true" width="200" height="200"></embed>-->
+
+
+        <div class="concact toolItem" id="concact">
+            <ul>
+                <li >
+                    <a  id="state">断开</a>
+                </li>
+                <li >
+                    <a   id="XFSSituation" class="yaz" >已安装[<label id="totalcount" href="#"  >加载中</label>]</a>&emsp;
+
+                    <a  id="XFSAlarmSituation"  class="bj">报警[<label id="AbnormalCovertotalcount" href="#">加载中</label>]</a>
+					
+					<a  id="HistoryAlarmXFSSituation"   >[历史记录]</a></a>
+
+                </li>
+                <li >
+                    <a title="关闭"   id="CloseearthTools" ><img src="image/pageimg/cont2.png" ></a>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+
+
+</body>
+</html>

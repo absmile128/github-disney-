@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<!-- saved from url=(0014)about:internet -->
+<head>
+    <meta charset="UTF-8"/>
+    <title>天气效果 - 雨</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" type="text/css" href="../../css/easyui/default/easyui.css" />
+    <script src="../../js/lib/jquery.min.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+    <script src="../../js/lib/locale/easyui-lang-zh_CN.js"></script>
+    <style>
+       /* html,body{ padding: 5px; }
+        div{ width: 100%; margin: 5px;}
+        input{ height: 15px; width: 50px; }
+        #btnStart{ width: 75px; }
+        #rainHeight{ width: 100px; font-size: 12px; }*/
+        button{ width: 85px; height: 28px;}
+    </style>
+</head>
+<body style="color: #fffffe " >
+<div id="divRainControl" style="margin-left:20px;height:40px;text-align: center; padding-top:20px">
+    <input id="terrainTranScroll"  showTip="false" min="0" max="10" value = "10" rule="['小','大']" style="width:180px;"/>
+</div>
+<script type="text/javascript">
+    document.oncontextmenu = function () {
+        event.returnValue = false;//212221
+    };
+    var earth ="";
+    function setTranScroll(earthObj){
+        earth = earthObj;
+        var bRain = false;
+
+        $("#rainHeight").change(function (){
+            earth.WeatherEffect.SetRainHeight( parseInt($("#rainHeight").val()) || 100);
+        });
+        $("#btnStart").click(function (){
+            earth.WeatherEffect.SetRainEnable(true);
+            earth.WeatherEffect.SetRainType(2);
+            $("#stop").removeAttr("disabled");
+            $("#terrainTranScroll").slider("enable");
+            $("#btnStart").attr("disabled", "disabled");
+        });
+        $("#stop").click(function (){
+            earth.WeatherEffect.SetRainEnable(false);
+            $("#stop").attr("disabled","disabled");
+            $("#terrainTranScroll").slider({value:3});
+            $("#terrainTranScroll").slider("disable");
+            $("#btnStart").removeAttr("disabled");
+        } );
+        //拖动条
+        $("#terrainTranScroll").slider({
+            onChange: function(value){
+                earth.WeatherEffect.SetRainHeight( earth.rainHeight || 100);
+                earth.WeatherEffect.SetRainEnable(true);
+                if(value>=0&&value<2){
+                    earth.WeatherEffect.SetRainType(0);
+                }  else if(value>=2&&value<4){
+                    earth.WeatherEffect.SetRainType(1);
+                }  else if(value>=4&&value<6){
+                    earth.WeatherEffect.SetRainType(2);
+                }  else if(value>=6&&value<8){
+                    earth.WeatherEffect.SetRainType(3);
+                }  else if(value>=8&&value<=10){
+                    earth.WeatherEffect.SetRainType(4);
+                }
+                 //earth.Environment.TerrainTransparency = value * 2.55;  // 0 - 255
+            }
+        });
+        $(window).unload(function (){
+            earth.WeatherEffect.SetRainEnable(false);
+        });
+    }
+
+</script>
+</body>
+</html>

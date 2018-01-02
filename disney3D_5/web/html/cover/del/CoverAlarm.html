@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <!--<meta http-equiv="refresh" content="20">-->
+    <!--其中20指每隔20秒刷新一次页面.-->
+    <title>项目管理</title>
+    <link rel="stylesheet" href="../../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../../css/zTree/zTreeStyle.css"/>
+    <link rel="stylesheet" href="../../../css/common.css"/>
+
+
+    <script src="../../../js/lib/jquery.js"></script>
+    <script src="../../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../../js/lib/locale/easyui-lang-zh_CN.js"></script>
+    <script src="../../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../../js/lib/jquery.xml2json.js"></script>
+    <script src="../../../js/searchAnalysis.js"></script>
+    <script src="../../../js/CITYPLAN_config.js"></script>
+    <script src="../../../js/common.js"></script>
+    <script src="../../../js/lib/jquery.jqpagination.js"></script>
+    <script src="../../../js/search.js"></script>
+    <script>
+
+
+    </script>
+</head>
+<body id="container" class="easyui-layout"  >
+    <div region="north" border="false" split="false" style="height:50px;width:100%;text-align: left; ">
+
+        <div   style="width:100%;margin-top: 10px">
+            <div  style="margin-left: 10px;float:left">
+                <label >井盖编号:</label>
+                <input id="machinecode" style="width: 110px;"/>
+                <button id="btnSearch"  onclick="searchdata()">搜索</button>
+
+            </div>
+        </div>
+
+
+
+
+
+    </div>
+    <div id="div_searchData" region="center" border="false" style="overflow-y: hidden;overflow-x: hidden;"  style="height:100%">
+
+        <div>查询结果： <label id="totalcount_label"></label> <label >（2分钟进行一次刷新）</label></div>
+
+        <table  id="searchData" class="easyui-datagrid" data-options="fitColumns:true,singleSelect:true,rowStyler :rowStyle  " style="height:100px"    >
+            <thead>
+            <tr >
+                <th data-options="field:'listNum',width:50">序号</th>
+                <th data-options="field:'machinecode',width:100">井盖编号</th>
+                <th data-options="field:'alarmcause',width:120" >井盖状态</th>
+
+            </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+          <!--异常井盖信息-->
+            <div style="height: 100px;font-size: 13px;margin-top: 10px;height:45px">
+                <div  style="width: 100px; float: left"><label>当前异常井盖：</label></div>
+                <div style="  margin-left: 100px"><span   id="abnormalinfo">暂无</span>
+            </div>
+         </div>
+
+    </div>
+    <div region="south" border="false" style="height: 50px;overflow:hidden;">
+        <%--  页码开始--%>
+        <ul  class="pagination" style=" width:100%; text-align:center;">
+            <li  class="firstpageli"><img src="../../../image/test/firstpage.png" ></li>
+            <li class="prepageli"><img src="../../../image/test/prepage.png"></li>
+            第
+            <li  class="currentpageli"><input  style="width:20px;" value=' '/></li>
+            页
+            <li class="nextpageli"><img src="../../../image/test/nextpage.png" ></li>
+            <li class="endpageli"><img src="../../../image/test/endpage.png" ></li>
+            共<li  class="totalpageli">&nbsp;</li>页
+        </ul>
+        <%--  页码结束--%>
+        <div style="margin-top: 0px; float: right;margin-right: 10px;">
+            <button id="importExcelBtn"  style="margin-left: 10px;">导出excel</button>
+        </div>
+    </div>
+</div>
+
+
+
+    <div  id="searchtip_div" class="tipdivclass"   > 正在查询.... </div>
+    <div id="nodatatip_div" class="tipdivclass"  > 没有查到相关结果 </div>
+</body>
+</html>

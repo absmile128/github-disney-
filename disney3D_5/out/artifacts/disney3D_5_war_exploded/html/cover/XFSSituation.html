@@ -1,0 +1,681 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+
+    <title> </title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <link rel="stylesheet" href="../../css/common.css"/>
+
+
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/locale/easyui-lang-zh_CN.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+    <script src="../../js/searchAnalysis.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>
+    <script src="../../js/common.js"></script>
+    <script src="../../js/lib/jquery.jqpagination.js"></script>
+    <script src="../../js/search.js"></script>
+    <script src="../../js/cover/handle.js"></script>
+    <script src="../../js/moment.min.js"></script>
+    <script src="../../js/md5.js"></script>	
+     <script src="../../js/statistics.js"></script>
+   <script src="../../js/pageHelper.js"></script>
+	
+    <script>
+        var earth=null;
+        var searchAnalysis =null;
+        var search=null;
+
+        var pageSize = 16; //每页显示条数
+        var pageNo = 1;//页码数（第几页）
+        var totalcount=0;//总数
+        var totalpagecount = 0;//总页数
+        var showDataArr = [];
+        var isfirst=true;//第一次加载
+        var isspatialsearch=false;//是否是空间搜索
+
+        var scStr = " ";
+        var  pcStr = "";
+        //        var IconObjArr=[];
+
+        var   abnormalwellcoverlist=[];//异常井盖数组
+        var cover_layerid= CITYPLAN_config.disney.cover_layerid;
+		
+		var app_id = '310100';
+		var time = new Date;
+	
+		$(function () {  
+			getEarth();
+			$("#searchData_tbl").datagrid({  
+				//双击事件  
+				onDblClickRow: function (index, row) {  
+					var loc=getGIS(row.h_id);
+
+				}  
+			});  
+		})  		
+
+        //获得定位地址
+        function getGIS(expnum) {
+            var location =null;
+            var coverGisdata = getXFSGISInfo(expnum);
+
+            if (coverGisdata == null || coverGisdata.length == 0) {
+                return location;
+            }
+			var pointid = coverGisdata[0].XFS_EXPNO;
+
+            var coordinateArr = coverGisdata[0]["SHAPE"]["Point"]["Coordinates"].split(',');
+            var point = earth.Factory.CreateGeoPoint();
+            for (var i = 0; (i + 2) < coordinateArr.length; i += 3) {
+                point.Longitude = coordinateArr[i];
+                point.Latitude = coordinateArr[i + 1];
+                //point.Altitude = earth.GlobeObserver.GetHeight(point.x, point.y); // 100;coordinateArr[i+2];
+                point.Altitude = earth.Measure.MeasureTerrainAltitude(point.x, point.y);
+            }
+            var location = {
+                lon: point.Longitude,
+                lat: point.Latitude,
+                alt: point.Altitude,
+				pid:pointid,
+            }
+			
+			showDetail(coverGisdata[0], location);
+			earth.GlobeObserver.GotoLookat(location.lon, location.lat, location.alt, 0, 90, 0, 5); //定位
+			highlight(location.pid);
+            return location;
+        }		
+		
+        function getXFSGISInfo(expnum) {
+            var searchDataResult;
+			var xfs_layerid = CITYPLAN_config.disney.xfs_layerid;
+            if (expnum != null & expnum != "" & xfs_layerid != null & xfs_layerid != "") {
+              var  pcStr1 = '&pc=' + '(and,like,XFS_SYBH,' + expnum + ')';
+                 searchDataResult = search.gisSearch(xfs_layerid, pcStr1);
+            }
+            return searchDataResult;
+        }
+
+        function highlight(expnum){
+            if( expnum =="" ) {
+                return;
+            }
+
+
+            var queryPipe = Query.PageHelper(earth);
+            var projectId  =CITYPLAN_config.disney.currentPrjGuid;
+            var pipelineList = StatisticsMgr.initPipelineListsz(projectId);//获取当前工程下的管线图层列表
+
+            for (var i = 0; i < pipelineList.length; i++) {
+                var layerID = pipelineList[i].id;
+                queryPipe.highlightObject(layerID, '管点', null, expnum);
+            }
+        }
+
+		
+		function getXFS(loc){
+	
+			var layerID = CITYPLAN_config.disney.js02_layerid;
+			var feature = null;
+			var filter = "(or,equal,EXPNO,"+ loc.pid +")";
+			var queryType = 16;
+			var queryTableType = 0;
+
+			var layer = earth.LayerManager.GetLayerByGUID(layerID);
+			//paramsLayerNames.push({layerName:layer.name, param:perQueryParam});
+			var subLayer = null;
+			for(var i= 0, len=layer.GetChildCount(); i<len; i++){
+				subLayer = layer.GetChildAt(i);
+				if(subLayer.LayerType == "Container"){
+					break;
+				}
+			}
+			if(subLayer == null){
+				return;
+			}
+
+			var param = subLayer.QueryParameter;
+			if (param == null) {
+				return null;
+			}
+			param.ClearCompoundCondition();
+			param.ClearSpatialFilter();
+			param.ClearRanges();
+
+			param.Filter = "";
+			if(filter!=null){
+				param.Filter = filter;
+			}
+			if(feature!=null){
+				param.SetSpatialFilter(feature);
+			}
+			if(queryTableType!=null){
+				param.QueryTableType=queryTableType;//[0] [0,1]
+			}
+			param.QueryType = queryType;
+			param.PageRecordCount = 1;
+			var result = new Object();
+			result = subLayer.SearchFromGISServer();
+			var bPage = result.GotoPage(0);
+			var json = parent.$.xml2json(bPage);
+		    var records = json.Result.Record;		
+			showDetail(records,loc);
+		
+		}
+		var showBallon = null;
+		var showDetail = function(record, loc) {
+			if (record != null) {
+				if (showBallon) {
+					showBallon.DestroyObject();
+					showBallon = null;
+				}
+				var htmlStr = '';
+				var guid = earth.Factory.CreateGuid();
+				var nn='';
+				showBallon = earth.Factory.CreateHtmlBalloon(guid, "balloon");
+			//		htmlStr = '<table style="font-size:14px;  width: 100%; ">';
+					htmlStr = '<div style="overflow:auto;width:245px;height:145px;">' + 
+						'<table style="font-size:12px;  width: 100%; border-collapse:collapse; border:none">';
+					for (var key in record) {
+						switch(key) {
+							case 'XFS_DZ':
+								nn='地址描述';
+								break;
+							case 'XFS_GXDW':
+								nn='管辖单位';
+								break;
+							case 'XFS_SYBH':
+								nn='水源编号';
+								break;
+							case 'XFS_EXPNO':
+								nn='管点编号';
+								break;
+							default:
+								nn='';
+						}
+						if(nn!=''){
+						   htmlStr += '<tr ><td   class="texttdclass" style="border:solid #ccc 1px">' + nn + '</td><td    class="texttdclass" style="border:solid #ccc 1px">' + record[key] + '</td></tr>';
+
+						}
+ 					}
+					htmlStr += "</table></div>";
+
+					showBallon.SetRectSize(330, 180);
+					showBallon.SetIsTransparence(false);
+				showBallon.SetSphericalLocation(loc.lon, loc.lat, loc.alt);
+				showBallon.SetTailColor(0xffffff00);
+				showBallon.SetIsAddCloseButton(true);
+				showBallon.SetIsAddMargin(true);
+				showBallon.SetIsAddBackgroundImage(true);
+				showBallon.ShowHtml(htmlStr);
+				earth.Event.OnHtmlBalloonFinished = function() {
+					if (showBallon != null) {
+						showBallon.DestroyObject();
+						showBallon = null;
+					}
+					//earth.attachEvent("onPoiClicked",parent.ifEarth.onPoiClicked);
+					earth.Event.OnHtmlBalloonFinished = function() {};
+				}
+			}
+		};
+		
+        function getEarth(earthObj) {
+            earth = earthObj;
+            searchAnalysis = CITYPLAN.searchAnalysis(earth);
+            search=STAMP.Search(earth);
+
+            //窗口变化后，尺寸调整
+            window.onresize = function(){
+                //初始化设置高度
+                var divHeight =$(document).height()-130 ;
+                var divWidth = $(document).width()  ;
+                $('#searchData').datagrid('resize',{
+                    height:divHeight,
+                    width:divWidth
+                });
+            };
+
+
+
+            $(window).trigger("resize");
+
+            //搜索
+            searchdata();
+
+        }
+
+        //格式化单元格提示信息
+        function formatCellTooltip(value){
+            return "<span title='" + value + "'>" + value + "</span>";
+        }
+
+        function onSearchCallback(keyword, spatialObj, layerId) {
+            var    searchResult1 = localSearch(layerId, keyword, spatialObj);
+            setxfsdata(searchResult1) ;
+
+
+        }
+
+        function localSearch (layerid, keyword, spatialObj) {
+            var layerObj = earth.LayerManager.GetLayerByGUID(layerid);
+
+            if (spatialObj == null) {
+                var rect = layerObj.LonLatRect;
+                var vec3s = earth.Factory.CreateVector3s();
+                vec3s.Add(rect.West,rect.North,0);
+                vec3s.Add(rect.East,rect.North,0);
+                vec3s.Add(rect.East,rect.South,0);
+                vec3s.Add(rect.West,rect.South,0);
+                spatialObj = vec3s;
+            }
+            var searchParam = layerObj.LocalSearchParameter;
+            if (searchParam == null) {
+                return;
+            }
+            searchParam.ClearSpatialFilter();
+            if (searchParam == null) {
+                return null;
+            }
+            if (spatialObj != null) {
+                searchParam.SetFilter("", "");
+                searchParam.SetSpatialFilter(spatialObj);
+            }
+            if (keyword != "") {
+
+                searchParam.SetFilter(keyword, "");
+            }
+
+
+            searchParam.HasDetail = true;
+            searchParam.HasMesh = true;
+            searchParam.ReturnDataType = 1; //0 返回所有数据，1 返回xml数据，2 返回渲染数据
+            searchResult = layerObj.SearchFromLocal();
+
+
+
+            var tmpResultXml = searchResult.GotoPage( pageNo-1);
+            var attrData = $.xml2json(tmpResultXml);
+            var data=[];
+
+            if(attrData.SearchResult != null && attrData.SearchResult.total>0 && attrData.SearchResult.ModelResult != null){
+                if(attrData.SearchResult.total>1){
+                    data = attrData.SearchResult.ModelResult.ModelData;
+                } else {
+                    data[0] = attrData.SearchResult.ModelResult.ModelData;
+                }
+            } else{
+                data = null;
+            }
+            return data;
+            //  setxfsdata(data);
+        }
+        //获取基本信息
+        function  searchdata() {
+            isspatialsearch=false;
+            pageNo = 1;//页码数（第几页）
+            totalcount=0;//总数
+            totalpagecount = 0;//总页数
+            //数据列表
+            getxfsdata(false);
+        }
+
+		/***
+		 * 计算MD5
+		 ***/
+		function return_md5(time) {
+			var src = 'app_key=eba8cf67ff587fff&app_id=310100&time=' + time;
+			return hex_md5(src);
+		}
+		//返回时间字符串
+		function return_time() {
+			return moment().format('YYYY-MM-DD HH');
+		}
+		//======================初次链接数据，获取所有传感器最新信号，并筛选异常信号
+        function getxfsdata(iscallback){
+			var ajax = {};
+			ajax.data = {};
+			var time = return_time();
+			ajax.url = 'http://disney.fubangyun.cn:9999/sh_disney/getData';
+			ajax.data = {
+				"app_id": app_id,
+				"time": time,
+				"sign": return_md5(time),
+			}
+			ajax.success_fn = function (data) {
+				//$("#state").html("已连接");
+			}
+			ajax.failed_fn = function (msg) {
+				//$("#state").html("断开");
+			}
+			get_ajax_getall(ajax, iscallback);
+        }
+
+		function get_ajax_getall(ajax, iscallback){		
+			var xmlhttp = null;
+			if (window.XMLHttpRequest) { // code for IE7, Firefox, Opera, etc.
+				xmlhttp = new XMLHttpRequest();
+			} else if (window.ActiveXObject) { // code for IE6, IE5
+				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			if (xmlhttp != null) {
+				xmlhttp.onreadystatechange = function () {
+					if (xmlhttp.readyState == 4) { // 4 = "loaded"
+						if (xmlhttp.status == 200) { // 200 = "OK"
+							var result = JSON.parse(xmlhttp.responseText);
+							if (result.code == '1') {
+								if (ajax.success_fn) {
+									ajax.success_fn(result.data);
+									setxfsdata(result.data,iscallback)
+								}
+							} else {
+								if (ajax.failed_fn) {
+									ajax.failed_fn(result.msg);
+								}
+							}
+						} else {
+							//alert("ajxa请求错误:" + xmlhttp.statusText);
+						}
+					}
+				};
+				xmlhttp.open("POST", ajax.url, true);
+				xmlhttp.send(JSON.stringify(ajax.data));
+			} else {
+				alert("你的浏览器不支持ajax.");
+			}	
+		}	
+
+        //设置页数+基本信息
+        function setxfsdata(data,iscallback){
+            tipdivshow("search",false);
+            tipdivshow("nodata",false);
+			var len = getJsonLength(data);
+            if(data===""||data===null||data===undefined||len==0){
+                tipdivshow("nodata",true);
+                return;
+            }
+            reformpagecount(len,iscallback);
+            reformdata(data);
+        }
+		
+		function getJsonLength(jsonData) {  
+			var length=0;  
+			for(var ever in jsonData) {  
+			    length++;  
+			}  
+			return length;  
+		} 		
+		
+        //设置页数
+        function reformpagecount(len,iscallback){
+			if (len==0){
+                totalcount = 0;
+                totalpagecount = 0;
+            }else {
+                totalcount= len;
+                totalpagecount = Math.ceil (totalcount / pageSize);
+            }
+            if(!iscallback) {
+                if(isfirst){
+                    $("#totalcount_label").html(totalcount+"个");
+                    isfirst=false;
+                } //设置安装总数
+
+                $("#searchtotalcount_label").html(totalcount+"个");  //设置总数
+                //初始化页码控件
+                $('.pagination').jqPagination({
+                    current_page: pageNo,
+                    max_page: totalpagecount,
+                    outerfunc: function (current_page) {
+                        return getfunccallback(current_page);
+                    }
+                });
+            }
+        }
+        //设置数据
+        function reformdata(data){
+			var len = getJsonLength(data);
+            if(data===""||data===null||data===undefined||len==0)
+            {
+                $("#searchData_tbl").datagrid("loadData",[]);
+                return;
+            }
+			getAllHydrantInfo(data);
+
+
+
+        }		
+		function getAllHydrantInfo(sensordata){
+			var ajax = {};
+			ajax.data = {};
+			var time = return_time();
+			ajax.url = 'http://disney.fubangyun.cn:9999/sh_disney/hydrantinfo';
+			ajax.data = {
+				"app_id": app_id,
+				"time": time,
+				"sign": return_md5(time)
+			}
+			ajax.success_fn = function (data) {
+				console.log(data);
+			}
+			ajax.failed_fn = function (msg) {
+				console.log(msg);
+			}
+			getallhydrant_ajax(ajax,sensordata);		
+	
+		
+		
+		}
+		function getallhydrant_ajax(ajax,sensordata) {
+			var xmlhttp = null;
+			if (window.XMLHttpRequest) { // code for IE7, Firefox, Opera, etc.
+				xmlhttp = new XMLHttpRequest();
+			} else if (window.ActiveXObject) { // code for IE6, IE5
+				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			if (xmlhttp != null) {
+				xmlhttp.onreadystatechange = function () {
+					if (xmlhttp.readyState == 4) { // 4 = "loaded"
+						if (xmlhttp.status == 200) { // 200 = "OK"
+							var result = JSON.parse(xmlhttp.responseText);
+							if (result.code == '1') {
+								if (ajax.success_fn) {
+									ajax.success_fn(result.data);
+									reformdata2(result.data,sensordata);
+								}
+							} else {
+								if (ajax.failed_fn) {
+									ajax.failed_fn(result.msg);
+								}
+							}
+						} else {
+							//alert("ajxa请求错误:" + xmlhttp.statusText);
+						}
+					}
+				};
+				xmlhttp.open("POST", ajax.url, true);
+				xmlhttp.send(JSON.stringify(ajax.data));
+			} else {
+				alert("你的浏览器不支持ajax.");
+			}
+		}		
+		function reformdata2(hydrantdata,sensordata){
+            var dataArr = [];//结果集
+			var listNum=0;
+			for(var ever in sensordata) {  
+                var listNum=listNum+1;
+				var temp = sensordata[ever];
+				var s_id = temp.hydrant_id;
+				//查找消防栓编号
+				var h_info = getHydrant(s_id,hydrantdata);
+				
+				var bv='';
+				if(temp.status=='1'){
+					bv='良好';
+				}else{
+					bv='低电压';				
+				}
+				var update_t = temp.update_time;
+				var wpvalue = temp.value;
+				var wp='';
+				if(parseInt(wpvalue) >2500){
+					wp='高水压';  				
+				}else if(parseInt(wpvalue) <150){
+					wp='低水压';  
+				}else{
+					wp='水压正常';  
+				}
+				
+                dataArr.push({"id":listNum,"s_id":s_id,"h_id":h_info.h_id,"h_lat":h_info.lat,"h_long":h_info.long,"bv":bv,"update_t":update_t,"wpvalue":wpvalue,"wp": wp });
+                showDataArr[listNum]= temp ;
+            }
+            $("#searchData_tbl").datagrid("loadData",dataArr);			
+		}
+		function getHydrant(id, data){
+			for(var ever in data) {  
+				var temp = data[ever];
+				var s_id = temp.hydrant_id;
+				var arr;
+				//查找消防栓编号
+				if(id == s_id){
+					var h_id = temp.hydrant_code;
+					var lat = temp.latitude;
+					var lon = temp.longitude;
+					arr={'h_id':h_id,'lat':lat,'long':lon};
+					break;
+				}
+			}
+			return arr;
+		}
+		
+		
+        //回调函数
+        function getfunccallback(current_page) {
+            pageNo = current_page;
+            if(isspatialsearch==false) {
+                getxfsdata(true); //重新获取数据
+            }else {
+                getdatabySpatial(cover_layerid,pcStr,scStr,pageNo,pageSize,true);  //重新获取数据
+            }
+
+        }
+        //行样式
+        function rowStyle(index,row) {
+            if (row.alarmstate == "井盖打开") {
+                return 'background-color:#ffee00;color:red;font-weight:bold;';
+            }
+        }
+  
+ 
+
+        //获得管点编号pointid
+        function getpointid(machinecode) {
+            var pointid ="";
+
+            var coverGisdata = getCoverGISInfo(machinecode);
+
+            if (coverGisdata == null || coverGisdata.length == 0) {
+                return pointid;
+            }
+
+            var pointid = coverGisdata[0]["POINTID"];
+            return pointid;
+        }
+
+        //定位
+    /*    function goToParse(location,info){
+
+            if( location ==null||info==null) {
+                alert("没有对应井盖！");
+                return;
+            }
+            earth.GlobeObserver.GotoLookat(location.lon+0.0002 , location.lat, location.alt, 0, 90, 0, 60); //定位
+            searchAnalysis.createHtmlBollon("CoverSituationTable.html", info, location, 400, 420)
+
+        }*/
+ 
+ 
+        function  getdatabySpatial  (cover_layerid, pcStr,scStr,pageNo,pageSize,iscallback) {
+
+            var  searchDataResult = search.gisSearchBypage(cover_layerid, pcStr, scStr, pageNo, pageSize);
+
+            var totalCount=searchDataResult.TotalCount;
+            var data=searchDataResult.List;
+            var expnolist=[];
+            if(data==null)  {
+                tipdivshow("nodata",true);
+                $("#searchData_tbl").datagrid("loadData",[]);
+                return;
+            }
+            for(var i=0;i<data.length;i++){
+                var expno=data[i]["EXPNO"];
+                if(expno!="") {
+                    expnolist.push(expno);
+                }
+            }
+//            if(covercodelist.length==0){covercodelist=["222531","000528","0662543A"];}
+
+
+            tipdivshow("search",true);
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/TriggerHandler.ashx?action=GetTriggerListByExpnums",
+                data: {
+                    expNums:expnolist
+
+                },
+                cache: false,
+                success: function (data) {
+                    var data2={
+                        TotalCount:totalCount,
+                        List:data.List
+                    }
+                    //设置基本信息表
+                    setxfsdata(data2,iscallback)
+                },
+                error:function (x,t,e) {
+
+                }
+            });
+        }
+
+
+
+    </script>
+</head>
+<body id="container" class="easyui-layout"  >
+	<div id="div_searchData" region="center" border="false" style="overflow-y: hidden;overflow-x: hidden;height:100%;padding:20px 10px;margin-top: 5px;"  >
+		<div style="float:left;">安装消防栓传感器：[ <label id="totalcount_label">加载中</label> <label >]</label></div>
+
+		<div style="float:right;">查询结果： <label id="searchtotalcount_label"></label> <label >（双击定位）</label>
+		</div><br>
+		<table  id="searchData_tbl" class="easyui-datagrid" data-options="fitColumns:true,singleSelect:true,rowStyler:rowStyle   " style="height:300px"    >
+			<thead>
+			<tr >
+				<th data-options="field:'id',width:30 ,formatter:formatCellTooltip">序号</th>
+				<th data-options="field:'h_id',width:100 ,formatter:formatCellTooltip">消防栓序号</th>
+				<th data-options="field:'s_id',width:50 ,formatter:formatCellTooltip,hidden:'true'">传感器序号</th>
+				<th data-options="field:'wp',width:80 ,formatter:formatCellTooltip">水压状态</th>
+				<th data-options="field:'wpvalue',width:50 ,formatter:formatCellTooltip">水压值</th>
+				<th data-options="field:'bv',width:80 ,formatter:formatCellTooltip">电池状态</th>
+				<th data-options="field:'update_t',width:100 ,formatter:formatCellTooltip">最新上报时间</th>
+			</tr>
+			</thead>
+			<tbody>
+
+			</tbody>
+		</table>
+
+	</div>
+
+
+
+<div  id="searchtip_div" class="tipdivclass"   > 正在查询.... </div>
+<div id="nodatatip_div" class="tipdivclass"  > 没有查到相关结果 </div>
+</body>
+</html>

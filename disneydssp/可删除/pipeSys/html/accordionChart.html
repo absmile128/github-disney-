@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+
+	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+	<meta http-equiv="Content-Type" content="textml; charset=UTF-8" />
+	<title>图层列表</title>
+	<style type="text/css">
+		body, div, p {margin: 0; padding: 0; vertical-align:middle; }
+		.spring { text-align: center; float:right;}
+		.spring .button { padding: 10px 0; float:right; }
+		#btn1 { width:254px; height:304px; margin-top:10px;}
+		#btn2 { width:254px; height:404px; margin-top:10px;}
+		#btn3 { width:254px; height:604px;margin-top:10px; }
+		#btn11 { background-image:url('../images/ghgx.png')}
+		#btn12 { background-image:url('../images/sjgx.png')}
+		#btn13 { background-image:url('../images/gcgx.png')}
+		#btn211 { background-image:url('../images/ztly.png')}
+		#btn221 { background-image:url('../images/ztly.png')}
+		#btn231 { background-image:url('../images/ztly.png')}
+		#btn212 { background-image:url('../images/hxq1.png')}
+		#btn222 { background-image:url('../images/hxq1.png')}
+		#btn232 { background-image:url('../images/hxq1.png')}
+		#btn213 { background-image:url('../images/hxq2.png')}
+		#btn223 { background-image:url('../images/hxq2.png')}
+		#btn233 { background-image:url('../images/hxq2.png')}
+		#btn214 { background-image:url('../images/xtq.png')}
+		#btn224 { background-image:url('../images/xtq.png')}
+		#btn234 { background-image:url('../images/xtq.png')}
+		.spring .button .btn10 { width:250px; height:45px; line-height:45px;
+background-image:url('../images/button-string-gray.png'); background-repeat: no-repeat; 
+background-color:transparent; float:top; font-family: "宋体"; font-size: 20px; color:black; border: 0px solid white }
+		.spring .button .btn11 { margin-top:10px; width:250px; height:60px; background-image:url('../images/button-rec-blue1.png'); background-repeat: no-repeat; 
+background-color:transparent; float:top; font-family: "黑体"; font-size: 20px; color:black; border: 1px solid black }
+		.spring .button .btn20 { width:250px; height:45px; line-height:45px;
+background-image:url('../images/button-string-gray.png'); background-repeat: no-repeat; 
+background-color:transparent; float:top; font-family: "宋体"; font-size: 20px; color:black; border: 0px solid white }
+		.spring .button .btn21  { width:250px; height:300px; float:top; border: 0px solid white; }
+		.spring .button .btn211 { margin-top:10px; margin-left:1px; width:250px; height:45px; background-repeat: no-repeat; 
+background-color:#E4E4E4; float:left; margin-top:10px; font-family: "黑体"; font-size: 20px; color:black; border: 1px solid #C8C8C8 }
+		.spring .button .btn30 { width:250px; height:45px; line-height:45px;
+background-image:url('../images/button-string-gray.png'); background-repeat: no-repeat; 
+background-color:transparent; float:top; font-family: "宋体"; font-size: 20px; color:black; border: 0px solid white }
+		.spring .button .btn31  { width:250px; height:300px; float:top; border: 0px solid white }
+		.spring .button .btn311 { margin-left:2px; width:250px; height:200px; float:left; border: 0px solid white }
+		.spring .button .btn3111 { margin-top:5px; width:248px; height:30px; float:left; font-family: "黑体"; font-size: 14px; font-weight:bold; background-color:white; color:white; border: 1px solid #C8C8C8 }
+	</style>
+	<script src="../util/jquery.min.js"></script>
+	<script type="text/javascript" src="../js/statistics.js"></script>
+	<script type="text/javascript" src="../js/index.js"></script>
+	<script>
+	// 扩展过渡效果到 jQuery
+	jQuery.extend(jQuery.easing,{
+        def : "easeOutQuad",
+        swing : function(c, a, b, d, e) {
+            return jQuery.easing[jQuery.easing.def](c, a, b, d, e)
+        },
+        easeOutBounce: function(c, a, b, d, e) {
+            return (a /= e) < 1 / 2.75 ? d * 7.5625 * a * a + b: a < 2 / 2.75 ? d * (7.5625 * (a -= 1.5 / 2.75) * a + 0.75) + b: a < 2.5 / 2.75 ? d * (7.5625 * (a -= 2.25 / 2.75) * a + 0.9375) + b: d * (7.5625 * (a -= 2.625 / 2.75) * a + 0.984375) + b
+        }
+    });
+	// 实现动画
+	$(function(){
+		var springSpeed = 1000; // 动画速度
+		var winWidth=window.document.body.offsetWidth;
+		var theSpringHeight3 = winWidth - $('#btn3').offset().left;
+		var theSpringHeight2 = winWidth - $('#btn2').offset().left;
+		var theSpringHeight1 = winWidth - $('#btn1').offset().left;
+		var theSpringHeight21 = theSpringHeight2-theSpringHeight1;
+		var theSpringHeight =  winWidth - $('.spring').offset().left;
+		$('.spring').css({marginRight: -theSpringHeight2*2});
+	
+			$('#btn11').click(function(){
+				$('.spring').animate({marginRight: -theSpringHeight3}, springSpeed, 'easeOutBounce');
+				$('#btn22').hide();
+				$('#btn23').hide();
+				$('#btn1').hide();
+			});
+			$('#btn12').click(function(){
+				$('.spring').animate({marginRight: -theSpringHeight3}, springSpeed, 'easeOutBounce');
+				$('#btn21').hide();
+				$('#btn23').hide();
+				$('#btn1').hide();
+			});
+			$('#btn13').click(function(){
+				$('.spring').animate({marginRight: -theSpringHeight3}, springSpeed, 'easeOutBounce');
+				$('#btn22').hide();
+				$('#btn21').hide();
+				$('#btn1').hide();
+			});
+
+			$('.btn20').click(function(){
+				$('.spring').animate({marginRight: -theSpringHeight2*2}, springSpeed, 'easeOutBounce');
+				$('#btn1').show();
+				$('#btn21').show();
+				$('#btn22').show();
+				$('#btn23').show();
+			});
+			$('#btn211').click(function(){
+				$('.spring').animate({marginRight: 0}, springSpeed, 'easeOutBounce');
+				$('#btn312').hide();
+				$('#btn313').hide();
+				$('#btn314').hide();
+				$('#btn32').hide();
+				$('#btn33').hide();
+				$('#btn2').hide();
+			});
+			$('#btn212').click(function(){
+				$('.spring').animate({marginRight: 0}, springSpeed, 'easeOutBounce');
+				$('#btn311').hide();
+				$('#btn313').hide();
+				$('#btn314').hide();
+				$('#btn32').hide();
+				$('#btn33').hide();
+				$('#btn2').hide();
+			});
+			$('#btn213').click(function(){
+				$('.spring').animate({marginRight: 0}, springSpeed, 'easeOutBounce');
+				$('#btn314').hide();
+				$('#btn312').hide();
+				$('#btn311').hide();
+				$('#btn32').hide();
+				$('#btn33').hide();
+				$('#btn2').hide();
+			});
+			$('#btn214').click(function(){
+				$('.spring').animate({marginRight: 0}, springSpeed, 'easeOutBounce');
+				$('#btn313').hide();
+				$('#btn312').hide();
+				$('#btn311').hide();
+				$('#btn32').hide();
+				$('#btn33').hide();
+				$('#btn2').hide();
+			});			
+			$('#btn221').click(function(){
+				$('.spring').animate({marginRight: 0}, springSpeed, 'easeOutBounce');
+				$('#btn322').hide();
+				$('#btn323').hide();
+				$('#btn324').hide();
+				$('#btn31').hide();
+				$('#btn33').hide();
+				$('#btn2').hide();
+			});
+			$('#btn222').click(function(){
+				$('.spring').animate({marginRight: 0}, springSpeed, 'easeOutBounce');
+				$('#btn321').hide();
+				$('#btn323').hide();
+				$('#btn324').hide();
+				$('#btn31').hide();
+				$('#btn33').hide();
+				$('#btn2').hide();
+			});
+			$('#btn223').click(function(){
+				$('.spring').animate({marginRight: 0}, springSpeed, 'easeOutBounce');
+				$('#btn324').hide();
+				$('#btn322').hide();
+				$('#btn321').hide();
+				$('#btn31').hide();
+				$('#btn33').hide();
+				$('#btn2').hide();
+			});
+			$('#btn224').click(function(){
+				$('.spring').animate({marginRight: 0}, springSpeed, 'easeOutBounce');
+				$('#btn323').hide();
+				$('#btn322').hide();
+				$('#btn321').hide();
+				$('#btn31').hide();
+				$('#btn33').hide();
+				$('#btn2').hide();
+			});
+			$('#btn231').click(function(){
+				$('.spring').animate({marginRight: 0}, springSpeed, 'easeOutBounce');
+				$('#btn332').hide();
+				$('#btn333').hide();
+				$('#btn334').hide();
+				$('#btn32').hide();
+				$('#btn31').hide();
+				$('#btn2').hide();
+			});
+			$('#btn232').click(function(){
+				$('.spring').animate({marginRight: 0}, springSpeed, 'easeOutBounce');
+				$('#btn331').hide();
+				$('#btn333').hide();
+				$('#btn334').hide();
+				$('#btn32').hide();
+				$('#btn31').hide();
+				$('#btn2').hide();
+			});
+			$('#btn233').click(function(){
+				$('.spring').animate({marginRight: 0}, springSpeed, 'easeOutBounce');
+				$('#btn331').hide();
+				$('#btn332').hide();
+				$('#btn334').hide();
+				$('#btn32').hide();
+				$('#btn31').hide();
+				$('#btn2').hide();
+			});
+			$('#btn234').click(function(){
+				$('.spring').animate({marginRight: 0}, springSpeed, 'easeOutBounce');
+				$('#btn331').hide();
+				$('#btn332').hide();
+				$('#btn333').hide();
+				$('#btn32').hide();
+				$('#btn31').hide();
+				$('#btn2').hide();
+			});
+			$('.btn30').click(function(){
+				$('.spring').animate({marginRight: -theSpringHeight3}, springSpeed, 'easeOutBounce');
+				$('#btn2').show();
+				$('#btn31').show();
+				$('#btn311').show();
+				$('#btn312').show();
+				$('#btn313').show();
+				$('#btn32').show();
+				$('#btn321').show();
+				$('#btn322').show();
+				$('#btn323').show();
+				$('#btn33').show();
+				$('#btn331').show();
+				$('#btn332').show();
+				$('#btn333').show();
+			});
+			$('.btn3111').click(function(){
+				var id = $(this).attr("id"); 
+				var name = $(this)[0].value;   
+				var layerObj = earth.LayerManager.GetLayerByGUID(id);
+				visi = layerObj.Visibility;
+				if(visi == true ){
+					layerObj.Visibility = false;
+					$(this).css("background", "transparent");
+					$(this).css("color", "black");
+				}else{
+					layerObj.Visibility = true;
+					var color = layerObj.CustomColor.toString(16).substr(2,6);//LayerManagement.getLayerColor(name);
+					$(this).css("background", "#"+color.toString());
+					$(this).css("color", "white");
+				}
+			});
+			$('.btn3111').dblclick(function(){
+				var id = $(this).attr("id");  
+				var layerObj = earth.LayerManager.GetLayerByGUID(id);
+				if(layerObj.LayerType === ""){
+					return;
+				}
+				var rect = layerObj.LonLatRect;
+				LayerManagement.flyToLayer(earth, rect); //定位图层
+			});
+
+	});
+	</script>
+</head>
+<body scroll=no>
+ 
+<div class="spring" >
+	<div class="button" id="btn3">
+		<button class="btn30" > 返回区域列表 </button>
+	</div>
+	<div class="button" id="btn2">
+		<button class="btn20" > 返回数据库列表 </button>
+	</div>
+	<div class="button" id="btn1" name="ProjecList">
+		<button class="btn20" > 管线数据库列表 </button>
+	</div>
+</div>
+
+<script type="text/javascript">
+	var earth=null;
+    var pipeLineLayers = top.PIPELINELAYERS;
+    earth = top.earth;
+	LayerManagement.initLayerDataChart(parent.earth);
+    LayerManagement.initPipelineChart(earth, $("#btn1"),$("#btn2"),$("#btn3"));
+ 	parent.ROADLAYERS = ROADLAYERS;
+	parent.DISTRICTLAYERS = DISTRICTLAYERS;
+        
+</script>
+	
+</body> 
+</html>

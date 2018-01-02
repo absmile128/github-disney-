@@ -1,0 +1,344 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+	<meta http-equiv="Content-Type" content="textml; charset=UTF-8" />
+    <title>井室位置对比</title>
+    <link rel="stylesheet" href="../../css/common.css"/>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css" />
+    <style type="text/css">
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+        table#tblResult>tbody>tr {
+            cursor: pointer;
+        }
+        td, th{
+            text-align: center;
+            border-bottom: 1px solid #d3d3d3;
+        }
+        .textWidth{
+        	width: 70px;
+        }
+        .bgRed {
+            background-color: red;
+        }
+		.col1 {
+            width: 120px;
+            text-align: left;
+            border-bottom: 1px solid #d3d3d3;
+        }
+
+        .col2 {
+            width: 120px;
+            text-align: left;
+            border-bottom: 1px solid #d3d3d3;
+        }
+         .w75 {
+            width: 120px;
+            text-align: left;
+        }
+
+        .w125 {
+            width: 120px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body id="container" class="easyui-layout">
+
+<div region="north" border="false" style="height:112px;">
+    <fieldset style="margin: 0;">
+        <legend>参数设置</legend>
+        <div style="height:50px;">
+            <span>设计井室:</span>
+            <input class="textWidth" type="text" id="txtObjId" style="width:69px" readonly/>&nbsp;&nbsp;<button class="smallBtn"  id="btnSelectObject">选取</button></br>
+            <span>导入井室:</span>
+            <select class="textWidth1" type="text" id="importedPipeList" readonly></select>
+        </div>
+        <!--<div>
+            <span>&nbsp;分&nbsp;&nbsp;析&nbsp;&nbsp;半&nbsp;&nbsp;径&nbsp;:</span>
+            <input class="textWidth" type="text" id="txtBufferDist" value="10"/>
+            <span>米</span>
+        </div>-->
+    </fieldset>
+    <div style="padding-top: 10px;">
+        <button id="btnAnalyze"  style="float:right;margin-right:10px;" disabled>分析</button>  
+    </div> 
+    <div style="clear: both;"></div>
+</div>
+<div region="center" border="true" >
+    <table id="tblResult">
+        <thead>
+        <tr>
+            <th class="w75">平面面积差值</th>
+            <th class="w125">面积重叠百分比</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+<div region="south" border="false" style="height: 40px;">
+    <div style="margin-top: 5px; float: right;margin-right: 0px;margin-top:10px">
+        <button id="importExcelBtn" disabled style="float:right;margin-right: 0px;">导出</button>
+        <button id="showResult" name="showResult" style="float:right;margin-right: 10px;" disabled>平面图</button>
+    </div>
+</div>
+<script type="text/javascript" src="../../util/jquery.js"></script> 
+<script type="text/javascript" src="../../util/easyui/jquery.easyui.js"></script>
+<script type="text/javascript" src="../../util/jquery.xml2json.js"></script>
+<script type="text/javascript" src="../../js/PipelineStandard.js"></script>
+<script type="text/javascript" src="../../js/common.js"></script>
+<script type="text/javascript" src="../../js/statistics.js"></script>
+<script type="text/javascript" src="../../js/approvalMgr.js"></script>
+<script type="text/javascript">
+	var designiSPolygon=[];
+	var importdPolygon=[];
+	$(function () {
+        var earth = parent.earth;
+        var bLine = true;
+        var selectedObj = null;  // SEGeoPoints类型
+        var selectedObjStr = "";  // selectedObj的字符串表示：x1,y1,z1,x2,y2,z2
+        var bufPolygon = null;
+        var bufGeoPoints = null;
+        var targetPipeLineType = 0; // PipelineStandard.PipelineType.Unknown
+        var designWell;
+        ApprovalMgr.initImportedPolognForDisAys($("#importedPipeList"));
+        /**
+         * 清除生成的缓冲区对象
+         */
+         var clearBuffer = function(){
+            if (bufPolygon != null){
+                earth.DetachObject(bufPolygon);
+                try{
+                	 earth.Factory.DestoryObject(bufPolygon);
+                }catch(e){
+                }
+                bufPolygon = null;
+            }
+        };
+	    var designPo;
+        var onPickObjectEx = function (pObj) {
+            //alert("pick");
+            pObj.Underground = true;// SEObjectFlagType.ObjectFlagUnderground
+
+            pObj.ShowHighLight();
+            earth.Event.OnPickObjectEx = function () {};
+            earth.Query.FinishPick();
+
+            var parentLayerName = pObj.GetParentLayerName();
+            var cArr=parentLayerName.split("=");
+            var cArr = cArr[1].split("_");
+            //alert(cArr[1]);
+            if(cArr[1]!="room"){
+                alert("请选择井室");
+                return;
+            }
+            var layer = earth.LayerManager.GetLayerByGUID(cArr[0]);
+            targetPipeLineType = layer.PipeLineType;
+            var selectLayerType=earth.LayerManager.GetLayerByGUID(parent.pipeListVal).PipeLineType;
+            if(targetPipeLineType!=selectLayerType){
+            	alert("所选管段与选中阶段图层管线不在同一图层！");
+            	return;
+            }
+            var param = layer.QueryParameter;
+            //井室属于管点图层
+            var usKey = top.getName("US_KEY",0,true);
+            var roomCenter = pObj.SphericalTransform;
+            //var roomCenter = pObj.GetLonLatRect().Center;
+            // http://192.168.10.166/dataquery?service=72af2305-143f-4c15-a99c-95f914704c77&qt=17&dt=polygon&sc=(3,0,1,121.66517271,31.14420564,0)&pg=0,10
+
+            var strConn = layer.GISServer + "dataquery?service=" + cArr[0] + "&qt=17&dt=polygon&sc="+"(3,0,1,"+roomCenter.Longitude+"," + roomCenter.Latitude + "," + roomCenter.Altitude +")"+"&pg=0,100";
+			// var xmlDoc=loadXMLStr(strConn);
+            earth.Event.OnEditDatabaseFinished = function(pRes, pFeature){
+                if (pRes.ExcuteType == parent.excuteType){
+                    var xmlStr = pRes.AttributeName;
+                    var xmlDoc=loadXMLStr(xmlStr);
+                    if(xmlDoc == null){
+                        return;
+                    }
+                    var pipelionPolygonPoints=xmlDoc.getElementsByTagName("Polygon");
+                    for(var m = 0; pipelionPolygonPoints!= null && m < pipelionPolygonPoints.length; m++){
+                        var pipePolygonNode = pipelionPolygonPoints[m];
+                        var coordinateStr = pipePolygonNode.selectSingleNode("Coordinates").text;
+                        var designcoordinateArr=coordinateStr.split(",");
+                        var designPolygon = earth.Factory.CreateGeoPoints();
+                        designPo =   earth.Factory.CreateVector3s();
+                        for(var i=0;i<designcoordinateArr.length;i+=3){
+                            var tempX,tempY;
+                            tempX=designcoordinateArr[i];
+                            tempY=designcoordinateArr[i+1];
+                            designPolygon.Add(parseFloat(designcoordinateArr[i]), parseFloat(designcoordinateArr[i+1]), parseFloat(designcoordinateArr[i+2]));
+                            designPo.Add(parseFloat(designcoordinateArr[i]), parseFloat(designcoordinateArr[i+1]), parseFloat(designcoordinateArr[i+2]));
+                            designiSPolygon.push(tempX+","+tempY+","+0);
+                        }
+                        designiSPolygon.push(designcoordinateArr[0],designcoordinateArr[1],0);
+                        designWell= earth.GeometryAlgorithm.CalculatePolygonAreaSphr(designPolygon);//设计井室面积
+                        }
+                    //designWell= earth.GeometryAlgorithm.CalculatePolygonAreaSphr(designPolygon);//设计井室面积
+                    $("#txtObjId").val(pObj.Name);
+                    $("#btnAnalyze").attr("disabled",false);
+                }
+            }
+            earth.DatabaseManager.GetXml(strConn);
+        };
+
+   		$("#btnSelectObject").click(function () {
+            designiSPolygon=[];
+            importdPolygon=[];
+        	earth.ToolManager.SphericalObjectEditTool.Browse();
+            earth.Event.OnPickObjectEx = onPickObjectEx;
+            earth.Query.PickObjectEx(24);// SEPickObjectType.PickAllObject
+   		});
+        /**
+         * 开始分析
+         * @return {[type]} [description]
+         */
+        $("#btnAnalyze").click(function (){
+            $("#tblResult tbody").empty();
+            importdPolygon=[];
+  			var importGuid=$("#importedPipeList").val();
+            var loadPath = earth.Environment.RootPath + "temp\\PipeData.xml";
+		    var PipeDataXml = earth.UserDocument.LoadXmlFile(loadPath);
+		    var PipeDataDoc =loadXMLStr(PipeDataXml);
+            if(PipeDataDoc == null){
+                return;
+            }
+			var pipePolygonNodes = PipeDataDoc.getElementsByTagName("PipePolygonElement");
+			for(var m = 0; pipePolygonNodes != null && m < pipePolygonNodes.length; m++){
+				var pipePolygonNode = pipePolygonNodes[m];
+				var guid=pipePolygonNode.getAttribute("id");
+				var coordinateStr = pipePolygonNode.selectSingleNode("Coordinates").text;
+				var coordinateArr = coordinateStr.split(",");
+				if(importGuid==guid){
+                    for(var i=0;i<coordinateArr.length;i+=3){
+                        var tempX,tempY;
+                        tempX=coordinateArr[i];
+                        tempY=coordinateArr[i+1];
+                        importdPolygon.push(tempX+","+tempY+","+0);
+                    }
+                    importdPolygon.push(coordinateArr[0],coordinateArr[1],0);
+                }
+
+                var importWellArea;
+				var importPolygon = earth.Factory.CreateGeoPoints();
+				for(var m = 0; m < coordinateArr.length; m = m+ 3){
+					importPolygon.Add(coordinateArr[m], coordinateArr[m+1], coordinateArr[m+2]);
+				}
+                var importPolygon1 = earth.Factory.CreateVector3s();
+                for(var k = 0; k < coordinateArr.length; k = k + 3){
+                    importPolygon1.Add(coordinateArr[k], coordinateArr[k+1], coordinateArr[k+2]);
+                }
+                importWellArea = earth.GeometryAlgorithm.CalculatePolygonAreaSphr(importPolygon);//导入井室面积
+			}
+            //导入的数据
+            var elementPolygon1 = earth.Factory.CreateElementPolygon(earth.Factory.CreateGuid(), "polygon");
+            elementPolygon1.BeginUpdate();
+            elementPolygon1.SetExteriorRing(importPolygon1);
+            elementPolygon1.AltitudeType = 1;
+            elementPolygon1.visibility = false;
+            elementPolygon1.EndUpdate();
+            earth.AttachObject(elementPolygon1);
+            //选中的设计管线
+            var elementPolygon2 = earth.Factory.CreateElementPolygon(earth.Factory.CreateGuid(), "polygon");
+            elementPolygon2.BeginUpdate();
+            elementPolygon2.SetExteriorRing(designPo);
+            elementPolygon2.AltitudeType = 1;
+            elementPolygon2.visibility = false;
+            elementPolygon2.EndUpdate();
+            earth.AttachObject(elementPolygon2);
+            var poly1 =  elementPolygon1.GetPolygon();
+            var poly2 =  elementPolygon2.GetPolygon();
+
+            var designTag = earth.PolygonAlgorithm.PolysRelationship(poly1,poly2);
+            earth.DetachObject(elementPolygon1);
+            earth.DetachObject(elementPolygon2);
+            var subArea=importWellArea-designWell;
+            if(designTag===0){//poly1 和poly2 完全相同
+                subArea =Math.abs( parseFloat(subArea).toFixed(3));
+                var template = "<tr class='bg'><td class='col1'>"+subArea+"</td><td class='col2'>"+"100%"+"</td></tr>";
+            }else if(designTag===1){ //poly1包含poly2
+                subArea =Math.abs( parseFloat(subArea).toFixed(3));
+                var percent=((Math.abs(designWell/subArea))*100);
+                percent = percent+"%";
+                var template = "<tr class='bg'><td class='col1'>"+subArea+"</td><td class='col2'>"+percent+"</td></tr>";
+            }else if(designTag===2){ //poly2包含poly1
+                subArea =Math.abs( parseFloat(subArea).toFixed(3));
+                var percent=((Math.abs(subArea/designWell))*100);
+                percent = percent+"%";
+                var template = "<tr class='bg'><td class='col1'>"+subArea+"</td><td class='col2'>"+percent+"</td></tr>";
+            }else if(designTag===5||designTag===4){//边相离或有重合边缘
+                subArea =Math.abs( parseFloat(subArea).toFixed(3));
+                subArea = parseFloat(subArea).toFixed(3)  ;
+                var template = "<tr class='bg'><td class='col1'>"+subArea+"</td><td class='col2'>"+0+"</td></tr>";
+            }else {//相交
+                subArea =Math.abs( parseFloat(subArea).toFixed(3));
+                //计算相交的区域
+                var a=earth.PolygonAlgorithm.PolysBoolOperation(poly1,poly2,0);//两个多边形做布尔运算 交 并 差 0 1 2
+                var tPolygon;
+
+                var wellArea;
+                if(a){
+                    for(var i=0;i< a.Count;i++){
+                        tPolygon= a.Items(i);
+                    }
+                    var elementPolygonArea = earth.Factory.CreateElementPolygon(earth.Factory.CreateGuid(), "polygon");
+                    elementPolygonArea.BeginUpdate();
+                    elementPolygonArea.SetExteriorRing(tPolygon.GetRingAt(0));
+                    elementPolygonArea.AltitudeType = 1;
+                    elementPolygonArea.visibility = false;
+                    elementPolygonArea.EndUpdate();
+                    earth.AttachObject(elementPolygonArea);
+                    //获取相交范围的面积值
+                    wellArea = elementPolygonArea.Area;
+                    earth.DetachObject(elementPolygonArea);
+                }
+                var percent=((Math.abs(wellArea/designWell))*100);
+                percent = parseFloat(percent).toFixed(3);
+                percent = percent+"%";
+                subArea = parseFloat(subArea).toFixed(3);
+                var template = "<tr class='bg'><td class='col1'>"+subArea+"</td><td class='col2'>"+percent+"</td></tr>";
+            }
+            //ar lengtha = earth.GeometryAlgorithm.CalculatePolygonDistance();
+
+			$("#tblResult tbody").append(template);
+			$("#importExcelBtn").attr("disabled",false);
+	    	$("#showResult").attr("disabled",false);
+		});
+
+		/**
+		 * 功能：【导出Excel】按钮onclick事件
+		 */
+		$("#importExcelBtn").click(function(){
+			var tabObj = $("#tblResult>tbody")[0];
+			var columns = ["平面面积差值","面积重叠百分比"];
+			StatisticsMgr.importExcelByTable(tabObj,columns);
+		});
+
+		$("#showResult").click(function(){
+			createVerSectionChat();
+		});
+
+		window.getParams = function(){
+		 	var params = {
+				importLineList:importdPolygon,
+				designLineList:designiSPolygon,
+				isPloyGon:false
+			};
+			return params;
+		};
+
+	    function createVerSectionChat() {
+			newWin=window.open("AcceptWellPosShow.html","_blank","height=680,width=1050,top=100,left=200,toolbar=no,menubar=no,scrollbars=no, resizable=no,location=no,status=no");
+		}
+
+        $(window).unload(function (){
+        });
+    });
+</script>
+</body>
+</html>
+

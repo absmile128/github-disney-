@@ -1,0 +1,273 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+    <title>运动物体</title>
+    <link rel="stylesheet" href="../../../css/easyui/gray/easyui.css" />
+    <link rel="stylesheet" href="../../../css/easyui/icon.css" />
+    <link rel="stylesheet" href="../../../css/zTree/zTreeStyle.css" />
+    <link rel="stylesheet" href="../../../css/common.css" />
+    <link rel="stylesheet" href="../../../js/lib/ztree/main/treeview.css" type="text/css"/>
+    <style>
+        body{}
+        .hide{ display: none; }
+        button{ width: 55px; height: 28px; margin: 5px;}
+        #divRoleTrack>div{ width:80px; text-align: left; float: left; padding: 3px 10px;}
+        #divChcekControl>div{width:70px; float: right;}
+        input[type=image]{ margin: 0px 0px;}
+        input[type=radio],input[type=checkbox]{ margin-right: 3px;}
+        select{ width:135px;}
+        #divRoleDynObj>div{ width: 100px; float: left;}
+        #divThree>div{ width: 100px; float: left;}
+    </style>     <script  src="../../../js/lib/ztree/main/treeviewcommon.js"></script>
+    <script  src="../../../js/lib/ztree/main/treeview.js"></script>
+    <script  src="../../../js/lib/ztree/main/XmlAccessObject.js"></script>
+    <script src="../../../js/lib/jquery.min.js"></script>
+    <script src="../../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../../js/lib/jquery.xml2json.js"></script>
+</head>
+<body >
+<div  data-options="fit:true">
+    <div id="roam_div" title="漫游" style="padding:10px;overflow: auto; ">
+        <div>
+            <label>运动对象：<select id="selDynamicObj" style="width: 100px;"></select></label>
+        </div>
+        <div style="text-align: center;margin: 10px auto;">
+            <button id="btnEnter" tag="enter" style="width:60px; height: 25px; ">进入</button>
+            <button id="btnStop" tag="enter" style="width:60px; height: 25px; " disabled >退出</button>
+        </div>
+        <div id="divRoleDynObj" style=" margin-top:20px; margin-bottom: 20px;" disabled>
+            <div><label style="font-size:15px;"><input type="radio" value="1"/>第一人称</label></div>
+            <div><label style="font-size:15px;"><input type="radio" id="three"  value="2"  />第三人称</label></div>
+
+        </div>
+        <!--<div  style="height: 1px; width: 200px; right:10px;position: absolute; top: 105px;" >-->
+            <!--<span>-------------------------------</span>-->
+        <!--</div>-->
+        <div style="border-bottom:1px dashed #000000;  margin-top:50px; margin-bottom: 10px;"></div>        <!--虚线-->
+        <div id="divThree" style="text-align:center;margin-top:10px; margin-bottom: 20px;" disabled>
+            <br/>
+           <!-- <div><label><input type="radio"  id="lowTop" value="low" checked/>后上方</label></div>-->
+            <div><label><input type="radio"  id="head" value="left"/>前　　方</label></div>
+            <div><label><input type="radio"  id="left" value="left"/>左　　方</label></div>
+            <br/>
+            <div><label><input type="radio"  id="low" value="low" />后　　方</label></div>
+            <div><label><input type="radio"   id="right" value="right"/>右　　方</label></div>
+            <br/>
+            <!--
+            <div><label><input type="radio"  id="up" value="up"/>俯　　视</label></div>
+            <br/>
+            <div><label><input type="radio"   id="down" value="down"/>仰　　视</label></div>-->
+            <div  style="margin-top:10px; margin-bottom: 20px;"><label><input type="radio" id="free" value="free"/>自定义  </label><br/>
+                <div id="freez0Div" style="margin-top:10px; margin-bottom: 10px;width:180px; "  disabled> 朝向:
+                    <input type="text" id="freez0" value="180" style="width: 32px"  disabled />度(0~360)</div >
+                <div id="freez1Div" style="margin-top:10px; margin-bottom: 10px;width:180px;  " disabled>俯仰:
+                    <input type="text" id="freez1" value="15" style="width: 32px"  disabled />度(-90~90)</div >
+               <!-- <div  style="right:70px;position: absolute; top: 130px">距离：
+                    <input type="text" id="freez2" value="0" style="width: 35px" disabled /> </div >
+                <div  style="right:70px;position: absolute; top: 150px">时间：
+                    <input type="text" id="freez3" value="0" style="width: 35px"  disabled /> </div >-->
+           </div>
+        </div>
+
+        <div style="border-bottom:1px dashed #000000;  margin-top:100px; margin-bottom: 10px;"></div>        <!--虚线-->
+
+        <div  style="text-align:left;margin-top:10px; margin-bottom: 20px;" >
+            <br/>
+            <!-- <div><label><input type="radio"  id="lowTop" value="low" checked/>后上方</label></div>-->
+            <div><label style="font-size:15px;font-weight: bold;">按键：</label></div>
+            <div style="margin-left: 20px;"> <label style="font-size:15px; ">w-前行       s-后退</label></div>
+            <!--<div> <label style="font-size:15px; "></label></div>-->
+            <div  style="margin-left: 20px;"><label style="font-size:15px; ">a-逆时针旋转   d-顺时针旋转 </label></div>
+            <!--<div><label style="font-size:15px; "></label></div>-->
+
+
+        <!--<div style="margin-top:20px; margin-bottom: 20px; width:100%; text-align: left;">-->
+            <!--<div style="margin-top:20px; margin-bottom: 20px; ">-->
+            <!--<label style="font-size:15px; ">按键：</label></div>-->
+            <!--<label style="font-size:15px; ">w-前行;</label>-->
+            <!--<label style="font-size:15px; ">s-后退;</label>-->
+            <!--<label style="font-size:15px; ">a-逆时针旋转;</label>-->
+            <!--<label style="font-size:15px; ">d-顺时针旋转;</label>-->
+
+        </div>
+
+
+    </div>
+</div>
+<script src="../../../js/config.js"></script>
+<script src="../../../js/track.js"></script>
+<script>
+    $(function (){
+         setsize();
+        earth = parent.earth;
+        var trackManager = STAMP.TrackManager(earth);
+
+        $("#divThree :radio").removeAttr("checked");
+        // cy:已看  初始化动态对象列表
+        trackManager.getDynamicObject(function (dynamic){
+            $("#selDynamicObj").append('<option value="' + dynamic.Guid + '">' + dynamic.Name + '</option>');
+        },function (fly){
+            $("#selFlyObj").append('<option value="' + fly.Guid + '">' + fly.Name + '</option>');
+        });
+        //cy:已看 ，根据用户在视图中点击的位置加载运动对象 region 动态物体
+        $("#btnEnter").click(function (){
+            if($(this).attr("tag") == "enter"){
+                trackManager.enter($("#selDynamicObj").val(), function (){
+                    $("#divRoleDynObj :radio").removeAttr("checked");
+                    $("#three").attr("checked", "checked");
+                    earth.GlobeObserver.InitThirdTrack(180,15);
+                    trackManager.startTracking($("#selDynamicObj").val(), 2);
+                    //earth.GlobeObserver.InitThirdTrack(180,15);
+                    $("#head").attr("checked", "checked");
+                    $("#divThree").removeAttr("disabled");
+                    //$("#btnEnter").attr("tag", "out").text("退出");
+                    $("#divRoleDynObj").removeAttr("disabled");
+                    $("#btnStop").removeAttr("disabled");
+                    $("#selDynamicObj").attr("disabled", "disabled");
+                    $("#btnEnter").attr("disabled", "disabled");
+                });
+            }
+        });
+        $("#btnStop").click(function (){
+            $("#divRoleDynObj").attr("disabled", "disabled");
+            $("#divThree :radio").removeAttr("checked");
+            $("#divRoleDynObj :radio").removeAttr("checked");
+            $("#btnStop").attr("disabled", "disabled");
+            $("#selDynamicObj").removeAttr("disabled");
+            $("#divThree").attr("disabled","disabled");
+            $("#btnEnter").removeAttr("disabled");
+            trackManager.out($("#selDynamicObj").val());
+        });
+        $("#divRoleDynObj :radio").click(function (){
+            $("#divThree :radio").removeAttr("checked");
+            //$("#divThree :radio").attr("checked", "checked");
+            $("#divRoleDynObj :radio").removeAttr("checked");
+            $(this).attr("checked", "checked");
+            if($(this).val()==1 ){
+                //top.document.getElementById('earthDiv0').focus();
+                trackManager.startTracking($("#selDynamicObj").val(), $(this).val());
+                $("#divThree").attr("disabled","disabled");
+            }
+            if($(this).val()==2){
+                //trackManager.startTracking($("#selDynamicObj").val(), $(this).val());
+                earth.GlobeObserver.InitThirdTrack(180,15);
+                trackManager.startTracking($("#selDynamicObj").val(), 2);
+                $("#head").attr("checked", "checked");
+                $("#divThree").removeAttr("disabled");
+            }
+        });
+        $("#divThree :radio").click(function (){
+            $("#divThree :radio").removeAttr("checked");
+            $(this).attr("checked", "checked");
+
+            earth.GlobeObserver.InitThirdTrack(180,15);
+            trackManager.startTracking($("#selDynamicObj").val(), 2);
+            if($(this).context.id){
+                //trackManager.startTracking($("#selDynamicObj").val(),3);
+                if($(this).context.id=="low"){
+                    //earth.GlobeObserver.InitThirdTrack(0,15);
+                    earth.GlobeObserver.ChangeThirdTrackHeading(0, $("#selDynamicObj").val());
+                } else if($(this).context.id=="left"){
+                    earth.GlobeObserver.ChangeThirdTrackHeading(90, $("#selDynamicObj").val());
+                } else if($(this).context.id=="right"){
+                    earth.GlobeObserver.ChangeThirdTrackHeading(-90, $("#selDynamicObj").val());
+                }else if($(this).context.id=="up"){
+                    earth.GlobeObserver.ChangeThirdTrackHeading(0, $("#selDynamicObj").val());
+                }else if($(this).context.id=="down"){
+                    earth.GlobeObserver.ChangeThirdTrackHeading(0, $("#selDynamicObj").val());
+                }else if($(this).context.id=="lowTop"){
+                    earth.GlobeObserver.ChangeThirdTrackHeading(0, $("#selDynamicObj").val());
+                } else if($(this).context.id=="head"){
+                    earth.GlobeObserver.ChangeThirdTrackHeading(180, $("#selDynamicObj").val());
+                }else if($(this).context.id=="free"){
+                    $("#freez0").removeAttr("disabled");
+                    $("#freez1").removeAttr("disabled");
+                    $("#freez0Div").removeAttr("disabled");
+                    $("#freez1Div").removeAttr("disabled");
+                    //自定义朝向设置
+                    $("#freez0").change( function(){
+                        var freex= 15;
+                        if($("#freez0").val() > 360 || $("#freez0").val() < 0||isNaN($("#freez0").val())){
+                            alert("输入内容不正确或超出范围，朝向范围0~360");
+                            return;
+                        }
+                        if($("#freez1").val() > 90 || $("#freez1").val() < -90||isNaN($("#freez0").val())){
+                            alert("输入内容不正确或超出范围，俯仰角度范围-90~90");
+                            return;
+                        }
+                        if($("#freez1").val() === 90){
+                            freex = 89.999;
+                        }  else if($("#freez1").val() === -90){
+                            freex = -89.999;
+                        }else{
+                            freex = $("#freez1").val();
+                        }
+                        earth.GlobeObserver.InitThirdTrack($("#freez0").val(),freex);
+                        // earth.GlobeObserver.ChangeThirdTrackHeading($("#freez0").val(), freex);
+                        trackManager.startTracking($("#selDynamicObj").val(), 2);
+                    }); 
+                    //自定义俯仰设置
+                    $("#freez1").change( function(){
+                        var freex= 15;
+                        if($("#freez1").val() > 90 || $("#freez1").val() < -90){
+                            alert("超出范围，俯仰角度范围-90~90");
+                            return;
+                        }
+                        if($("#freez1").val() === 90){
+                            freex = 89.999;
+                        }  else if($("#freez1").val() === -90){
+                            freex = -89.999;
+                        }else{
+                            freex = $("#freez1").val();
+                        }
+                        earth.GlobeObserver.InitThirdTrack($("#freez0").val(),freex);
+                        trackManager.startTracking($("#selDynamicObj").val(), 2);
+                    });
+                    $("#freez0,#freez1").trigger("change");
+                    trackManager.startTracking($("#selDynamicObj").val(), 2);
+                }
+                if($(this).context.id!="free"){
+                    $("#freez0").attr("disabled","disabled");
+                    $("#freez1").attr("disabled","disabled");
+                    $("#freez0").val(180);
+                    $("#freez1").val(15);
+                    $("#freez0Div").attr("disabled","disabled");
+                    $("#freez1Div").attr("disabled","disabled");
+                }
+            }
+        });
+        window.onunload = function (){
+            //if($("#btnEnter").attr("tag") == "out"){
+            if(earth.GlobeObserver){
+                trackManager.out($("#selDynamicObj").val());
+            }
+
+           // }
+        };
+        // endregion
+    });
+
+
+
+
+
+    function  setsize()
+    {
+
+
+        var winHeight= window.parent.document.getElementById('ifResult').offsetHeight;
+        var height=10;
+        if(winHeight-20>0)
+        {
+
+            height=winHeight-20 ;
+        }
+        document.getElementById ("roam_div").style.height =height + "px";
+    }
+
+</script>
+</body>
+</html>

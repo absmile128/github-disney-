@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>管块统计</title>    
+	<meta http-equiv="pragma" content="no-cache">
+	<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+	<meta http-equiv="content-type" content="text/html; charset=gb2312">   
+	<link rel="stylesheet" type="text/css" href="../../css/common.css"/>
+	<style type="text/css">
+		select{			
+			width: 160px;
+			margin: 2px 0px;
+		}
+		#pipeListDiv{
+			width: 150px;
+			height: 100px;
+			border: 1px double #7f9db9;
+			overflow: auto;
+			text-align: left;
+		}
+		
+		#resultDiv{
+			width: 100%;
+			overflow: auto;
+		}	
+		
+		td.spaceForLeft{
+			padding-left : 5px;
+		}	
+	</style>
+</head>  
+<body class="largeDialogBody" oncontextmenu="return false;">
+	<table style="width:100%;height:100%;" cellspacing="0" cellpadding="0">
+		<tr>
+			<td class="borderSty" height="135px" align="center">
+				<table>
+					<tr>
+						<td align="left" colspan="2">
+							指定项目:&nbsp;<select id="projectList" name="projectList"></select>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<div id="pipeListDiv"></div>
+						</td>
+						<td class="spaceForLeft">
+							<button id="selectAllBtn">全选</button><br/><br/>
+							<button id="InvSelectBtn">反选</button><br/><br/>
+							<button id="clearSelectBtn">清空</button>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr>
+			<td height="40px">
+				<button class="largeBtn" id="allAreaBtn">整体区域</button>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<button class="largeBtn" id="cusAreaBtn">自定义区域</button>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2" align="left">
+				行政区划统计:
+			</td>
+		</tr>
+		<tr>
+			<td colspan="2" align="left" height="30px">
+				<select id="districtList" name="districtList"></select>&nbsp;&nbsp;<button class="smallBtn" id="districtAreaBtn">统计</button>
+			</td>
+		</tr>
+		<tr>
+			<td class="borderSty">
+				<table style="width:100%; background-color: #ebeadb;">
+					<tr>
+						<td class="seperatorLine" width="33.3%">宽度X高度</td>
+						<td class="seperatorLine" width="33.3%">条数</td>
+						<td>总长度</td>
+					</tr>					
+				</table>
+				<div id="resultDiv"></div>
+			</td>
+		</tr>
+		<tr>
+			<td style="padding-top: 5px; text-align: right;">
+				<button class="largeBtn" id="importExcelBtn" disabled>导出Excel</button>
+			</td>
+		</tr>
+	</table>
+<script type="text/javascript" src="../../util/jquery.js"></script> 
+<script type="text/javascript" src="../../js/statistics.js"></script>  
+<script type="text/javascript" src="../../js/common.js"></script>  
+<script type="text/javascript">
+	var earth = null;
+	var districtNameList = null;
+	$(function(){	
+		earth = parent.earth;	
+		var divHeight = $("#dlgResult",parent.document).height() - 282;
+		$("#resultDiv").height(divHeight);
+		
+		StatisticsMgr.initProjectList($("select#projectList"));// 初始化“项目”下拉列表
+		StatisticsMgr.addSelectAllEvent($("#selectAllBtn")); //为【全选】按钮添加onclick功能事件
+		StatisticsMgr.addInvSelectEvent($("#InvSelectBtn")); //为【反选】按钮添加onclick功能事件
+		StatisticsMgr.addClearSelectEvent($("#clearSelectBtn")); //为【清空】按钮添加onclick功能事件
+		
+		/**
+		 * 功能："项目"下拉列表的onchange事件
+		 */
+		$("select#projectList").change(function(){
+			var projectId = $("select#projectList").val();
+			StatisticsMgr.initPipelineList(projectId, $("#pipeListDiv"));//初始化管线图层列表
+            districtNameList = StatisticsMgr.initDistrictNameList($("select#districtList"),projectId);//初始化管线图层列表
+            if(districtNameList == null || districtNameList.length == 0){
+                $("button#districtAreaBtn").attr("disabled",true);
+            }else {
+                $("button#districtAreaBtn").removeAttr("disabled");
+            }
+		});
+		//初始化行政区域列表和管线列表。
+		var initProjectId =	$("select#projectList").val();
+		if(initProjectId == null || initProjectId == ""){
+			$("button").attr("disabled",true);
+		}else{
+			$("select#projectList").trigger("change");
+
+		}
+		
+		/**
+		 * 功能：【整体区域】按钮onclick事件
+		 */
+		$("#allAreaBtn").click(function(){
+			var flag = validation();
+			if(flag == false){
+				return;
+			}
+			squarenessClassification(null); //特征分类汇总
+		});
+		
+		/**
+		 * 功能：【自定义区域】按钮onclick事件
+		 */
+		$("#cusAreaBtn").click(function(){
+			var flag = validation();
+			if(flag == false){
+				return;
+			}
+			earth.Event.OnCreateGeometry = function(p,t){ 
+				if(p.Count < 3){
+					return;
+				}
+				squarenessClassification(p);//特征分类汇总
+				earth.Event.OnCreateGeometry = function(){};
+			};
+			earth.ShapeCreator.CreatePolygon();			
+			earth.Event.OnRBDown = function(){
+				earth.ShapeCreator.Clear();
+				earth.Event.OnRBDown = function(){};
+			};
+		});
+		
+		/**
+		 * 功能：根据指定的行政区域ID获取行政区域名称信息
+		 */
+		var getDistrictItemObject = function(districtId){
+			var districtItemObj = null;
+			for(var i = 0; i < districtNameList.length; i++){
+				if(districtNameList[i].districtId == districtId){
+					districtItemObj = districtNameList[i];
+					break;
+				}
+			}
+			return districtItemObj;
+		};		
+				
+		/**
+		 * 功能：行政区划【统计】按钮onclick事件
+		 */
+		$("#districtAreaBtn").click(function(){
+			var flag = validation();
+			if(flag == false){
+				return;
+			}
+			var districtId = $("#districtList").val();
+			var districtItemObj = getDistrictItemObject(districtId);
+			if(districtItemObj == null){
+				return;
+			}
+			var buffer = districtItemObj.districtBuffer;
+			squarenessClassification(buffer);//特征分类汇总
+		});
+		
+		/**
+		 * 功能：【导出Excel】按钮onclick事件
+		 */
+		$("#importExcelBtn").click(function(){
+			var tabObj = $("#resultDiv table")[0];
+			var columns = ["宽度X高度","条数","总长度"];
+			StatisticsMgr.importExcelByTable(tabObj,columns);
+		});
+		
+		/**
+		 * 功能：验证是否有checkbox被选中，如果没有任何一个checkbox被选中，则弹出提示信息
+		 */
+		var validation = function(){
+			if($(":checkbox:checked").length == 0){
+				alert("请先选择管线图层");
+				return false;
+			}
+			return true;
+		};
+		
+		/**
+		 * 功能：管块分类汇总功能代码
+		 */
+		var squarenessClassification = function(spatial){
+			var classResList = [];
+			$(":checkbox:checked").each(function(){
+				var layerId = $(this).val();
+				var layerName = $(this).next("label").html();
+				var classLayer = {
+					layerName : layerName,
+					dataList : []
+				};
+				
+				StatisticsMgr.initPipeConfigDoc(layerId, false, true); //不初始化编码映射文件对象, 初始化空间坐标转换对象
+				var queryTableType = 1; //线表搜索
+				var filter = "(and,greater,US_PWIDTH,0)";
+				var valueRes = StatisticsMgr.getPipelineInfo(layerId+"_container", filter, 17, queryTableType, spatial); //线表搜索使用Container子层
+				if(valueRes != null){	
+					var dataNum = valueRes.RecordCount;				
+				    for(var p=0; p<dataNum/100; p++){
+					    var resultXml = valueRes.GotoPage(p);
+					    var resultDoc = loadXMLStr(resultXml);
+					    var resultRoot = resultDoc.documentElement;
+					    var recordRoot = resultRoot.firstChild;
+					    for(var i=0; i<recordRoot.childNodes.length; i++){
+					    	var recordNode = recordRoot.childNodes[i];
+							var width = parseFloat(recordNode.selectSingleNode("US_PWIDTH").text);
+							var height = parseFloat(recordNode.selectSingleNode("US_PHEIGHT").text);
+							var dataType = width + " X " + height;
+							var dataLen = StatisticsMgr.getLengthByNode(recordNode);
+							var dataObj = getDataObject(dataType, classLayer.dataList);
+							if(dataObj == null){
+								dataObj = {
+									dataType: dataType, 
+									dataNum: 1, 
+									length: dataLen
+								};
+								classLayer.dataList.push(dataObj);
+							}else{
+								dataObj.dataNum = dataObj.dataNum + 1; 
+								dataObj.length = parseFloat((dataObj.length + dataLen).toFixed(3));
+							}
+					    }
+				    }
+				}
+				classResList.push(classLayer);
+			});
+			StatisticsMgr.showClassificationResult(classResList, $("#resultDiv"),3); //显示管块分类汇总结果
+			$("#importExcelBtn").attr("disabled",false);
+		};
+		
+		/**
+		 * 功能：从dataList中，查找类型为dataType对象
+		 */
+		var getDataObject = function(dataType, dataList){
+			var dataObj = null;
+			for(var i=0; i<dataList.length; i++){
+				if(dataType == dataList[i].dataType){
+					dataObj = dataList[i];
+					break;
+				}
+			}
+			return dataObj;
+		};
+	});
+</script>
+</body>
+</html>

@@ -1,0 +1,269 @@
+<html xmlns:v="http://www.w3.org/2001/XMLSchema">
+<head>
+    <title>历史故障井盖统计</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/common.css"/>
+
+
+    <script type="text/javascript" src="../../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.easyui.min.js"></script>
+
+    <script src="../../js/lib/locale/easyui-lang-zh_CN.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+
+
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>　
+    <script src="../../js/common.js"></script>
+    <script src="../../js/lib/jquery.jqpagination.js"></script>
+    <script src="../../js/cover/handle.js"></script>
+
+    <script>
+        var params = window.dialogArguments;
+
+        var pageSize = 16; //每页显示条数
+        var pageNo = 1;//页码数（第几页）
+        var totalcount=0;//总数
+        var totalpagecount = 0;//总页数
+        var resultdata =null;
+
+        $(function () {
+
+            getdata();
+            //窗口变化后，尺寸调整
+            window.onresize = function(){
+                //初始化设置高度
+                var divHeight =$(document).height()-110 ;
+                var divWidth = $(document).width()  ;
+                $('#searchData').datagrid('resize',{
+                    height:divHeight,
+                    width:divWidth
+                });
+            };
+
+            $(window).trigger("resize");
+
+
+        });
+
+        //格式化单元格提示信息
+        function formatCellTooltip(value){
+            var titlestr="";
+            if(value.toString().indexOf(";")>0) {
+                var valuearr = value.split(";");
+                for (var i = 0; i < valuearr.length; i++) {
+                    if (valuearr[i] != "") {
+                        titlestr = titlestr + valuearr[i] + ";\n";
+                    }
+                }
+
+            }else{
+                titlestr=value;
+            }
+
+            return "<span title='" + titlestr + "'>" + value + "</span>";
+        }
+
+        //回调函数
+        function getfunccallback(current_page) {
+            pageNo = current_page;
+            reformdata(); //重新获取数据
+        }
+        function  getdata() {
+             var start= params.info.start;
+             var end=  params.info.end;
+             var keystr=   params.info.keystr;
+
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/CaseHandler.ashx?action=GetHisAlarmInfoCount",
+                data: {
+                    starttime:start,
+                    endtime:end,
+                    str:keystr
+                },
+                cache: false,
+                async:false,
+                success: function (data) {
+
+                    setdata(data)
+
+                },
+                error:function (x,t,e) {
+
+                }
+            });
+        }
+        //设置页数+基本信息
+        function setdata(data,pageNo)         {
+            tipdivshow("search",false);
+            tipdivshow("nodata",false);
+            if(data===""||data===null||data===undefined||data.length==0){
+                tipdivshow("nodata",true);
+                return;
+            }
+            reformpagecount(data.TotalCount);
+            resultdata=data.List;
+            reformdata();
+        }
+
+        //设置页数
+        function reformpagecount(data ) {
+            if (data == null || data == "0" || data == "") {
+                totalcount = 0;
+                totalpagecount = 0;
+            }
+            else {
+                totalcount= parseInt(data);
+                totalpagecount = Math.ceil (parseInt(data)    / pageSize);
+            }
+
+            $("#totalcount_label").html(totalcount+"个");  //设置总数
+                //初始化页码控件
+                $('.pagination').jqPagination({
+                    current_page: pageNo,
+                    max_page: totalpagecount,
+                    outerfunc: function (current_page) {
+                        return getfunccallback(current_page);
+                    }
+                });
+
+        }
+        //设置数据
+        function reformdata()    {
+
+            var dataArr = [];//结果集
+            var beginindex=(pageNo-1)*pageSize ;
+            var endindextemp= pageNo*pageSize-1 ;
+            var endindex=endindextemp<totalcount-1?endindextemp:totalcount-1;
+
+            for(var i=beginindex;i<endindex+1;i++){
+                dataArr.push(resultdata[i]);
+
+            }
+
+            var dataArr2 = [];//结果集
+            for(var j=0;j<dataArr.length;j++){
+                var listNum=j+1;
+
+                var expnum=handlefield("expnum", dataArr[j].ExpNum).valuealias;
+
+                var expnumalias=handlefield("expnumalias",dataArr[j].ExpNum).valuealias;
+                var alarmcount= handlefield("alarmcount",dataArr[j].AlarmCount).valuealias;
+                var reporttimearray=handlefield("reporttimearray",dataArr[j].ReportTimeArray).valuealias;
+                dataArr2.push({"listNum":listNum,"expnum":expnum,"expnumalias":expnumalias ,"alarmcount": alarmcount,"reporttimearray":reporttimearray});
+
+
+            }
+
+            $("#searchData").datagrid("loadData",dataArr2);
+        }
+
+        /**
+         * 功能：将table导出成Excel文档
+         * 参数：tableId - 要导出的表对象; columns - 列标题数组
+         * 返回：无
+         */
+        function importExcelByTable(){
+            var xls = null;
+            try{
+                xls = new ActiveXObject("Excel.Application");
+            }catch(e){
+                alert("无法启动Excel\n\n如果您确信您的电脑中已经安装了Excel, 那么请调整IE的安全级别\n" +
+                        "具体的操作：\n" +
+                        "工具 -> Internet选项 -> 安全 -> 自定义级别 -> 对没有标记为安全的ActiveX进行初始化和脚本运行 -> 启用");
+                return;
+            }
+            xls.visible = true;
+
+
+
+            try{
+                var rootpath=   getRootPath()
+                var path=rootpath+"/xls/historyalarmcover.xlsx"  ;
+                var newBook = xls.Workbooks.Open(path);//这里的Add方法里的参数是模板的路径
+                var  oSheet=newBook.ActiveSheet;
+                for(var i=0;i<resultdata.length;i++){
+
+                    oSheet.Cells(i+2,1).value =resultdata[i].ExpNum;
+                    oSheet.Cells(i+2,2).value =resultdata[i].AlarmCount;
+                    oSheet.Cells(i+2,3).value =resultdata[i].ReportTimeArray;
+
+
+                    }
+
+            }
+            catch(e){
+                alert("导出Excel错误！");
+                return;
+            }
+
+            xls.UserControl = true;
+            xls = null;
+            alert("成功导出Excel");
+
+        }
+
+    </script>
+</head>
+
+<body id="container" class="easyui-layout">
+<div region="north" border="false" split="false" style="height:40px;text-align: left;text-align: center;vertical-align: middle ">
+
+            <label style="font-size: 20px;font-weight: bold;margin-top: 20px">历史故障井盖统计表格</label>
+
+</div>
+<div id="div_searchData" region="center" border="false" style="overflow-y: hidden;overflow-x: hidden;"  style="height:100%">
+    <div>查询结果： <label id="totalcount_label">0个</label> </div>　
+    <table  id="searchData" class="easyui-datagrid" data-options="fitColumns:true,singleSelect:true "   style="height:100px" >
+
+        <thead>
+        <tr >
+            <th data-options="field:'listNum',width:20">序号</th>
+            <!--<th data-options="field:'machinecode',width:100">井盖编号</th>-->
+            <th data-options="field:'expnumalias',width:50 ,formatter:formatCellTooltip">井盖编号</th>
+            <th data-options="field:'expnum',width:100 ,formatter:formatCellTooltip,hidden:'true'">井盖编号</th>
+            <th data-options="field:'alarmcount' ,formatter:formatCellTooltip ,width:50">报警次数</th>
+            <th data-options="field:'reporttimearray' ,formatter:formatCellTooltip ,width:100 ">报警时间序列</th>
+
+        </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+</div>
+
+
+<div region="south" border="false" style="height: 50px;overflow:hidden">
+    <%--  页码开始--%>
+    <ul  class="pagination" style=" width:100%; text-align:center;">
+        <li  class="firstpageli"><img src="../../image/test/firstpage.png" ></li>
+        <li class="prepageli"><img src="../../image/test/prepage.png"></li>
+        第
+        <li  class="currentpageli"><input  style="width:20px;" value=' '/></li>
+        <li>页</li>
+        <li class="nextpageli"><img src="../../image/test/nextpage.png" ></li>
+        <li class="endpageli"><img src="../../image/test/endpage.png" ></li>
+        共<li  class="totalpageli">&nbsp;</li> <li>页</li>
+    </ul>
+    <%--  页码结束--%>
+    <div style="margin-top: 0px; float: right;margin-right: 10px;">
+
+        <button id="exportdata_btn"  style="margin-left: 10px;" onclick="importExcelByTable()">导出表格</button>
+    </div>
+</div>
+
+
+
+<div  id="searchtip_div" class="tipdivclass"   > 正在查询.... </div>
+<div id="nodatatip_div" class="tipdivclass"  > 没有查到相关结果 </div>
+
+
+
+</body>
+</html>

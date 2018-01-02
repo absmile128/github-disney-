@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>附件查看</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css" />
+    <link rel="stylesheet" href="../../css/easyui/icon.css" />
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css" />
+    <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.ztree.core-3.5.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+</head>
+<body id="container" class="easyui-layout" >
+<div region="center" id="centerDiv"  border="false" style="padding: 5px;">
+    <ul id="planTree" class="ztree"></ul>
+</div>
+<script src="../../js/common.js"></script>
+<script src="../../js/CITYPLAN_config.js"></script>
+<script src="../../js/project.js"></script>
+<!--<script src="../../js/attachment.js"></script>-->
+    <script>
+        $(function () {
+            //如果当前方案处以编辑状态并且有建筑选中的情况下 附件查看功能展示的是"建筑附件" 否者是项目附件
+            var earth = parent.earth;
+            var atuoVue = top.document.getElementById("atuoVueObj");
+            var buildID = ""//todo:选择功能选中建筑的id
+            var projManager = CITYPLAN.ProjectManager(earth);
+            //var attachment = CITYPLAN.Attachment(earth);
+
+            var attachment = top.attachment;
+            //返回当前审批项目的项目id
+            var proId = projManager.loadApproveXML();
+            //根据项目id获取方案信息
+            var proData = projManager.getPlanData(proId);
+            //建筑附件 
+            //var buildNodes = projManager.getBuildingDataByPlanId(proData[0]["PLAN.ID"]);
+            //var buildIDs = [];
+            //附件包括 项目附件 方案附件与建筑附件
+            function attachPlan(){//项目附件
+                var nodes = {id:1, pId:0, name:"附件",open:true,isParent:true};
+                var planNodes =[];
+                planNodes.push({id:proId,name:"项目附件",pId:1,open:true,isParent:true});
+                $.each(proData,function(i,node){
+                    var len = proData.length;
+                    planNodes.push({id:node["CPPLAN.ID"],name:node["CPPLAN.NAME"]+"附件",pId:1,open:true,isParent:true});
+                });
+
+                // if(buildNodes && buildNodes.length > 0){
+                //     for(var g = 0; g < buildNodes.length; g++){
+                //         buildIDs.push(buildNodes[g]["BUILDING.ID"]);
+                //     }
+                // }
+                // var buildNode = {id:"jianzhu", pId:1, name:"建筑附件",open:true,isParent:true};
+                //planNodes.push(buildNode);
+                //attachment.setBuildNodes(buildIDs);
+                nodes.children =  planNodes;
+                var len = planNodes.length;
+                // for(var loop = 0; loop < planNodes.length; loop++){
+                //     attachment.searchAttachment(planNodes[loop].id, loop, len, planNodes[loop], nodes, $("#planTree"));
+                // }
+                attachment.searchAttachment2(planNodes, len, nodes, $("#planTree"));
+            }
+            var isEdit = false;
+            if(top.currentPlanLayers && top.currentPlanLayers.length){
+                for(var r = 0; r < top.currentPlanLayers.length; r++){
+                    if(top.editLayers[top.currentPlanLayers[r]].Editable){
+                        isEdit = true;
+                    }
+                }
+            }
+
+
+
+            if(isEdit && earth.SelectSet.GetCount()){
+                //打开建筑附件
+                attachBuildings();
+            }else{
+                //打开项目附件与方案附件
+                attachPlan();
+            }
+            
+            function attachBuildings(){
+                var temps = [];
+                var models = [];
+                var layersNum  = top.editLayers.length;
+                for (var i = 0; i < earth.SelectSet.GetCount(); i++){
+                    var model = earth.SelectSet.GetObject(i);
+                    //alert(model.Guid);
+                    temps.push(model.Guid);
+                    if(model.Editable){
+                        models.push(model.Guid);
+                    }
+                }
+                var selectModels = [];
+                for(var j = 0; j < models.length; j++){
+                    var guid = models[j];
+                    for(var layerGuid in top.editLayers){
+                        var layer = top.editLayers[layerGuid];
+                        if(layer.DataLayerType === 1 && layer.GetObjByGuid(guid)){//说明是建筑图层
+                            selectModels.push(guid);
+                        }
+                    }
+                }
+                selectModels;
+                //alert(model.Guid);model.Guid .GetObjByGuid()
+                //根据建筑的GUID从CPAttachment附件表中查询(要排除总平图)
+                var nodes = {id:1, pId:0, name:"附件",open:true,isParent:true};
+                var buildNode = {id:"jianzhu", pId:1, name:"建筑附件",open:true,isParent:true};
+                nodes.children =  [buildNode];
+                //attachment.setBuildNodes([model.Guid]);
+
+                attachment.searchPlanBuilds(buildNode, nodes, selectModels, $("#planTree"));   
+            };
+
+            $(window).unload(function(){
+                //关闭右侧面板
+                //attachment.closeAttachmentDialog();
+                //清除按钮的选中状态
+                var eventObj = top.$("#attachmentTag");
+                if(eventObj.hasClass("selected")){
+                    eventObj.removeClass("selected");
+                }
+                //关闭exe
+                
+            });
+        });
+    </script>
+</body>
+</html>

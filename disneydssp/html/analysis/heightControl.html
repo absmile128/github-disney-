@@ -1,0 +1,299 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+    <title>控高分析</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/common.css"/>
+    <style>
+        div[region=north]>div {
+            margin: 5px;
+        }
+
+        input {
+            width: 125px;
+        }
+
+        select {
+            width: 130px;
+        }
+
+        label {
+            display: inline-block;
+            width: 75px;
+        }
+
+        button {
+            width: 100px;
+            height: 30px;
+        }
+    </style>
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+</head>
+<body id="container" class="easyui-layout" oncontextmenu="return false;">
+<div region="north" border="false" split="false" style="height:150px;width:100%;text-align: center;">
+    <div style=" text-align: center;margin-top: 20px;">
+
+                    <label for="txtHeight" style="display: inline" >控高:&nbsp;&nbsp;&nbsp;</label>
+
+                    <input type="text" id="txtHeight"   style="display: inline" />
+
+                    <label  style="display: inline">米  </label>
+
+
+    </div>
+    <div >
+
+        <label id="txtdescription"  style="display: inline" ></label>
+    </div>
+
+    <!--<hr style="margin-top: 20px;"/>-->
+    <div style="border-bottom:1px dashed #000000;margin-top: 20px;"></div>        <!--虚线-->
+    <div  style=" text-align: center;margin-top: 20px;">
+        <!--<button class="largeBtn"    id="btnAnalysis" >开始分析</button>-->
+        <button class="normal2Btn"    id="btnAnalysis" >开始分析</button>
+
+
+    </div>
+</div>
+<div id="div_tblResult" region="center" border="false" split="true" style="overflow: auto;  margin-top: 20px;  display: none">
+    <table id="tblResult" class="easyui-datagrid" fit="true" border="true" data-options="
+                rownumbers:true,
+                singleSelect:true,
+                autoRowHeight:false,
+                pagination:false,
+               rowStyler: funcrowStyler"
+
+    >
+        <thead>
+        <tr style="text-align: center">
+            <th field="jzmc">建筑名称</th>
+            <th field="gd" data-options="styler:cellStyler" >高度(m)</th>
+            <th field="cg">超高(m)</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+<script src="../../js/CITYPLAN_config.js"></script>
+<script src="../../js/project.js"></script>
+<script src="../../js/common.js"></script>
+<script>
+    var earth = parent.earth;
+    var boxes = [];   // 控高盒
+    var projManager = CITYPLAN.ProjectManager(earth);
+    var node = parent.currentSelectedNode;
+    $(function () {
+        var highLightObjArr = [];
+        var init = function () {
+            if (node) {
+                if (node.type == "PLAN") {
+                    $("#btnAnalysis").attr("disabled", false);
+                    //读规划的高度值
+                    getProjectJZXG();
+                }
+            }
+        }
+        init();
+
+        //已看
+        var clearBoxes = function () {
+            $.each(boxes, function (i, box) {
+                earth.DetachObject(box);
+            });
+            boxes = [];
+        };
+        //已看
+        var stopHightLight = function () {
+            if (highLightObjArr.length) {
+                for (var i = 0; i < highLightObjArr.length; i++) {
+                    var obj = highLightObjArr[i];
+                    try {
+                        if (obj) {
+                            obj.StopHighLight();
+                        }
+
+                    } catch (e) {
+
+                    }
+                }
+                highLightObjArr = [];
+            }
+        };
+        //已看
+        var createBoxByParcelLayerId = function (parcelLayerId, height) {
+            clearBoxes();
+          /*
+            if (parcelLayerId) {
+                var ids = parent.currentLayerIdList;//所有的现状图层id
+                for (var i = 0; i < ids.length; i++) {
+                    var currentlayer = parent.editLayers[ids[i]];//从数据库图层中取出现状图层
+                    if (currentlayer) {
+                        var vect3 = parent.ploygonLayersVcts3[parcelLayerId];//规划用地的范围即使现状图层的范围，抠出现状图层的范围
+                        if (vect3) {
+                            var volume = earth.Factory.CreateElementVolume(earth.Factory.guid, "");
+                            volume.BeginUpdate();
+                            var newPolygon = earth.Factory.CreatePolygon();
+                            newPolygon.AddRing(vect3);
+                            volume.SetPolygon(1, newPolygon);   // SECoordinateUnit.Degree
+                            volume.height = height;
+                            volume.FillColor = 0x50FFFFFF;
+                            volume.EndUpdate();
+                            if (projManager.IsValid(vect3)) {
+                                volume.SphericalTransform.SetLocationEx(vect3.X, vect3.Y, vect3.Z);
+                            }
+                            earth.AttachObject(volume);
+                            boxes.push(volume);
+                        }
+                    }
+                }
+            }
+            */
+            //修复bug:无现状数据时不生成控高盒
+            if(parcelLayerId){
+                var vect3 = parent.ploygonLayersVcts3[parcelLayerId];//用规划用地的范围生成控高盒
+                if (vect3) {
+                    var volume = earth.Factory.CreateElementVolume(earth.Factory.guid, "");
+                    volume.BeginUpdate();
+                    var newPolygon = earth.Factory.CreatePolygon();
+                    newPolygon.AddRing(vect3);
+                    var cp = newPolygon.GetCenterPoint();
+                    var ch = earth.Measure.MeasureTerrainAltitude(cp.X, cp.Y);
+                    var v3s = newPolygon.GetRingAt(0);
+                    for(var j = 0;j < v3s.Count;j++){
+                        v3s.SetAt(j, v3s.Items(j).X, v3s.Items(j).Y, ch);
+                    }
+                    volume.SetPolygon(1, newPolygon);   // SECoordinateUnit.Degree
+                    volume.height = height;
+                    volume.FillColor = 0x50FFFFFF;
+                    volume.EndUpdate();
+                    if (projManager.IsValid(vect3)) {
+                        volume.SphericalTransform.SetLocationEx(vect3.X, vect3.Y, vect3.Z);
+                    }
+                    earth.AttachObject(volume);
+                    boxes.push(volume);
+                }
+            }
+        };
+
+
+
+        //已看
+        $(window).unload(function () {
+       if(parent.earth == null){
+                return;
+            }
+            clearBoxes();//清空控规盒
+            stopHightLight();//清空高亮
+            earth.SelectSet.Clear();//清空选泽
+        });
+
+        //已看
+        $("#btnAnalysis").click(function () {
+            $("#div_tblResult").css("display", "none");
+            var projHeight = $("#txtHeight").val();
+            if(isNaN(projHeight)){
+                alert("请输入数字!");
+                return;
+            }
+            var dataArr = [];
+            $("#tblResult>tbody").empty();
+            $("#tblResult").datagrid("loadData", []);
+
+            var projId = node.projectId;
+            var planId = node.id;
+            var parcelLayerId = node.parcelId;
+            createBoxByParcelLayerId(parcelLayerId, projHeight);    //cy:生成控制盒
+            var fieldName, fieldFloor, fieldFloorHeight;    // 数据库中的字段名称
+
+            var buildingData = projManager.getBuildingDataByPlanId(planId);
+            var planLayers = projManager.getLayerIdsByPlanId(planId);
+            stopHightLight();//清空高亮
+            $.each(buildingData, function (i, buildData) {
+                var height = parseFloat(buildData["CPBUILDING.JZGD"]);
+                var buildId = buildData["CPBUILDING.ID"];
+                var cg = height - projHeight;
+                for (var j = 0; j < planLayers.length; j++) {
+                    var editLayer = parent.editLayers[planLayers[j]];
+                    if (editLayer && editLayer.DataLayerType == 1 && (editLayer.Name.toLowerCase().indexOf("buildingsmodel".toLowerCase()) != -1)) {
+                        var obj = editLayer.GetObjByGuid(buildId);
+                        if (obj && cg > 0) {
+                            obj.HightLightIsFlash(false);  //cy:高亮不闪烁
+                            obj.ShowHighLight();  //cy:设置高亮闪烁
+                            highLightObjArr.push(obj);
+                        }
+                    }
+                }
+
+
+                dataArr.push({"jzmc": buildData["CPBUILDING.NAME"], "gd": height.toFixed(3), "cg": (height - projHeight), obj: obj});
+            });
+            if(dataArr.length>0){
+                $("#div_tblResult").css("display", "block");
+            $("#tblResult").datagrid("loadData", dataArr);
+            }
+        });
+        //已看 datagrid双击事件
+        var dbclick = function (rowIndex, rowData) {
+            var rows = $("#tblResult").datagrid("getRows");
+            var obj = rows[rowIndex].obj;
+            if (obj) {
+                projManager.centerObject(obj);
+            }
+        }
+        var clickCell = function (rowIndex, field, value) {
+            var rows = $("#tblResult").datagrid("getRows");
+            // alert(rows[rowIndex])
+            //goToParse(rows[rowIndex]);
+        }
+
+        //已看 datagrid 设置
+        $("#tblResult").datagrid({
+            onDblClickRow: dbclick,
+            onClickCell: clickCell
+
+        });
+    });
+
+    //已看
+    function cellStyler(value, row, index) {
+        var projHeight = $("#txtHeight").val();
+        if (value > parseFloat(projHeight)) {
+         return 'background-color:#ffee00;color:red;font-weight:bold;';
+
+        }
+    }
+
+
+
+    function   funcrowStyler(index,row){
+        var projHeight = $("#txtHeight").val();
+        if (row.gd > parseFloat(projHeight)) {
+
+          return 'background-color:#ffee00;';
+//        return 'background-color:red;font-weight:bold;';
+        }
+    }
+
+    //cy:初始化的时候读取规划用地的限高
+    function   getProjectJZXG() {
+        var projId = node.projectId;
+
+        var projectJZXG = parseFloat(projManager.getProjectJZXG(projId)[0]);
+
+           $("#txtHeight").val(projectJZXG) ;
+            if(projectJZXG>0)
+            {
+            $("#txtdescription").text("(用地限高："+projectJZXG+"米)");
+             }
+
+
+    }
+</script>
+</body>
+</html>

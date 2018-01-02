@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>埋深统计</title>
+	<meta http-equiv="pragma" content="no-cache">
+	<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+	<meta http-equiv="content-type" content="text/html; charset=gb2312"> 
+	<link rel="stylesheet" type="text/css" href="../../util/easyui/themes/default/easyui.css"/>
+    <link rel="stylesheet" type="text/css" href="../../css/common.css"/>
+    <style type="text/css">
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+        table#tblResult>tbody>tr{
+            cursor: pointer;
+        }
+        td, th{
+            text-align: center;
+            border-bottom: 1px solid #d3d3d3;
+        }
+        .w75 {
+            width: 45px;
+        }
+
+        .w125 {
+            width: 65px;
+        }
+        .bgRed{
+            background-color: red;
+        }
+    </style>
+</head>
+<body id="container" class="easyui-layout">
+<div region="north" border="false" style="height:150px;">
+    <fieldset style="margin: 0;">
+        <legend>参数设置</legend>
+        <div id="bufferParamDiv" style="padding-bottom: 5px;">
+	            <span>指定项目:</span>
+	            <select id="projectList" name="projectList" style="width: 140px;"></select>
+       	</div>
+        <div style="width:100%; height:25px;">
+            <label for="selLayers">指定图层:</label>
+            <select id="selLayers" style="width:140px;"></select>
+        </div>
+    </fieldset>
+    <div style="height:25px; padding:5px 0px 0px 0px;">
+        <button class="largeBtn" id="btnAllRegionSelect" style="float:left;">整体区域</button>
+        <button class="largeBtn" id="btnPolygonRegion" style="float:right;">多边形区域</button><br/>
+    </div>
+    <div style="height:40px; padding:5px 0px 0px 0px;">
+ 		行政区划统计:<br/>
+        <select id="districtList" name="districtList" style="width:150px;"></select>&nbsp;
+        <button class="smallBtn" id="districtAreaBtn">统计</button>
+    </div>
+</div>
+<div region="center" border="true">
+    <table id="tblResult">
+        <thead>
+        <tr>
+            <th class="w75">编&nbsp;&nbsp;&nbsp;号</th>
+            <th class="w125">起点埋深</th>
+            <th class="w125">终点埋深</th>
+            <th class="w125">埋深标准</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+</div>
+<div region="south" border="false" style="height: 30px;">
+	<div style="margin-top: 5px;float: left;">
+		<button class="largeBtn" id="importExcelBtn" disabled style="margin-left: 10px;">导出Excel</button>
+	</div>
+	<div style="margin-top: 5px; float: right;margin-right: 10px;">
+		<input type="checkbox" id="showResult" name="showResult" disabled>显示结果
+	</div>
+</div>
+<script type="text/javascript" src="../../util/jquery.js"></script> 
+<script type="text/javascript" src="../../util/easyui/jquery.easyui.js"></script>
+<script type="text/javascript" src="../../util/jquery.xml2json.js"></script>
+<script type="text/javascript" src="../../js/PipelineStandard.js"></script>
+<script type="text/javascript" src="../../js/statistics.js"></script> 
+<script type="text/javascript" src="../../js/common.js"></script>  
+<script type="text/javascript">
+	var earth = null;
+	var districtNameList = null;
+    $(function () {
+        //var pipeLineLayers = top.PIPELINELAYERS;
+        earth = top.earth;
+		StatisticsMgr.initProjectList($("select#projectList"));// 初始化“项目”下拉列表
+		/**
+		 * 功能："项目"下拉列表的onchange事件
+		 */
+		$("select#projectList").change(function(){
+			var projectId = $("select#projectList").val();
+			StatisticsMgr.initPipelineSelectList(projectId, $("#selLayers"));//初始化管线图层列表
+            districtNameList = StatisticsMgr.initDistrictNameList($("select#districtList"),projectId);//初始化管线图层列表
+            if(districtNameList == null || districtNameList.length == 0){
+                $("button#districtAreaBtn").attr("disabled",true);
+            }  else {
+                $("button#districtAreaBtn").removeAttr("disabled");
+            }
+		});
+		//初始化行政区域列表和管线列表。
+		var initProjectId =	$("select#projectList").val();
+		if(initProjectId == null || initProjectId == ""){
+			$("button").attr("disabled",true);
+		}else{
+			$("select#projectList").trigger("change");
+
+		}
+		
+        /**
+         * 在搜索的结果集中根据key值确定具体的对象
+         * @param searchResult  搜索结果集
+         * @param key           对象的US_KEY值
+         * @return {*}          返回匹配的对象
+         */
+        var filterByKey = function(searchResult, key){
+            var obj = null;
+            if (searchResult.RecordCount === 0){
+                return null;
+            }
+            searchResult.GotoPage(0);
+            for (var i = 0; i < searchResult.RecordCount; i++){
+                obj = searchResult.GetLocalObject(i);
+                if (null == obj) continue;
+                if (obj.Name == key){
+                    obj.SetObjectFlags(2);   // SEObjectFlagType.ObjectFlagUnderground
+                    obj.SetRenderState(2, -1);   // SERenderStateType.RenderStateDepthBias
+                    break;
+                }
+            }
+            return obj;
+        };
+
+        /**
+         * 高亮闪烁显示
+         * 作为表格的行的双击事件处理函数，其可见范围需在window全局作用域！
+         * @param layerID  图层ID
+         * @param type     对象类型：point / line
+         * @param guid     对象的GUID
+         * @param key      对象的US_KEY值
+         */
+         window.highlightObject = function (layerID, type, guid, key,flag) {
+            var layer = earth.LayerManager.GetLayerByGUID(layerID);
+            var i = 0;
+            var subLayer = null;
+            var searchResult = null;
+            var obj = null;
+            for(i=0;i<layer.GetChildCount();i++){
+                subLayer = layer.GetChildAt(i);
+                if(type === "point"){
+                    if(subLayer.LayerType === "Container") continue;
+                }else if(type === "line"){
+                    if(subLayer.LayerType !== "Container") continue;
+                }
+
+                subLayer.LocalSearchParameter.ReturnDataType = 0;//0 返回所有数据，1 返回xml数据，2 返回渲染数据
+                subLayer.LocalSearchParameter.PageRecordCount = 100;
+                subLayer.LocalSearchParameter.SetFilter(key, "");
+                //subLayer.LocalSearchParameter.SetSpatialFilter(null);
+                subLayer.LocalSearchParameter.HasDetail = false;
+                subLayer.LocalSearchParameter.HasMesh = false;
+                searchResult = subLayer.SearchFromLocal();
+
+                if (searchResult.RecordCount < 1) continue;
+                obj = filterByKey(searchResult, key);
+                if( obj != null ){
+                    var vecCenter = obj.GetLonLatRect().Center;
+                    obj.SetKey(key);
+	                obj.SetParentLayerName(layerID+"_"+subLayer.LayerType);
+                    earth.GlobeObserver.GotoLookat(vecCenter.X, vecCenter.Y, vecCenter.Z+50, 0.0, 89.0, 0, 4);
+
+                    if(flag==true){
+						earth.Paint.ClearHighlightObject();
+					}
+                    earth.Paint.HighlightObject(obj, 20, 1.0, parseInt("0x77ff0000"));
+                    //break;
+                }
+            }
+            if( obj == null ){
+                earth.Paint.ClearHighlightObject();
+            }
+        };
+
+        /**
+         * 解析查询结果，添加到结果表格中
+         * @param result 查询结果
+         * @param guid 图层ID
+         * @param name 图层名
+         */
+        var highlightObjectList=[]; 
+        var parseResult = function (result, guid, pltype) {
+            var standard = PipelineStandard.getCoverageStandard(parseInt(pltype),
+                    PipelineStandard.PipelineLayoutType.Layout_ZHIMAI, true);
+            var template = '<tr ondblclick=highlightObject("$LayerID","$TYPE","$GUID","$KEY",true)' +
+                    '><td class="w75">$INDEX</td>'+
+                    '<td class="w125 $SRED">$SDEEP</td>'+
+                    '<td class="w125 $ERED">$EDEEP</td><td class="w125">$STANDARD</td></tr>';
+            var json = $.xml2json(result);
+            if(json==null||!json.Result){
+            	return;
+            }
+            var type = "line";
+            var records = json.Result.Record;
+            if (json.Result.num <= 0) {
+                return;
+            } else if (json.Result.num == 1) {
+                $("#tblResult>tbody").append(template.replace("$INDEX", records.US_KEY)
+                        .replace("$SDEEP", (parseFloat(records.US_SDEEP)).toFixed(2))
+                        .replace("$SRED", parseFloat(records.US_SDEEP) < standard ? "bgRed" : "")
+                        .replace("$EDEEP",(parseFloat(records.US_EDEEP)).toFixed(2))
+                        .replace("$ERED", parseFloat(records.US_EDEEP) < standard ? "bgRed" : "")
+                        .replace("$STANDARD", standard)
+                        .replace("$LayerID", guid)
+                        .replace("$TYPE", type)
+                        .replace("$GUID", records.US_ID)
+                        .replace("$KEY", records.US_KEY));
+                        if(parseFloat(records.US_SDEEP) < standard||parseFloat(records.US_EDEEP) < standard){
+                        	var obj={};
+                            obj.layerId=guid;
+                            obj.type=type;
+                            obj.guid=records.US_ID;
+                            obj.key=records.US_KEY;
+                            highlightObjectList.push(obj);
+                        }
+            } else {
+                for (var i = 0; i < records.length; i++) {
+                    $("#tblResult>tbody").append(template.replace("$INDEX", records[i].US_KEY)
+                            .replace("$SDEEP", (parseFloat(records[i].US_SDEEP)).toFixed(2))
+                            .replace("$SRED", parseFloat(records[i].US_SDEEP) < standard ? "bgRed" : "")
+                            .replace("$EDEEP", (parseFloat(records[i].US_EDEEP)).toFixed(2))
+                            .replace("$ERED", parseFloat(records[i].US_EDEEP) < standard ? "bgRed" : "")
+                            .replace("$STANDARD", standard)
+                            .replace("$LayerID", guid)
+                            .replace("$TYPE", type)
+                            .replace("$GUID", records[i].US_ID)
+                            .replace("$KEY", records[i].US_KEY));
+                            if(parseFloat(records[i].US_SDEEP) < standard||parseFloat(records[i].US_EDEEP) < standard){
+                            	var  obj={};
+	                            obj.layerId=guid;
+	                            obj.type=type;
+	                            obj.guid=records[i].US_ID;
+	                            obj.key=records[i].US_KEY;
+	                            highlightObjectList.push(obj);
+                            }
+                }
+            }
+            $("#importExcelBtn").attr("disabled",false);
+            $("#showResult").attr("disabled",false);
+        };
+        /**
+         * 画多边形回调函数
+         * @param pFeat
+         * @param geoType
+         */
+        var onCreatePolygon = function (pFeat, geoType) {
+            $("#tblResult>tbody").empty();
+            var vv = $("#selLayers option:selected");
+            var guid = vv.val();
+            var name = vv.text();
+            var layer = earth.LayerManager.GetLayerByGUID(guid);
+            var subLayer = null;
+            for(var i= 0, len=layer.GetChildCount(); i<len; i++){
+                subLayer = layer.GetChildAt(i);
+                if(subLayer.LayerType == "Container"){  // 使用具体的_container图层
+                    break;
+                }
+            }
+            if(subLayer == null){
+                return;
+            }
+            var param = subLayer.QueryParameter;
+            param.Filter = "";
+            param.QueryType = 16;   // SE_AttributeData
+            param.SetSpatialFilter(pFeat);
+            // 0：SE_Table_Point，1：SE_Table_Line
+            param.QueryTableType=1;
+            var result = subLayer.SearchFromGISServer();
+            if(result !== null){
+				var dataNum = result.RecordCount;				
+				for(var p = 0; p  <dataNum/100; p++){
+					parseResult(result.GotoPage(p),guid,name);
+				}             
+            }
+	        earth.Event.OnCreateGeometry = function () {
+	        };
+        };
+
+        $("#btnAllRegionSelect").click(function () {
+            earth.ShapeCreator.Clear();
+             if(highlightObjectList.length>0){
+            	highlightObjectList.splice(0, highlightObjectList.length);
+            }
+            $("#showResult").attr("checked",false);
+			$("#tblResult>tbody").empty();
+            var vv = $("#selLayers option:selected");
+            var guid = vv.val();
+            var name = vv.text();
+            var layer = earth.LayerManager.GetLayerByGUID(guid);
+            var subLayer = null;
+            for(var i= 0, len=layer.GetChildCount(); i<len; i++){
+                subLayer = layer.GetChildAt(i);
+                if(subLayer.LayerType == "Container"){  // 使用具体的_container图层
+                    break;
+                }
+            }
+            if(subLayer == null){
+                return;
+            }
+            var param = subLayer.QueryParameter;
+            param.Filter = "";
+            param.QueryType = 16;   // SE_AttributeData
+            // 0：SE_Table_Point，1：SE_Table_Line
+            param.QueryTableType=1;
+            var result = subLayer.SearchFromGISServer();
+            if(result !== null){	
+				var dataNum = result.RecordCount;				
+				for(var p = 0; p  <dataNum/100; p++){
+					parseResult(result.GotoPage(p),guid,name);
+				}                
+            }
+        });
+        $("#btnPolygonRegion").click(function () {
+        	if(highlightObjectList.length>0){
+            	highlightObjectList.splice(0, highlightObjectList.length);
+            }
+            $("#showResult").attr("checked",false);
+            earth.Event.OnCreateGeometry = onCreatePolygon;
+            earth.ShapeCreator.Clear();
+            earth.ShapeCreator.CreatePolygon();
+        });
+        
+		/**
+		 * 功能：根据指定的行政区域ID获取行政区域名称信息
+		 */
+		var getDistrictItemObject = function(districtId){
+			var districtItemObj = null;
+			for(var i = 0; i < districtNameList.length; i++){
+				if(districtNameList[i].districtId == districtId){
+					districtItemObj = districtNameList[i];
+					break;
+				}
+			}
+			return districtItemObj;
+		};		
+        
+        $("#districtAreaBtn").click(function () {
+        	if(highlightObjectList.length>0){
+            	highlightObjectList.splice(0, highlightObjectList.length);
+            }
+            $("#showResult").attr("checked",false);
+            
+			var districtId = $("#districtList").val();
+			var districtItemObj = getDistrictItemObject(districtId);
+			if(districtItemObj == null){
+				return;
+			}
+			var buffer = districtItemObj.districtBuffer;
+			onCreatePolygon(buffer,5);//特征分类汇总
+        });
+        
+        //显示结果
+		$("#showResult").click(function(){
+			if($("#showResult").attr("checked")){
+				for(var i=0;i<highlightObjectList.length;i++){
+					var obj=highlightObjectList[i];
+					highlightObject(obj.layerId,obj.type,obj.guid,obj.key,false);
+				}
+			}
+		});
+        /**
+		 * 功能：【导出Excel】按钮onclick事件
+		 */
+		$("#importExcelBtn").click(function(){
+			var tabObj = $("#tblResult>tbody")[0];			
+			var columns = ["编号","起点埋深","终点埋深","埋深标准"];
+			StatisticsMgr.importExcelByTable(tabObj,columns);
+		});
+    });
+</script>
+</body>
+</html>

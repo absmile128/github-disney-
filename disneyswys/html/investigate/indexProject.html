@@ -1,0 +1,264 @@
+﻿<!DOCTYPE HTML>
+<html>
+<!-- saved from url=(0014)about:internet -->
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+    <meta charset="utf-8"/>
+    <title>  </title>
+    <meta name="Generator" content="EditPlus">
+    <meta name="Author" content="">
+    <meta name="Keywords" content="">
+    <meta name="Description" content="">
+    <link rel="stylesheet" href="../../css/table.css"/>
+    <script type="text/javascript" src="../../js/common.js"></script>
+</head>
+
+<body>
+<table id="xmzb_ghyd" width="100%"  border="0px" style=" background-color:#D5E3F8; text-align:left;  margin-bottom:20px; margin-top:10px"      >
+    <caption><strong>项&nbsp;目&nbsp;指&nbsp;标&nbsp;（&nbsp;规&nbsp;划&nbsp;用&nbsp;地&nbsp;）</strong></caption>
+    <tr>
+        <td  class="maintextclass"  >指标</td>
+        <td  class="maintextclass">指标值</td>
+        <td    class="maintextclass"> 单位</td>
+    </tr>
+    <tr>
+        <td class="texttdclass2"   ><strong>项目名称</strong></td>
+        <td id="XMMC" class="texttdclass2"  ></td>
+        <td  class="texttdclass2" >---</td>
+    </tr>
+    <tr>
+        <td  class="texttdclass"   ><strong>用地名称</strong></td>
+        <td  id="YDMC" class="texttdclass"></td>
+        <td class="texttdclass" >---</td>
+    </tr>
+    <tr>
+        <td  class="texttdclass"   ><strong>权属单位</strong></td>
+        <td d="QSDW" class="texttdclass" ></td>
+        <td   class="texttdclass">---</td>
+    </tr>
+
+    <tr>
+        <td  class="texttdclass"   ><strong>用地性质</strong></td>
+        <td  id="YDXZ" class="texttdclass"></td>
+        <td   class="texttdclass">---</td>
+    </tr>
+
+    <tr>
+        <td   class="texttdclass"   ><strong>用地面积</strong></td>
+        <td  id="YDMJ" class="texttdclass"></td>
+        <td   class="texttdclass" >平方米</td>
+    </tr>
+    <tr>
+        <td   class="texttdclass"   ><strong>建筑密度</strong></td>
+        <td  id="JZMD" class="texttdclass"></td>
+        <td   class="texttdclass" >%</td>
+    </tr>
+
+    <tr>
+        <td   class="texttdclass"   ><strong>容积率</strong></td>
+        <td  id="RJL" class="texttdclass"></td>
+        <td   class="texttdclass" >%</td>
+    </tr>
+
+
+
+    <tr>
+        <td   class="texttdclass"  ><strong>绿地率</strong></td>
+        <td id="LDL" class="texttdclass" ></td>
+        <td  class="texttdclass" >%</td>
+    </tr>
+    <tr>
+        <td   class="texttdclass"   ><strong>建筑限高</strong></td>
+        <td  id="JZXG" class="texttdclass" ></td>
+        <td   class="texttdclass" >米</td>
+    </tr>
+
+
+</table>
+
+
+
+
+
+
+
+
+<table id="xmzb_dlhx" width="100%"  border="0px" style=" background-color:#D5E3F8; text-align:left;  margin-bottom:20px; margin-top:10px"      >
+    <caption><strong>项&nbsp;目&nbsp;指&nbsp;标&nbsp;（&nbsp;道&nbsp;路&nbsp;红&nbsp;线&nbsp;）</strong></caption>
+    <tr>
+        <td  class="maintextclass"  >指标</td>
+        <td  class="maintextclass">指标值</td>
+        <td    class="maintextclass"> 单位</td>
+    </tr>
+</table>
+
+
+
+
+
+
+
+<div  style="height: 20px;margin-top: 20px; text-align: right" >
+    <a style="text-decoration:underline ;color:blue; cursor: hand;"  id="importExcelBtn"  onclick="importExcelByTable()">导出Excel</a>
+
+</div>
+
+
+
+
+
+
+<script src="../../js/lib/jquery.js"></script>
+<script>
+
+    function postData(obj){
+        if(obj){
+
+            if(obj.ParcelData&&obj.ParcelData.length>0)
+              {
+            $("#XMMC").text(obj.ParcelData[0]["CPPROJECT.NAME"] || "");//方案名称
+            $("#YDMC").text(obj.ParcelData[0]["CPPROJECT.YDNAME"] || "");//设计单位
+            $("#QSDW").text(obj.ParcelData[0]["CPPROJECT.QSDW"] || "");//设计单位
+            $("#YDXZ").text(obj.ParcelData[0]["CPPROJECT.YDXZ"] || "");//设计单位
+            $("#YDMJ").text(obj.ParcelData[0]["CPPROJECT.YDMJ"] || "");//设计单位
+            $("#JZMD").text(obj.ParcelData[0]["CPPROJECT.JZMD"] || "");//设计单位
+            $("#RJL").text(obj.ParcelData[0]["CPPROJECT.RJL"] || "");//设计单位
+            $("#LDL").text(obj.ParcelData[0]["CPPROJECT.LDL"] || "");//设计单位
+            $("#JZXG").text(obj.ParcelData[0]["CPPROJECT.JZXG"] || "");//设计单位
+           }
+            else
+            {  $("#xmzb_ghyd").hide();   }
+
+            if(obj.roadLineData&&obj.roadLineData.length>0)
+            {
+
+
+            $.each(obj.roadLineData, function (i, roadLine) {
+                var trHtml="";
+                trHtml+="<tr><td   class='texttdclass' ><strong>"+roadLine["CPROADLINE.CODE"]+"</strong></td>";
+
+                trHtml+="<td   class='texttdclass' >"+roadLine["CPROADLINE.DISTANCE"]+"</td>";
+                trHtml+="<td   class='texttdclass' >"+"米</td></tr>";
+                $("#xmzb_dlhx").append(trHtml);
+            })
+            }
+
+            else
+            {     $("#xmzb_dlhx").hide();          }
+
+
+
+
+
+    }
+    }
+    /**
+     * 功能：将table导出成Excel文档
+     * 参数：tableId - 要导出的表对象; columns - 列标题数组
+     * 返回：无
+     */
+    var importExcelByTable = function(){
+        var xls = null;
+        try{
+            xls = new ActiveXObject("Excel.Application");
+        }catch(e){
+            alert("无法启动Excel\n\n如果您确信您的电脑中已经安装了Excel, 那么请调整IE的安全级别\n" +
+                    "具体的操作：\n" +
+                    "工具 -> Internet选项 -> 安全 -> 自定义级别 -> 对没有标记为安全的ActiveX进行初始化和脚本运行 -> 启用");
+            return;
+        }
+        xls.visible = true;
+
+
+
+        try{
+            var rootpath=   getRootPath()
+            var path=rootpath+"/xls/indexProject.xlsx"  ;
+            var newBook = xls.Workbooks.Open(path);//这里的Add方法里的参数是模板的路径
+//         var path2="C:/Users/Administrator/Desktop/codetest/disney3D/xls/BuildData.xlsx";
+//         var newBook = xls.Workbooks.Open(path2);//这里的Add方法里的参数是模板的路径
+            var  oSheet=newBook.ActiveSheet;
+
+
+            var  rowlength=oSheet.UsedRange.Columns.Rows.Count;
+            var columnlength= 3;
+
+            for (var i=1;i< rowlength+1;i++)
+            {
+                for (var j=1;j< columnlength+1;j++)
+                {
+                    var cell=  oSheet.Cells(i,j);
+                    var celltext= cell.value;
+                    switch(celltext)
+                    {
+                        case "{XMMC}":
+                            oSheet.Cells(i,j).value =$("#XMMC").text();
+                            break;
+                        case "{YDMC}":
+                            oSheet.Cells(i,j).value =$("#YDMC").text();
+                            break;
+                        case "{QSDW}":
+                            oSheet.Cells(i,j).value =$("#QSDW").text();
+                            break;
+                        case "{YDXZ}":
+                            oSheet.Cells(i,j).value =$("#YDXZ").text();
+                            break;
+                        case "{YDMJ}":
+                            oSheet.Cells(i,j).value =$("#YDMJ").text();
+                            break;
+                        case "{JZMD}":
+                            oSheet.Cells(i,j).value =$("#JZMD").text();
+                            break;
+                        case "{RJL}":
+                            oSheet.Cells(i,j).value =$("#RJL").text();
+                            break;
+                        case "{LDL}":
+                            oSheet.Cells(i,j).value =$("#LDL").text();
+                            break;
+                        case "{JZXG}":
+                            oSheet.Cells(i,j).value =$("#JZXG").text();
+                            break;
+//                        case "{roadline_name}":
+//                            oSheet.Cells(i,j).value =$("#roadline_name").text();
+//                            break;
+//                        case "{roadline_distance}":
+//                            oSheet.Cells(i,j).value =$("#roadline_distance").text();
+//                            break;
+
+                    }
+
+                }
+            }
+
+
+
+            var rows =  $("#xmzb_dlhx")[0].rows;
+            for(var t=2; t<rows.length+1; t++)  //从第二行开始输出
+            {
+                var columslength=  rows[t-1].cells.length;
+                for (var k=1; k<columslength+1; k++){
+                      var val=   rows[t-1].cells[k-1].innerText;
+                    oSheet.Cells(t+13,k).value = val;
+
+
+                }
+
+            }
+
+
+
+
+        }
+        catch(e){
+            alert("导出Excel错误！");
+            return;
+        }
+
+        xls.UserControl = true;
+        xls = null;
+        alert("成功导出Excel");
+
+    } ;
+</script>
+</body>
+</html>

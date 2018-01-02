@@ -1,0 +1,180 @@
+<!DOCTYPE HTML>
+<html>
+<!-- saved from url=(0014)about:internet -->
+ <head>
+  <meta charset="utf-8"/>
+  <title> 模型属性 </title>
+  <meta name="Generator" content="EditPlus">
+  <meta name="Author" content="">
+  <meta name="Keywords" content="">
+  <meta name="Description" content="">
+     <link rel="stylesheet" href="../../css/table.css"/>
+
+
+     <script src="../../js/common.js"></script>
+
+     <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+     <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+
+
+     <script type="text/javascript" src="../../js/lib/jquery.js"></script>
+     <script type="text/javascript" src="../../js/lib/jquery.easyui.min.js"></script>
+     <script src="../../js/attachment_64.js"></script>
+
+ </head>
+
+ <body>
+
+
+
+ <div class="easyui-tabs" style=" height:180px">
+     <div title="建筑物属性" id="sx_div" style="padding:10px">
+
+     </div>
+     <div title="建筑物图纸" id="tz_div" style="padding:10px">
+
+     </div>
+
+ </div>
+ <script src="../../js/lib/jquery.js"></script>
+ <script>
+
+     var earth=null;
+
+     function postData(obj){
+
+             earth=obj.earth;
+         var module=obj.module;
+         var module_guid=obj.module.guid;
+         var module_jzgd=module.jzgd;
+         var module_name=module.name;
+         var module_unitlist=module.modulelist;
+
+         var module_tzlist=    module.tzlist;
+
+
+
+//                 pObj.ShowHighLight();
+//                for (var i=0;i<module_unitlist.length;i++)
+//                {
+//                           GetObjByGuid ( module_unitlist[i]).ShowHighLight();
+//                }
+
+
+         if(obj){
+
+             var htmlStr = '<table style="font-size:14px;  width: 100%;border-collapse: collapse;border-spacing: 0;overflow-y:auto;color:#000000">';
+             htmlStr = htmlStr + '<tr>';
+             htmlStr = htmlStr + '<td style=" width: 40%;border: 1px solid #808080; font-size:13px; padding-left:5px; padding-right:5px;text-align:left;">建筑名称:</td>';
+             htmlStr = htmlStr + '<td style="width: 60%;border: 1px solid #808080; font-size:13px; padding-left:5px; padding-right:5px;text-align:left;">';
+             if(module_name!=null&&module_name!="")
+                     { htmlStr = htmlStr +module_name;}
+             htmlStr = htmlStr  + '</td>';
+             htmlStr = htmlStr + '</tr >';
+             htmlStr = htmlStr + '<tr>';
+             htmlStr = htmlStr + '<td style=" width: 40%;border: 1px solid #808080; font-size:13px; padding-left:5px; padding-right:5px;text-align:left;">建筑高度:</td>';
+             htmlStr = htmlStr + '<td style="width: 60%;border: 1px solid #808080; font-size:13px; padding-left:5px; padding-right:5px;text-align:left;">';
+
+             if(module_jzgd!=null&&module_jzgd!="")
+             { htmlStr = htmlStr +module_jzgd;}
+             htmlStr = htmlStr  + '</td>';
+             htmlStr = htmlStr + '</tr>';
+
+
+
+
+
+             htmlStr = htmlStr + '<tr>';
+             htmlStr = htmlStr + '<td style=" width: 40%;border: 1px solid #808080; font-size:13px; padding-left:5px; padding-right:5px;text-align:left;">建筑面积:</td>';
+             htmlStr = htmlStr + '<td style="width: 60%;border: 1px solid #808080; font-size:13px; padding-left:5px; padding-right:5px;text-align:left;">';
+
+             htmlStr = htmlStr +"";
+             htmlStr = htmlStr  + '</td>';
+             htmlStr = htmlStr + '</tr>';
+             htmlStr = htmlStr + '<tr>';
+             htmlStr = htmlStr + '<td style=" width: 40%;border: 1px solid #808080; font-size:13px; padding-left:5px; padding-right:5px;text-align:left;">建筑层数:</td>';
+             htmlStr = htmlStr + '<td style="width: 60%;border: 1px solid #808080; font-size:13px; padding-left:5px; padding-right:5px;text-align:left;">';
+
+             htmlStr = htmlStr +"";
+             htmlStr = htmlStr  + '</td>';
+             htmlStr = htmlStr + '</tr>';
+
+             htmlStr = htmlStr + '<tr>';
+             htmlStr = htmlStr + '<td style=" width: 40%;border: 1px solid #808080; font-size:13px; padding-left:5px; padding-right:5px;text-align:left;">建筑用途:</td>';
+             htmlStr = htmlStr + '<td style="width: 60%;border: 1px solid #808080; font-size:13px; padding-left:5px; padding-right:5px;text-align:left;">';
+
+             htmlStr = htmlStr +"";
+             htmlStr = htmlStr  + '</td>';
+             htmlStr = htmlStr + '</tr>';
+
+
+
+
+
+
+
+
+             htmlStr = htmlStr + '</table>';
+
+
+             $("#sx_div").html(htmlStr);
+
+             if(module_tzlist!=null)
+             {
+               if(module_tzlist.length  >0  )       {
+
+                 var htmlStr2 = '<table style="font-size:14px;  width: 100%;border-collapse: collapse;border-spacing: 0;overflow-y:auto;color:#000000">';
+                 for(var i=0;i<module_tzlist.length;i++)
+                 {
+                     var tz= module_tzlist[i];
+                     var tz_name=tz.tz_name;
+                     var tz_path=tz.tz_path;
+
+                     htmlStr2 = htmlStr2 + '<tr>';
+                     htmlStr2 = htmlStr2 + '<td style="width: 60%;border: 1px solid #808080; font-size:13px; padding-left:5px; padding-right:5px;text-align:left;">' +
+                             ' <a style="text-decoration:underline ;color:blue; cursor: hand;"  address="'+tz_path+'"  onclick="ViewPic(this)">'+
+                             tz_name+'</a>'+
+                             ' （<a style="text-decoration:underline ;color:blue; cursor: hand;"  href="'+tz_path+'"   >'+
+                             "下载"+'</a>）</td>';
+                     htmlStr2 = htmlStr2 + '</tr >';
+                 }
+
+
+                 htmlStr2 = htmlStr2 + '</tabe>';
+                 $("#tz_div").html(htmlStr2);
+               }
+                 else
+               {
+                   var   htmlStr2 =  '该建筑暂无图纸！';
+                   $("#tz_div").html(htmlStr2);
+
+               }
+             }
+             else
+             {
+              var   htmlStr2 =  '该建筑暂无图纸！';
+                 $("#tz_div").html(htmlStr2);
+             }
+
+
+
+
+         }
+     }
+     function ViewPic(obj){
+
+         var fileurl=$(obj).attr("address");  //网络文件
+         var fileName=      GetFileName(fileurl) ;                //文件名
+         var returnStatus = earth.UserDocument.SaveFile(fileurl,fileName);
+         if(returnStatus){
+             var filePath = earth.RootPath + "\\temp\\" + fileName;
+             var avwinpath= getClientPath2(earth) + "avwin\\avwin.exe";   //cy：注册的客户端下放入avwin文件夹
+             var   attachment=  CITYPLAN.Attachment(earth);
+             attachment.exec(avwinpath, filePath);
+         }
+
+     }
+
+ </script>
+ </body>
+</html>

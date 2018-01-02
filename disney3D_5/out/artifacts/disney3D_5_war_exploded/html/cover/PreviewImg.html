@@ -1,0 +1,27 @@
+<html xmlns:v="http://www.w3.org/2001/XMLSchema">
+<head>
+    <title>照片浏览</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <script type="text/javascript" src="../../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>
+    <script>
+
+        var params = window.dialogArguments;
+
+        $(function () {
+
+            $("#simg").attr("src",params.path);
+
+        });
+
+
+    </script>
+</head>
+
+<body style="background: white;">
+<img id="simg"  style="width:100% ; height: 100%"/>
+</body>
+</html>

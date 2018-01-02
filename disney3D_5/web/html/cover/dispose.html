@@ -1,0 +1,167 @@
+<html xmlns:v="http://www.w3.org/2001/XMLSchema">
+<head>
+    <title>市政巡查人员</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <script type="text/javascript" src="../../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>　
+    <script   type="text/javascript"  src="../../js/authentication.js"></script>
+    <script src="../../js/cover/handle.js"></script>
+
+    <script>
+
+        var params = window.dialogArguments;
+
+        $(function () {
+
+            getinitpersonnellist();
+
+        });
+        function  getinitpersonnellist() {
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/UserHandler.ashx?action=GetUserList",
+                data: {
+                    str:"",
+                    status:""
+                 },
+                cache: false,
+                success: function (data) {
+                     debugger;
+
+                    //设置基本信息表
+                    setpersonnellist(data)
+                },
+                error:function (x,t,e) {
+
+                }
+            });
+        }
+        function  setpersonnellist(data) {
+            var setting = {
+
+                data: {
+                    simpleData: {
+                        enable: true
+                    }
+                },
+                view: {
+                    dblClickExpand: false, //双击节点时，是否自动展开父节点的标识
+                    expandSpeed: "", //节点展开、折叠时的动画速度, 可设置("","slow", "normal", or "fast")
+                    selectedMulti: false //设置是否允许同时选中多个节点
+                },
+                callback: {
+                    onDblClick: function (event, treeId, node) {
+                        if (node && node.id) {
+                            var layer = earth.LayerManager.GetLayerByGUID(node.id);
+
+                        }
+                    },
+                    onCheck: function (event, treeId, node) {
+                        var layer = earth.LayerManager.GetLayerByGUID(node.id);
+                        layer.Visibility = node.checked;
+                    }
+                }
+            };
+            var treeData = [];
+            for(var i=0;i<data.length;i++) {
+                treeData.push({  id: data[i].GroupName,  pId: 0,  name: data[i].GroupName,  open: true   });
+                for(var j=0;j<data[i].UserList.length;j++){
+                    var state=handlefield("status",data[i].UserList[j].STATUS).valuealias  ;
+                    var str=  data[i].UserList[j].NAME+"("+state+")";
+                    treeData.push({  id: data[i].UserList[j].ID,  pId: data[i].GroupName,  name: str  });
+                }
+            }
+
+
+
+
+            $.fn.zTree.init($("#personnellistTree"), setting, treeData);
+
+        }
+        function  dispose() {
+            var treeObj = $.fn.zTree.getZTreeObj("personnellistTree");
+            var  nodes=treeObj.getSelectedNodes(true);
+
+            var managerID = authMgr.getCookie('username');  //  当前用户
+            alert(managerID);
+
+
+            if(nodes.length==1) {
+                if(nodes[0].isParent) {return;} //不对父节点操作
+                var inspectorID = nodes[0].id;
+                var inspectorName = nodes[0].name;
+                var expnum=params.alarmCoverInfo.EXPNUM;
+                var expnumalias= params.alarmCoverInfo.EXPNUMALIAS;
+                var msg = "是否将报警井盖（编号：" + expnumalias + "）已派单给巡查员：" + inspectorName + "?";
+                if (confirm(msg) == true) {
+                    $.ajax({
+                        dataType: 'JSONP',
+                        type: "GET",
+                        url: CITYPLAN_config.disney.WebServiceUrl + "/CaseHandler.ashx?action=AddCaseUndoInfo",
+                        data: {
+                            expnum: expnum,
+                            inspectorID: inspectorID,
+                            address: params.alarmCoverInfo.ROADINFO,
+                            managerID: managerID
+
+                        },
+                        cache: false,
+                        success: function (data) {
+                            if (data == true) {
+                                alert("已成功派单！");
+                                window.returnValue = "已派单"; //定义返回值
+                                window.close();
+                            } else {
+                                alert("派单失败！");
+                            }
+                        },
+                        error: function (x, t, e) {
+                            alert("派单失败！");
+
+                        }
+                    });
+
+
+                }
+
+            }
+
+
+        }
+
+
+
+
+    </script>
+</head>
+
+<body style="background: white;">
+<table align="center">
+    <tr>
+        <td>
+            <div id="h2" style="text-align: center;"><h2>市政巡查人员</h2></div>
+            <hr style="width:100%;height:2px;">
+        </td>
+    </tr>
+    <tr>
+        <td style="width: 100%; vertical-align: top">
+            <div title="巡查人员列表">
+                <ul id="personnellistTree" class="ztree"></ul>
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td style="width: 1000px;height: 600px;vertical-align: top;text-align: right">
+            <hr style="width:100%;height:2px;">
+             <input id="dispose" type="button" value="派 单" style="width: 60px;" onclick="javascript:dispose();">
+        </td>
+    </tr>
+</table>
+
+
+</body>
+</html>

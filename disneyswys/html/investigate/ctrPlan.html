@@ -1,0 +1,390 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+    <title>规划用地查询</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/common.css"/>
+
+
+    <script type="text/javascript" src="../../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.xml2json.js"></script>
+    <script src="../../js/generalQuery.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>
+    <script src="../../js/common.js"></script>
+    <script src="../../js/searchAnalysis.js"></script>
+    <script src="../../js/generalQuery.js"></script>
+</head>
+<body >
+
+<div id="div_condition">
+            <div  style=" text-align:left;  margin-top: 5px;">
+<fieldset >
+<legend>参数设置</legend>
+
+            <div style="margin-top: 10px;margin-left: 10px;">
+                指定字段：
+                <select id="searchkey"  style="width:120px">
+                </select>
+            </div>
+            <div style="margin-top: 10px;margin-left: 10px; margin-bottom: 5px;">
+                查询条件：
+                <input id="searchChk"  type="text" value=""   onchange="searchChk_change()" style="width:120px">
+
+            </div>
+
+</fieldset>
+</div>
+            <div style="height: 20px;margin-top: 20px;" >
+
+                <a style="text-decoration:underline ;color:blue; cursor: hand;"  id="chk"  onclick="chk_change()">关闭无关图层</a>
+            </div>
+
+
+            <div style="border-bottom:1px dashed #000000;  margin-top: 20px;"></div>        <!--虚线-->
+            <div  style=" text-align:center;  margin-top: 5px;">
+                <!--<button class="largeBtn"    id="schData" disabled >按条件查询</button>-->
+                <!--<button class="largeBtn"    id="btnParcelSelect"  disabled >拾取地块查询</button>-->
+                <button class="normal2Btn"    id="schData" disabled >按条件查询</button>
+                <button class="normal2Btn"    id="btnParcelSelect"  disabled  >拾取地块查询</button>
+
+            </div>
+  </div>
+
+            <div id="div_searchData" class="enter" region="center" border="true" style="overflow: auto;  margin-top: 20px;display: none">
+
+            <table  id="searchData" class="easyui-datagrid" data-options="fitColumns:true,singleSelect:true "   style="height:400px;" >
+                <thead>
+                <tr >
+                    <th data-options="field:'listNum',width:100">名称</th>
+                    <th data-options="field:'name' ,width:100,styler:cellStyler">属性</th>
+
+                </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+          </div>
+
+
+
+<script type="text/javascript">
+    var earth = parent.earth;
+    var searchAnalysis = CITYPLAN.searchAnalysis(earth);
+    var ctrParcelLayer=     parent.ctrPlanLayer;//shape文件
+    var dataDoc=null;
+    var showDataArr = [];
+    var bufPolygon = null;
+    var layer=null;
+    $(function(){
+        setsize()  ;   //设置图例高度，以适合不同的屏幕分辨率
+        var id=   ctrParcelLayer[0].id;
+         layer = earth.LayerManager.GetLayerByGUID(id);   //规划土地图层
+
+
+        $('#searchData').datagrid({
+
+            onClickCell:onCellClick
+        });
+
+
+
+        $("#btnParcelSelect").click(function(){
+           if(bufPolygon){
+                earth.DetachObject(bufPolygon);
+             }
+
+            earth.Event.OnCreateGeometry = function(p,t){
+                if(p == null){
+                    return;
+                }
+
+                var spatial = generateGeoPoints(p);
+                    var Result = getPolygonInfo(this.layer, null, 17, null, spatial);
+                if(Result != null && Result.RecordCount > 0){
+
+                  var ResultDoc = loadXMLStr(Result.GotoPage(0));
+
+                      var obj={};
+                    var coor = ResultDoc.getElementsByTagName("Polygon")[0].getElementsByTagName("Coordinates")[0].text;
+                    obj.coor=coor;
+                    var id = earth.Factory.createGuid();
+                    obj.id=id;
+                    showDataArr[id]=ResultDoc.documentElement.firstChild.childNodes[0];
+                    goToParse(obj) ;
+
+                    earth.ShapeCreator.Clear();
+
+                }
+                };
+                earth.ShapeCreator.CreatePoint();
+
+
+        });
+
+
+
+        getfield();
+
+
+        $("#schData").click(function(){
+            $("#div_searchData").css("display","none");
+            xmlData=dataDoc;
+            $("#searchData").datagrid("loadData", []);
+            var str =  $("#searchChk").val();
+            var key =  $("#searchkey").val();
+            if(str){
+                var myReg = "/.*?"+str+".*?/";//"/^[\w]*"+str+"+[\w]*$/";
+                var nodes = xmlData.getElementsByTagName(key);
+                if(nodes===""||nodes===null||nodes===undefined)return;
+
+                var dataArr = [];//结果集
+
+                for(var j=0;j<nodes.length;j++){
+                    if(eval(myReg).test(nodes[j].text)){
+                        var name = nodes[j].text;
+
+                        var coor = nodes[j].parentNode.getElementsByTagName("Polygon")[0].getElementsByTagName("Coordinates")[0].text;
+                        var id = earth.Factory.createGuid();
+                        showDataArr[id]= nodes[j].parentNode;
+                        dataArr.push({"listNum":name,"name":"详细",coor:coor,id:id});
+                    }
+                }
+                if(dataArr.length==0){
+
+
+                    alert("没有查到相关内容！")}
+                else{
+                    $("#div_searchData").css("display","block");
+                    $("#searchData").datagrid("loadData",dataArr);
+                }
+            }
+
+        });
+        window.onunload=function(){
+            if(parent.earth == null){
+                return;
+            }
+            if(bufPolygon){
+                earth.DetachObject(bufPolygon);
+            }
+
+            searchAnalysis.clear();
+            recoverhide();
+        }
+    });
+
+
+
+
+    function  searchChk_change()
+    {
+
+        setbtnabled();
+
+    }
+     function getfield()
+    {
+        if(ctrParcelLayer!=null&ctrParcelLayer.length>0)
+        {
+            var id=  ctrParcelLayer[0].id;
+            var url = CITYPLAN_config.server.ip +"/geoserver?service="+id+"&qt=17&pg=0,10000";
+             dataDoc = loadXMLStr(url);
+
+            if(dataDoc.xml===""){
+                alert("未找到符合要求字段！");
+                $("#searchkey").empty();
+                return;
+            }
+            $("#searchkey").empty();
+            var nodes = dataDoc.getElementsByTagName("Record")[0].childNodes;
+            for(var i=0;i<nodes.length;i++){
+                var name = nodes[i].nodeName;
+
+                if(name.toLocaleUpperCase() === "DKBH"){
+                    txtValue = "地块编号";
+                }
+                if(name.toLocaleUpperCase() === "YDXZDM"){
+                    txtValue = "用地性质代码";
+                }
+                if(name.toLocaleUpperCase() === "YDMJ"){
+                    txtValue = "用地面积";
+                }
+                if(name.toLocaleUpperCase() === "DKBH" || name.toLocaleUpperCase() === "YDXZDM" ||
+                        name.toLocaleUpperCase() === "YDMJ"){
+                    $("#searchkey").append('<option value="' +
+                            name + '" server="' + name + '">' +
+                            txtValue + '</option>');
+
+
+                }
+
+            }
+        }
+        setbtnabled();
+
+
+    }
+
+
+
+
+    function setbtnabled ()
+    {
+        if($("#searchkey").text()!=""&&$("#searchChk").val()!="")
+        {
+            $("#schData").removeAttr("disabled") ;
+        }
+        else
+        {
+            $("#schData").attr("disabled","disabled") ;
+        }
+
+
+    }
+
+
+        //定位
+   function goToParse(obj){
+        if(bufPolygon){
+            earth.DetachObject(bufPolygon);
+        }
+        var vecs=obj.coor.split(",");
+        var v3s = earth.Factory.CreateVector3s();
+        for(var j = 0; j<vecs.length; j+=3){
+            var v3 = earth.Factory.CreateVector3();
+            v3.X =vecs[j];
+            v3.Y =vecs[j+1];
+            v3.Z =vecs[j+2];
+            v3s.AddVector(v3);
+        }
+
+        bufPolygon = earth.Factory.CreateElementPolygon(earth.Factory.CreateGUID(), "");
+        bufPolygon.BeginUpdate();
+        bufPolygon.SetExteriorRing(v3s);   // SECoordinateUnit.Degree
+
+        bufPolygon.LineStyle.LineWidth = 1;
+        bufPolygon.LineStyle.LineColor = parseInt("0xFFFF0000");
+        bufPolygon.FillStyle.FillColor = parseInt("0x2500FF00");
+        bufPolygon.AltitudeType = 1;   // SEAltitudeType.ClampToTerrain
+        bufPolygon.EndUpdate();
+        earth.AttachObject(bufPolygon);
+
+        var lon =bufPolygon.SphericalTransform.Longitude;
+        var lat = bufPolygon.SphericalTransform.Latitude;
+        var alt = bufPolygon.SphericalTransform.Altitude;
+       //     earth.GlobeObserver.FlytoLookat(lon, lat, alt, 0, 60, 0, 100, 2);
+       //      earth.GlobeObserver.GotoLookat(lon, lat,400, 0, 70, 0, 2);
+       earth.GlobeObserver.GotoLookat(lon, lat,2000, 0, 200, 0, 2);
+        var location ={
+            lon:lon,
+            lat:lat,
+            alt:alt
+        }
+        searchAnalysis.createHtmlBollon ("searchDataTable.html",showDataArr[obj.id],location,350,300)
+    }
+
+    function hide()
+    {
+
+        parent.setalllayersvisibility(false);  //关闭所有地上模型
+
+
+        if(this.layer!=null)    //开启地块图层
+            if (this.layer.Visibility==false) {
+                this.layer.Visibility =true;
+            }
+
+    }
+    function recoverhide()
+    {
+
+        for(var i=0;i<parent.hidedlayers.length;i++)
+    {
+        var layer=  parent.hidedlayers[i];
+        layer.Visibility=true;
+    }
+
+        //cy:10.10
+
+        var elistarray1= parent.currentLayerObjList[parent.currentApproveProjectGuid];
+        if(elistarray1!=null&&elistarray1.length>0){
+            parent.hideXZ(); //抠现状
+        }
+        //cy:10.10
+
+
+        if(this.layer!=null)     //关闭地块图层
+            if (this.layer.Visibility==true) {
+                this.layer.Visibility =false;
+            }
+
+    }
+function chk_change()
+{
+
+    var txt=$("#chk").text();
+    if(txt=="关闭无关图层")
+    {
+
+        hide();
+        $("#btnParcelSelect").removeAttr("disabled") ;
+        $("#chk").text("还原已关闭图层");
+
+  }
+    else
+
+    {
+        recoverhide();
+
+        $("#btnParcelSelect").attr("disabled","disabled") ;
+            $("#chk").text("关闭无关图层");
+    }
+
+
+
+
+}
+
+
+
+    //已看
+
+    function cellStyler(value, row, index) {
+            return 'color:blue;text-decoration: underline ; cursor:hand';
+                                                                                              }
+
+
+   function onCellClick (rowIndex, field, value)
+   {
+       if(field=="name")
+       {
+       var rows = $("#searchData").datagrid("getRows");
+       goToParse(rows[rowIndex]);
+       }
+
+   }
+    function  setsize()
+    {
+
+
+        var winHeight= window.parent.document.getElementById('ifResult').offsetHeight;
+        var div_conditionHeight=document.getElementById('div_condition').offsetHeight;
+        var height=10;
+        if(winHeight- div_conditionHeight-20>0)
+        {
+
+            height=winHeight- div_conditionHeight-20 ;
+        }
+        document.getElementById ("div_searchData").style.height =height + "px";
+
+    }
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<!-- saved from url=(0014)about:internet -->
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>地面透明度设置</title>
+    <link rel="stylesheet" type="text/css" href="../../js/lib/easyui/themes/default/easyui.css"/>
+    <link rel="stylesheet" type="text/css" href="../../js/lib/easyui/themes/icon.css"/>
+    <link rel="stylesheet" type="text/css" href="../../css/common.css"/>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+</head>
+<body class="littleDialogBody" style="background-color: #ffffff; color: #fffffe;">
+
+<br/>
+    <table align="center">
+        <tr>
+            <td height="60px" width="90%" >
+                <!--<input id="terrainTranScroll" value="100" showTip="true" style="width:200px;" rule="[0,'|',50,'|',100]"/>-->
+                <input id="terrainTranScroll" value="100" showTip="true" style="width:200px;" rule="['透明','不透明']"/>
+
+
+
+                <!--<input id="terrainTranScroll" class="easyui-slider" style="width:200px"  value="100"  data-options="showTip:true,rule:[0,'|',50,'|',100]">-->
+            </td>
+            <td width="10%">&nbsp;</td>
+        </tr>
+        <tr>
+            <td width="90%">
+                <input id="terrainTranValue" type="text" value="100" style="display:none"/>
+            </td>
+            <td width="10%">&nbsp;</td>
+        </tr>
+    </table>
+<script src="../../js/lib/jquery.min.js"></script>
+<script src="../../js/lib/jquery.easyui.min.js"></script>
+<script src="../../js/lib/jquery.xml2json.js"></script>
+<script type="text/javascript">
+    document.oncontextmenu = function () {
+        event.returnValue = false;
+    };
+
+    function setTranScroll(earth){
+
+        var terrainTrans = earth.Environment.TerrainTransparency;
+        var terrainPercent = Math.round((terrainTrans / 255) * 100); //将地面透明度的值转化为百分比
+        $("#terrainTranScroll").val(terrainPercent); //初始化地面透明度的值
+
+        //地表透明度控制
+        $("#terrainTranScroll").slider({
+            tipFormatter: function(value){
+                return value + '%';
+            },
+            onChange: function(value){
+                earth.Environment.TerrainTransparency = value * 2.55;
+            }
+        });
+    }
+</script>
+</body>
+</html>

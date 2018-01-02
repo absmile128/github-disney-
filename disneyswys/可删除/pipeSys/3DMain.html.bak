@@ -1,0 +1,76 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+
+		<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+		<meta http-equiv="Content-Type" content="textml; charset=UTF-8" />
+		<title>3DMain.html</title>
+		<meta http-equiv="content-type" content="text/html; charset=gb2312">    
+		<link rel="stylesheet" type="text/css" href="css/common.css"/>
+</head>
+  
+<body oncontextmenu="return false;" onunload="unloadEarth()">    
+	<div id="usearthDiv" style="width:100%;height:100%;background:gray;float:left;">
+			<OBJECT id="usearth"
+				data=data:application/x-oleobject;base64,Xy0TLBTXH0q8GKFyFzl3vgAIAADYEwAA2BMAAA==
+				classid="clsid:EA3EA17C-5724-4104-94D8-4EECBD352964" codebase="UniBrowser_2.8.9_new/UsEarth.CAB" 
+				VIEWASTEXT width="100%" height="100%"> </OBJECT>
+	</div>
+
+<script type="text/javascript" src="util/jquery.js"></script>
+<script type="text/javascript" src="js/parameter.js"></script>
+<script type="text/javascript" src="js/authentication.js"></script>
+<script type="text/javascript" src="js/authorityConfig.js"></script>
+<script type="text/javascript">
+	function unloadEarth(){
+		usearth.Suicide();
+	}
+	function loadEarth(){
+        usearth.Event.OnCreateEarth = function (pval) {
+            usearth.Load(params.ip, params.screen);
+			parent.earth = usearth;
+            usearth.Event.OnDocumentChanged = function(type,guid){
+                if(type===1){
+                    parent.init();
+
+                }
+                usearth.Event.OnDocumentChanged = function(){};
+            };
+        }
+    }
+	function checkAuth(){
+            if(CITYPLAN_config.auth.enableAuth){
+             //   debugger;
+                var userName = authMgr.getCookie('userName');
+                var pwd = authMgr.getCookie('password');
+                var auth = false;
+//                var needSecurity = seearth.UserLog.NeedSecurity(CITYPLAN_config.server.ip);    //安全服务
+//                if(needSecurity){
+                    if(userName && pwd){
+                        auth = usearth.UserLog.Login(params.ip, userName, pwd);
+                    }
+//                }
+                if(!auth){
+                    parent.jump2Login();
+                    // showLoginModal();
+                }
+            }	
+	}
+	$(function(){
+		checkAuth();
+		loadEarth();
+	})
+</script>
+<!-- Event OnCreateEarth 创建成功 -->
+<!--<SCRIPT LANGUAGE="JavaScript" for="usearth" event="OnCreateEarth(pVal)">
+
+    parent.earth = usearth;
+    usearth.Load(params.ip, params.screen);
+    usearth.Event.OnDocumentChanged = function(){
+        parent.LayerManagement.initPipelineTree(usearth,$("#pipelineLayerTree", parent.document)); //初始管线图层树
+        parent.LayerManagement.initLayerTree(usearth,$("#layerTree", parent.document)); //初始化图层树
+        usearth.Event.OnDocumentChanged = function(){};
+    };
+//
+</SCRIPT>-->
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!-- saved from url=(0014)about:internet -->
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+    <title> 属性 </title>
+    <meta name="Generator" content="EditPlus">
+    <meta name="Author" content="">
+    <meta name="Keywords" content="">
+    <meta name="Description" content="">
+    <link rel="stylesheet" href="../../css/table.css"/>
+    <script type="text/javascript" src="../../js/common.js"></script>
+
+</head>
+<body>
+
+
+<table id="dataTable" width="100%"  border="0px" style=" background-color:#D5E3F8; text-align:left;  margin-bottom:20px; margin-top:10px"      >
+    <thead>
+    <tr>
+        <td  class="maintextclass" width="50%">属性</td>
+        <td    class="maintextclass" width="50%"> 属性值</td>
+    </tr>
+    </thead>
+
+    <tbody>
+    </tbody>
+  </table>
+
+
+
+
+<script src="../../js/lib/jquery.js"></script>
+<script>
+
+
+    function postData(obj){
+
+
+
+        var Fields  =  obj.fields ;
+        var  Values=  obj.values  ;
+        for (var tt=0; tt<Fields.length;tt++)
+        {
+
+                var fieldname=   Fields[tt];
+                var text= Values [tt];
+                if(fieldname!= "GUID" && fieldname != "IFPUBLISH"){
+                var html = '<tr ><td class="texttdclass">'+fieldname+'</td><td  class="texttdclass">'+text+'</td></tr>'
+
+                $("#dataTable").append(html);
+                }
+
+        }
+
+        //append后需要重新加载一下html元素 保证滚动条能正常显示
+        var bodyHtml = $("body").html();
+        $("body").html(bodyHtml);
+    }
+
+
+
+
+</script>
+</body>
+</html>

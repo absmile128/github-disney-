@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="lib/jquery.min.js"></script>
+    <script type="text/javascript" src="lib/jquery.js"></script>
+    <script type="text/javascript" src="lib/jquery-1.4.4.min.js"></script>
+
+    <script type="text/javascript">
+
+
+
+
+
+//    $(function(){
+//        test() ;//执行函数
+//        alert("11111");
+//    });
+
+
+//前后台交互示例
+    function test() {
+        $.ajax({
+            type: "POST",
+            url: "/disneySZ/TestServlet",
+            data: {
+                commdCode: "getWellCoverHistoryAlarmByTimePager",
+                parm:"tt"
+            },
+            dataType: "json",
+            success: function (data) {
+               alert( data.outStr.toString());
+            }
+            });
+
+
+    }
+</script>
+
+</head>
+<body>
+<input name="loginbutton" id="loginbutton" value="登陆" type="button" onclick="test()"/>
+
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>项目管理</title>
+    <link rel="stylesheet" href="../../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../../css/zTree/zTreeStyle.css"/>
+    <link rel="stylesheet" href="../../../css/common.css"/>
+
+
+    <script src="../../../js/lib/jquery.js"></script>
+    <script src="../../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../../js/lib/locale/easyui-lang-zh_CN.js"></script>
+    <script src="../../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../../js/lib/jquery.xml2json.js"></script>
+    <script src="../../../js/searchAnalysis.js"></script>
+    <script src="../../../js/CITYPLAN_config.js"></script>
+    <script src="../../../js/common.js"></script>
+    <script src="../../../js/lib/jquery.jqpagination.js"></script>
+    <script src="../../../js/search.js"></script>
+    <script>
+        var earth = parent.earth;
+        var searchAnalysis = CITYPLAN.searchAnalysis(earth);
+        var search=STAMP.Search(earth);
+
+        var pageSize = 16; //每页显示条数
+        var pageNo = 1;//页码数（第几页）
+        var totalcount=0;//总数
+        var totalpagecount = 0;//总页数
+        var showDataArr = [];
+
+        var cover_layerid= CITYPLAN_config.disney.cover_layerid;
+
+        $(function () {
+            //初始化设置高度
+            var divHeight =$(document).height()-140 ;
+            var divWidth = $(document).width()  ;
+            $('#searchData').datagrid('resize',{
+                height:divHeight,
+                width:divWidth
+            });
+            //搜索
+            searchdata();
+            $('#searchData').datagrid({
+                onDblClickRow: dbclick
+            });
+        });
+
+
+        //回调函数
+        function getfunccallback(current_page) {
+            pageNo = current_page;
+            getdata(true); //重新获取数据
+        }
+
+        //行样式
+        function  rowStyle(index,row) {
+            if (row.alarmcause == "井盖打开") {
+                return 'background-color:#ffee00;color:red;font-weight:bold;';
+            }
+        }
+
+        //datagrid双击事件
+        function dbclick(rowIndex,rowData){
+
+            var rows = $("#searchData").datagrid("getRows");
+            goToParse(rowIndex);
+        }
+        //定位
+        function goToParse(rowIndex){
+            var rows = $("#searchData").datagrid("getRows");
+            var machinecode=  rows[rowIndex].machinecode;  //触发器编号
+
+          var coverGisdata=  getCoverGISInfo(machinecode);
+
+            if(coverGisdata.length==0){alert(" 没有对应的井盖！");return;}
+
+
+            //TODO：对应找位置
+//    var obj = searchResult.GetLocalObject(rowIndex);
+//    var lon =obj.SphericalTransform.Longitude;
+//    var lat = obj.SphericalTransform.Latitude;
+//    var alt = obj.SphericalTransform.Altitude;
+
+            var lon =121.661061;
+            var lat = 31.152523;
+            var alt = 4.38;
+            var heading =360;
+            var tilt=89;
+            var distance=1.382;
+
+//    earth.GlobeObserver.GotoLookat(lon, lat,alt, heading,tilt ,roll, 0);
+            earth.GlobeObserver.GotoLookat(lon, lat,alt, heading,tilt ,0,distance);
+//    obj.ShowHighLight ();
+
+            var location ={
+                lon:lon,
+                lat:lat,
+                alt:alt
+            }
+            var info ={
+                coverSituationInfo:showDataArr[machinecode]
+            }
+            searchAnalysis.createHtmlBollon ("CoverSituationTable.html",info,location,300,380)
+        }
+
+         //获取基本信息
+        function  searchdata() {
+              pageNo = 1;//页码数（第几页）
+              totalcount=0;//总数
+              totalpagecount = 0;//总页数
+            //数据列表
+            getdata(false);
+        }
+        function  getdata(iscallback) {
+            var  machinecode=     $("#machinecode").val();
+            tipdivshow("search",true);
+            debugger;
+            $.ajax({
+                type: "POST",
+                url: "/disneySZ/CoverServlet",
+                data: {
+                    commdCode: "getWellCoverByMachinecode",
+                    machinecode:machinecode,
+                    pageNo:pageNo ,
+                    pageSize:pageSize
+
+                },
+                dataType: "json",
+                success: function (data) {
+
+                    //设置基本信息表
+                    setdata(data,iscallback)
+                }
+            });
+        }
+        //设置页数+基本信息
+        function setdata(data,iscallback)         {
+            tipdivshow("search",false);
+            tipdivshow("nodata",false);
+            if(data===""||data===null||data===undefined||data.length==0){
+                tipdivshow("nodata",true);
+                return;
+            }
+            reformpagecount(data.totalcount,iscallback);
+            reformdata(data.data);
+        }
+        //设置页数
+        function reformpagecount(data,iscallback) {
+            if (data == null || data == "0" || data == "") {
+                totalcount = 0;
+                totalpagecount = 0;
+            }
+            else {
+                totalcount= parseInt(data);
+                totalpagecount = Math.ceil (parseInt(data)    / pageSize);
+            }
+            if(!iscallback) {
+                $("#totalcount_label").html(totalcount+"个");  //设置总数
+                 //初始化页码控件
+                $('.pagination').jqPagination({
+                    current_page: pageNo,
+                    max_page: totalpagecount,
+                    outerfunc: function (current_page) {
+                        return getfunccallback(current_page);
+                    }
+                });
+            }
+        }
+        //设置数据
+        function reformdata(data)    {
+            var dataArr = [];//结果集
+            if(data===""||data===null||data===undefined||data.length==0)
+            {
+
+
+                $("#searchData").datagrid("loadData",[]);
+                return;
+            }
+
+            for(var j=0;j<data.length;j++){
+                var listNum=j+1;
+                var machinecode=  data[j].machinecode;
+                var alarmcause=data[j].alarmcause;
+                dataArr.push({"listNum":listNum,"machinecode": machinecode,alarmcause:alarmcause });
+                showDataArr[machinecode]= data[j] ;
+                $("#searchData").datagrid("loadData",dataArr);
+            }
+        }
+
+
+        //GIS查询
+        function getCoverGISInfo(machinecode) {
+            var data = [];
+            if (machinecode != null & machinecode != "" & cover_layerid != null & cover_layerid != "") {
+                debugger;
+                pcStr = '&pc=' + '(and,like,JGCODE,' + machinecode + ')';
+                var searchDataResult = search.gisSearch(cover_layerid, pcStr);
+                if (searchDataResult != null || searchDataResult != undefined) {
+
+                    var tmpResultXml = searchDataResult.GotoPage(0);
+                    var attrData = $.xml2json(tmpResultXml);
+                    if (attrData.SearchResult != null && attrData.SearchResult.total > 0 && attrData.SearchResult.ModelResult != null) {
+                        if (attrData.SearchResult.total > 1) {
+                            data = attrData.SearchResult.ModelResult.ModelData;
+
+                        } else {
+                            data[0] = attrData.SearchResult.ModelResult.ModelData;
+                        }
+                    } else {
+                        data = [];
+                    }
+
+
+                }
+
+                return data;
+            }
+        }
+
+
+
+    </script>
+</head>
+<body id="container" class="easyui-layout">
+    <div region="north" border="false" split="false" style="height:60px;width:100%;text-align: left; ">
+
+        <div   style="width:100%;">
+            <div  style="margin-left: 10px;float:left">
+                <label >井盖编号:</label>
+                <input id="machinecode" style="width: 110px;"/>
+                <button id="btnSearch"  onclick="searchdata()">搜索</button>
+            </div>
+        </div>
+
+
+
+
+
+    </div>
+    <div id="div_searchData" region="center" border="false" style="overflow-y: hidden;overflow-x: hidden;"  style="height:100%">
+
+        <div>查询结果： <label id="totalcount_label"></label></div>
+
+        <table  id="searchData" class="easyui-datagrid" data-options="fitColumns:true,singleSelect:true,rowStyler :rowStyle  " style="height:100px"    >
+            <thead>
+            <tr >
+                <th data-options="field:'listNum',width:50">序号</th>
+                <th data-options="field:'machinecode',width:100">井盖编号</th>
+                <th data-options="field:'alarmcause',width:120" >井盖状态</th>
+
+            </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+
+
+    </div>
+    <div region="south" border="false" style="height: 50px;overflow:hidden">
+        <%--  页码开始--%>
+        <ul  class="pagination" style=" width:100%; text-align:center;">
+            <li  class="firstpageli"><img src="../../../image/test/firstpage.png" ></li>
+            <li class="prepageli"><img src="../../../image/test/prepage.png"></li>
+            第
+            <li  class="currentpageli"><input  style="width:20px;" value=' '/></li>
+            页
+            <li class="nextpageli"><img src="../../../image/test/nextpage.png" ></li>
+            <li class="endpageli"><img src="../../../image/test/endpage.png" ></li>
+            共<li  class="totalpageli">&nbsp;</li>页
+        </ul>
+        <%--  页码结束--%>
+        <div style="margin-top: 0px; float: right;margin-right: 10px;">
+            <button id="importExcelBtn"  style="margin-left: 10px;">导出excel</button>
+        </div>
+    </div>
+</div>
+
+
+
+    <div  id="searchtip_div" class="tipdivclass"   > 正在查询.... </div>
+    <div id="nodatatip_div" class="tipdivclass"  > 没有查到相关结果 </div>
+</body>
+</html>

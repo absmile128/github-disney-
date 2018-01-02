@@ -1,0 +1,196 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+    <title>上海国际旅游度假区三维空间基础信息平台</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	 <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+    <style type="text/css" media="screen">
+        html, body, object {
+            width:100%;
+            height:100%;
+            display:block;
+        }
+        html {
+            /* hides the browser's scrollbars */
+            overflow:none;
+        }
+        body {
+            margin:0;
+            padding:0;
+
+        }
+        #flashContent { width:100%; height:100%; }
+    </style>
+    <link rel="stylesheet" href="css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="css/easyui/icon.css"/>
+    <script  type="text/javascript"  src="js/lib/jquery.js"></script>
+    <script  type="text/javascript"  src="js/lib/jquery.easyui.min.js"></script>
+    <script  type="text/javascript"  src="js/lib/jquery.ztree.all.min.js"></script>
+    <script  type="text/javascript"   src="js/lib/jquery.xml2json.js"></script>
+
+
+
+    <script  type="text/javascript"  src="js/CITYPLAN_config.js"></script>
+    <script   type="text/javascript"  src="js/authentication.js"></script>
+    <!--<script type="text/javascript" src='js/login.js'></script>-->
+
+
+    <script type="text/javascript">
+
+        $(function (){
+		//add by JIARONG, NOV24 2015.
+			authMgr.delCookie('userName');
+			authMgr.delCookie('password');
+			authMgr.clearAll(); //清理缓存的权限信息
+
+            if(!CITYPLAN_config.auth.enableAuth){
+                jumpToMain("dskj");     //若    CITYPLAN_config.auth.enableAuth设置为false ，就直接跳转
+            }
+
+
+        });
+
+
+        function   userLogin (userName,password,swkjstyle){
+                debugger;
+              //cy:调用宝信接口
+                var url = CITYPLAN_config.service.authentication
+                        + '&u='+ escape(userName)
+                        + '&pwd=' + escape(password);
+
+                tearth.Event.OnEditDatabaseFinished = function(response){
+                    tearth.Event.OnEditDatabaseFinished = function(){};
+
+                    $('#earthtemp').hide();
+
+                    var menuAuthXml = response.AttributeName;
+
+                    var menuAuthJson = $.xml2json(menuAuthXml);
+                    if(menuAuthJson == undefined){
+                        alert('用户名或密码错误');
+                        return;
+                    }else{
+                        if(menuAuthJson.result <= 0){
+                            alert('用户名或密码错误');
+                            return;
+                        }
+
+                        authMgr.setCookie('userName', userName, 24);
+                        authMgr.setCookie('password', password, 24);
+
+                        jumpToMain(swkjstyle);
+                    }
+                }
+                tearth.DatabaseManager.GetXml(url);
+                $('#earthtemp').hide();
+            }
+
+        function jumpToMain (swkjstyle){
+          try{
+             var url = top.location.href;
+             if(swkjstyle=="dskj")
+             {
+                 url = url.substring(0,url.lastIndexOf('/')) + '/main2.html';
+                 top.location.assign(url);
+              }
+              else
+			{
+				url = url.substring(0,url.lastIndexOf('/'))+ '/pipeSys/index.html';
+                top.location.assign(url);
+			 }
+
+                }catch(e){
+
+                }
+            }
+
+
+
+
+
+//    //cy:登录系统（swf的函数接口）
+//    //swkjstyle：登录哪个系统（地上or地下）
+            var dx_login=function(dx_username,dx_password,swkjstyle){
+                alert(swkjstyle);
+
+
+                if(swkjstyle!="dskj"&&swkjstyle!="dxkj")
+                {
+
+                    alert("请重新选择需要进入的子系统！");
+                    return;
+                }
+
+                userLogin(dx_username,dx_password,swkjstyle);
+
+
+            }
+
+
+        //cy:管理员界面
+        var dx_pw=function(){
+            window.open (CITYPLAN_config.server.stampMgrUrl );
+        }
+
+
+        //cy:   插件、用户手册下载
+        var down=function(){
+            window.open ("down.html");
+        }
+
+
+    </script>
+
+</head>
+<body>
+
+
+<div id="flashContent" style=" z-index:1;">
+    <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="1280" height="720" id="login_ds" align="middle">
+        <param name="movie" value="sw.swf" />
+        <param name="quality" value="high" />
+        <param name="bgcolor" value="#2d8ee5" />
+        <param name="play" value="true" />
+        <param name="loop" value="true" />
+        <param name="wmode" value="opaque" />
+        <param name="scale" value="showall" />
+        <param name="menu" value="true" />
+        <param name="devicefont" value="false" />
+        <param name="salign" value="" />
+        <param name="allowScriptAccess" value="sameDomain" />
+        <!--[if !IE]>-->
+        <object type="application/x-shockwave-flash" data="sw.swf" width="100%" height="100%">
+            <param name="movie" value="login_ds.swf" />
+            <param name="quality" value="high" />
+            <param name="bgcolor" value="#2d8ee5" />
+            <param name="play" value="true" />
+            <param name="loop" value="true" />
+            <param name="wmode" value="opaque" />
+            <param name="scale" value="showall" />
+            <param name="menu" value="true" />
+            <param name="devicefont" value="false" />
+            <param name="salign" value="" />
+            <param name="allowScriptAccess" value="sameDomain" />
+            <!--<![endif]-->
+            <a href="http://www.adobe.com/go/getflash">
+                <img src="http://www.adobe.com/images/shared/download_buttons/get_flash_player.gif" alt="获得 Adobe Flash Player" />
+            </a>
+            <!--[if !IE]>-->
+        </object>
+        <!--<![endif]-->
+    </object>
+</div>
+
+<div id="gly_url" style="z-index:999;position:absolute;top:20px;right:60px;">
+               <a style="font-weight: bold;color:#ffffff;text-decoration:underline; cursor: hand; " onclick="dx_pw()">管理员界面</a>
+</div>
+<div id="downcj_url" style="z-index:999;position:absolute;top:20px;right:160px;">
+    <a style="font-weight: bold;color:#ffffff;text-decoration:underline; cursor: hand; " onclick="down()">插件、用户手册下载</a>
+</div>
+
+<div id='earthtemp'></div>
+
+</body>
+
+</html>

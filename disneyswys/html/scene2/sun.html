@@ -1,0 +1,158 @@
+<!DOCTYPE HTML>
+<html>
+<!-- saved from url=(0014)about:internet -->
+<head>
+    <title>太阳</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="../../css/easyui/default/easyui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/easyui/icon.css" />
+    <link rel="stylesheet" href="../../css/slider/main.css" />
+    <link rel="stylesheet" href="../../css/slider/slider.css" />
+    <style>
+        button{ width: 85px; height: 28px;}
+        #container{ text-align: center; }
+        #container>div{ margin: 10px 0; }
+        input{ width: 150px;}
+    </style>
+    <script src="../../js/lib/jquery.min.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/locale/easyui-lang-zh_CN.js"></script>
+</head>
+
+<body id="container" style="font-size: 12px;color: #fffffe">
+<div style="margin-top: 30px;" >
+
+</div>
+<div style="margin-left:30px;">
+  <!--  太阳：<input id="timeSlider"  showTip="false"  rule="['8','|','10','|','12','|','14','|','16','|','18']" />-->
+    <div style="position: absolute;left:50px;top: 30px;" >
+        <span id="nowTime"  ></span>
+    </div>
+     <div style="position: absolute;left: 30px;top: 40px;">
+    <input id="timeSlider" class="easyui-slider" showTip="false" data-options="min:0,max:1440,step:1"
+           rule="['0','|','6','|','12','|','18','|','24']" value="1440" style="width:200px;" />
+    </div>
+</div>
+<!--<div>
+    <button id="btnStartAnalysis" >开始</button>
+    <button id="btnstop" disabled>停止</button>
+</div>-->
+<script src="../../js/analysis.js"></script>
+<script type="text/javascript">
+    document.oncontextmenu = function () {
+        event.returnValue = false;//212221
+    };
+    var earth ="";
+    function setTranScroll(earthObj){
+        earth = earthObj;
+        var analysis = CITYPLAN.Analysis(earth);
+    var timer;
+    var today = "";
+    var setDateTime = function(now){
+            var year = now.getFullYear();
+            var month = now.getMonth()+1;
+            var day = now.getDate();
+            var hour = now.getHours();
+            var minute = now.getMinutes();
+            var second = now.getSeconds();
+            if(hour<10){
+               hour ="0"+hour;
+            }
+            if(minute < 10){
+                minute = "0"+minute;
+            }
+            var str ="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;当前日期："+year + "/" + month + "/" + day+" "+" "+hour + ":" + minute ;
+            today = year + "-" + month + "-" + day;
+            $("#nowTime")[0].innerHTML=str;
+            /*$("#date").datebox("setValue", year + "/" + month + "/" + day);
+            $("#time").timespinner("setValue", hour + ":" + minute + ":" + second);*/
+            $("#timeSlider").slider({value:1440});
+        };
+        setDateTime(new Date());
+
+        $("#timeSlider").slider({
+            onChange: function(value){
+                var h = Math.floor(value / 60);
+                var m = value % 60;
+                var nowdata= h + ":" + m + ":00";
+                var t = today.split("-");
+                if(h<10){
+                    h ="0"+h;
+                }
+                if(m< 10){
+                    m = "0"+m ;
+                }
+                var str ="当前日期："+t[0] + "/" +t[1] + "/" + t[2]+" "+" "+h + ":" + m ;
+                $("#nowTime")[0].innerHTML=str;
+                //$("#time").timespinner("setValue", (8+h) + ":" + m + ":00");
+                analysis.sun(today,nowdata);
+            }
+        });
+        var clear = function (){
+            analysis.clear();
+        };
+        // 开始或结束分析   timezone  date time    step     interval   timeSlider
+        $("#btnStartAnalysis").click(function (){
+            if($(this).text() == "开始"){
+                analysis.sun($("#date").datebox("getValue"),$("#time").val());
+                $("#timeSlider").slider("enable");
+                $("#btnStartAnalysis").attr("disabled","disabled");
+                $("#btnstop").removeAttr("disabled");
+                $("#datediv").attr("disabled","disabled") ;
+                $("#timediv").attr("disabled","disabled") ;
+
+            }
+        });
+        $("#btnstop").click(function (){
+            clear();
+            earth.Analysis.EndShinLightAnaLysis();
+            $("#timeSlider").slider("disable");
+            $("#btnStartAnalysis").removeAttr("disabled");
+            $("#btnstop").attr("disabled","disabled");
+            $("#datediv").removeAttr("disabled");
+            $("#timediv").removeAttr("disabled");
+            setDateTime(new Date());
+        });
+        // 开始或取消动态模拟
+        $("#btnSimulate").click(function (){
+            stopTime=((18-$("#time").val().split(":")[0])*60/$("#step").val())*$("#interval").val()*1000;
+            moni();
+        });
+        function moni(){
+            if($("#btnSimulate").text() == "动态模拟"){
+                $("#btnSimulate").text("取消模拟");
+                $("#btnGetExtent,#btnStartAnalysis").attr("disabled");
+                $("#timeSlider").slider("disable");
+                timer = setInterval(function (){
+                    var dates = $("#date").datebox("getValue").split("-");
+                    var times = $("#time").val().split(":");
+                    var curDate = new Date(dates[0],dates[1]-1,dates[2],times[0],times[1],times[2]);
+                    curDate.setTime(curDate.getTime() + $("#step").val() * 60 * 1000);
+                    setDateTime(curDate);
+                    analysis.shinning(timezone.value,$("#date").datebox("getValue"),$("#time").val(),extent);
+                }, $("#interval").val() * 1000);
+            }else{
+                $("#btnSimulate").text("动态模拟");
+                $("#btnGetExtent,#btnStartAnalysis").removeAttr("disabled");
+                $("#timeSlider").slider("enable");
+                clearInterval(timer);
+            }
+        }
+        setInterval(function(){
+            if($("#time").val()=="18:00:00"&&$("#btnSimulate").text()=="取消模拟"){
+                $("#btnSimulate").text("动态模拟");
+                $("#btnGetExtent,#btnStartAnalysis").removeAttr("disabled");
+                $("#timeSlider").slider("enable");
+                clearInterval(timer);
+            }
+        },$("#interval").val());
+        $(window).unload(function (){
+            clear();
+            earth.Analysis.EndShinLightAnaLysis();
+        });
+    }
+    
+    
+</script>
+</body>
+</html>

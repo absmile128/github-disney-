@@ -1,0 +1,509 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title></title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <link rel="stylesheet" href="../../css/common.css"/>
+
+
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/locale/easyui-lang-zh_CN.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+    <script src="../../js/searchAnalysis.js"></script>
+    <script src="../../js/project.js"></script>
+    <script src="../../js/editor.js"></script>
+    <script src="../../js/common.js"></script>
+    <script src="../../js/lib/jquery.jqpagination.js"></script>
+    <script src="../../js/search.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>
+    <script src="../../js/cover/handle.js"></script>
+    <script src="../../js/statistics.js"></script>
+    <script src="../../js/pageHelper.js"></script>
+    <script>
+
+        var earth = null;
+        var searchAnalysis = null;
+        var search=null;
+
+        var pageSize = 16; //每页显示条数
+        var pageNo = 1;//页码数（第几页）
+        var totalcount=0;//总数
+        var totalpagecount = 0;//总页数
+        var showDataArr = [];
+
+        var cover_layerid= "";
+
+
+        function getEarth(earthObj) {
+            earth = earthObj;
+            searchAnalysis = CITYPLAN.searchAnalysis(earth);
+            search=STAMP.Search(earth);
+            cover_layerid= CITYPLAN_config.disney.cover_layerid;
+            //窗口变化后，尺寸调整
+            window.onresize = function(){
+                //初始化设置高度
+                var divHeight =$(document).height()-150 ;
+                var divWidth = $(document).width()  ;
+                $('#searchData').datagrid('resize',{
+                    height:divHeight,
+                    width:divWidth
+                });
+            };
+
+            $(window).trigger("resize");
+
+
+
+            $('#searchData').datagrid({
+                onDblClickRow: dbclick
+            });
+
+            var parseDate = function(date){
+
+                try{
+                    if(date == undefined){
+                        date = new Date();
+                    }
+
+                    var sy = date.getFullYear();
+                    var sm = date.getMonth() + 1;
+                    sm = sm < 10 ? '0' + sm : sm;
+                    var sd = date.getDate();
+                    sd = sd < 10 ? '0' + sd : sd;
+
+                    return sy + '-' + sm + '-' + sd;
+                }catch(e){
+                    date = new Date();
+                    parseDate(date);
+                }
+            }
+
+            $("#startDate").datebox({
+                onSelect:function(){
+                    var s1=$(this).datebox("getValue").split("-");
+                    var s2=$("#endDate").datebox("getValue").split("-");
+                    if(s2){
+                        $("#endDate").datebox("setValue",year+"-"+month+"-"+day);
+                        s2=$("#endDate").datebox("getValue").split("-");
+                    }
+                    var end=s2[0]+s2[1]+s2[2];
+                    var str=s1[0]+s1[1]+s1[2];
+                    if(parseFloat(str)>parseFloat(end)){
+                        $("#endDate").datebox("setValue",$(this).datebox("getValue"));
+                    }
+                },
+                formatter:parseDate
+            });
+            $("#endDate").datebox({
+                onSelect:function(){
+                    var s1=$(this).datebox("getValue").split("-");
+                    var s2=$("#startDate").datebox("getValue").split("-");
+                    var str=s2[0]+s2[1]+s2[2];
+                    var end=s1[0]+s1[1]+s1[2];
+                    if(parseFloat(str)>parseFloat(end)){
+                        $("#startDate").datebox("setValue",$(this).datebox("getValue"));
+
+                    }
+                },
+                formatter:parseDate
+            });
+            var curr_time = new Date();
+
+            var year = curr_time.getFullYear();
+            var month=(curr_time.getMonth()+1>9?curr_time.getMonth()+1:"0"+(curr_time.getMonth()+1));
+            var day=(curr_time.getDate()>=10?curr_time.getDate():"0"+curr_time.getDate());
+            $("#startDate").datebox("setValue", year + "-" + "01" + "-01");
+            $("#endDate").datebox("setValue", year + "-" + month + "-" + day);
+
+            getinitpersonnellist();
+            searchdata();
+
+        }
+
+        //格式化单元格提示信息
+        function formatCellTooltip(value){
+            return "<span title='" + value + "'>" + value +"</span>";
+        }
+
+
+        function  getinitpersonnellist() {
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/UserHandler.ashx?action=GetUserList",
+                data: {
+                    str:"",
+                    status:""
+                },
+                cache: false,
+                success: function (data) {
+                    debugger;
+
+
+                    setpersonnellist(data)
+                },
+                error:function (x,t,e) {
+
+                }
+            });
+        }
+
+        function setpersonnellist(data) {
+            var html="";
+            html+="<option  > </option> ";
+            for (var i = 0; i < data.length; i++) {
+                for (var j = 0; j < data[i].UserList.length; j++) {
+                    var id=data[i].UserList[j].ID
+                    var name= data[i].UserList[j].NAME;
+                    html+="<option  value="+id+">"+name+"</option> ";
+                }
+            }
+            $("#inspectorlist").html(html);
+        }
+        //回调函数
+        function getfunccallback(current_page) {
+            pageNo = current_page;
+            getdata(true); //重新获取数据
+        }
+        function picsFormatter(value,row,index){   //关键：格式化，并返回一个img标签
+
+            return '<img   width="60px" height="60px" title="点击浏览照片" src="'+row.picpaths+'"   onclick=preview("'+row.picpaths+'") />' ;
+
+
+        }
+        function piceFormatter(value,row,index){   //关键：格式化，并返回一个img标签
+
+            return '<img   width="60px" height="60px" title="点击浏览照片" src="'+row.picpathe+'"   onclick=preview("'+row.picpathe+'") />' ;
+
+        }
+         function preview(path) {
+             var params = {
+                 path: path
+
+             };
+             openDialog("PreviewImg.html", params, 400, 400,true);
+//
+//             $("#dlg").dialog('open');
+//             $("#simg").attr("src",path);
+         }
+
+        //datagrid双击事件
+        function dbclick(rowIndex,rowData){
+            var rows = $("#searchData").datagrid("getRows");
+            var machinecode=  rows[rowIndex].machinecode;  //触发器编号
+
+            var expnum=rows[rowIndex].expnum//管点编号
+            var expnumalias=rows[rowIndex].expnumalias//管点编号简略
+            var location=getlocation(expnum) ;  //获得定位地址              根据管点编号 得到gis 点位
+            var  expnumlist=[];
+            expnumlist.push(expnum);
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/TriggerHandler.ashx?action=GetTriggerListByExpnums",
+                data: {
+
+                    expNums:expnumlist
+                },
+                cache: false,
+                async:false,
+                success: function (data) {
+
+                    if(data.TotalCount==0)   {
+                        alert("没有对应井盖！");
+                        return;
+                    }
+                   if(data.List!=null) {
+                       var info ={
+                           coverSituationInfo:data.List[0]
+                       }
+                       info.coverSituationInfo.EXPNUMALIAS= expnumalias;
+
+                       //气泡显示的属性信息
+                       goToParse(location, info);
+                       //高亮
+                       highlight(expnum);
+                    }
+
+                },
+                error:function (x,t,e) {
+
+                }
+            });//获得井盖信息
+
+        }
+        function highlight(expnum){
+            if( expnum =="" ) {
+                return;
+            }
+            var queryPipe = Query.PageHelper(earth);
+            var projectId  =CITYPLAN_config.disney.currentPrjGuid;
+            var pipelineList = StatisticsMgr.initPipelineListsz(projectId);//获取当前工程下的管线图层列表
+            if(pipelineList==undefined||pipelineList==null)  {
+                alert("无管线图层！");
+                return;
+            }
+            for (var i = 0; i < pipelineList.length; i++) {
+                var layerID = pipelineList[i].id;
+                queryPipe.highlightObject(layerID, '管点', null, expnum);
+            }
+        }
+        //获得定位地址
+        function getlocation(expnum) {
+            var location =null;
+            var coverGisdata = getCoverGISInfo(expnum);
+            if (coverGisdata == null || coverGisdata.length == 0) {
+                return location;
+            }
+            var coordinateArr = coverGisdata[0]["SHAPE"]["Point"]["Coordinates"].split(',');
+            var point = earth.Factory.CreateGeoPoint();
+            for (var i = 0; (i + 2) < coordinateArr.length; i += 3) {
+                point.Longitude = coordinateArr[i];
+                point.Latitude = coordinateArr[i + 1];
+                //point.Altitude = earth.GlobeObserver.GetHeight(point.x, point.y); // 100;coordinateArr[i+2];
+                point.Altitude = earth.Measure.MeasureTerrainAltitude(point.x, point.y);
+            }
+            var location = {
+                lon: point.Longitude,
+                lat: point.Latitude,
+                alt: point.Altitude,
+            }
+            return location;
+        }
+
+        //定位
+        function goToParse(location,info){
+
+            if( location ==null||info==null||info.coverSituationInfo==null) {
+                alert("没有对应井盖！");
+                return;
+            }
+//            earth.GlobeObserver.GotoLookat(location.lon , location.lat, location.alt, 0, 90, 0, 30); //定位
+            earth.GlobeObserver.GotoLookat(location.lon+0.0004 , location.lat, location.alt, 0, 90, 0, 60); //定位
+            searchAnalysis.createHtmlBollon("CoverSituationTable.html", info, location, 350, 360)
+
+        }
+        //GIS查询
+        function getCoverGISInfo(expnum) {
+            var searchDataResult;
+            if (expnum != null & expnum != "" & cover_layerid != null & cover_layerid != "") {
+                var  pcStr = '&pc=' + '(and,like,EXPNO,' + expnum + ')';
+                searchDataResult = search.gisSearch(cover_layerid, pcStr);
+            }
+            return searchDataResult;
+        }
+        function searchdata() {
+            pageNo = 1;//页码数（第几页）
+            totalcount = 0;//总数
+            totalpagecount = 0;//总页数
+            //数据列表
+            getdata(false);
+        }
+
+        function getdata(iscallback) {
+            var  keystr= $("#keystr").val();
+            var receiverstr=$.trim($("#inspectorlist").find("option:selected").text());
+
+            tipdivshow("search",true);
+            var start=$("#startDate").datebox("getValue");
+            start=start.replace("-","/").replace("-","/");
+            var end=$("#endDate").datebox("getValue");
+            end=end.replace("-","/").replace("-","/");
+
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/CaseHandler.ashx?action=GetHisCaseList",
+                data: {
+                    starttime:start,
+                    endtime:end,
+                    str:keystr,
+                    receiver:receiverstr,
+                    pageNo:pageNo ,
+                    pageSize:pageSize
+
+                },
+                cache: false,
+                success: function (data) {
+
+                    //设置基本信息表
+                    setdata(data,iscallback)
+                },
+                error:function (x,t,e) {
+                    alert("错误！");
+
+                }
+            });
+        }
+
+        //设置页数+基本信息
+        function setdata(data,iscallback)         {
+            tipdivshow("search",false);
+            tipdivshow("nodata",false);
+            if(data===""||data===null||data===undefined||data.length==0){
+                tipdivshow("nodata",true);
+                return;
+            }
+            reformpagecount(data.TotalCount,iscallback);
+            reformdata(data.List);
+        }
+
+        //设置页数
+        function reformpagecount(data,iscallback) {
+            if (data == null || data == "0" || data == "") {
+                totalcount = 0;
+                totalpagecount = 0;
+            }
+            else {
+                totalcount= parseInt(data);
+                totalpagecount = Math.ceil (parseInt(data)    / pageSize);
+            }
+            if(!iscallback) {
+                $("#totalcount_label").html(totalcount+"个");  //设置总数
+                //初始化页码控件
+                $('.pagination').jqPagination({
+                    current_page: pageNo,
+                    max_page: totalpagecount,
+                    outerfunc: function (current_page) {
+                        return getfunccallback(current_page);
+                    }
+                });
+            }
+        }
+        //设置数据
+        function reformdata(data)    {
+            var dataArr = [];//结果集
+            if(data===""||data===null||data===undefined||data.length==0)
+            {
+
+                $("#searchData").datagrid("loadData",[]);
+                return;
+            }
+            for(var j=0;j<data.length;j++){
+                var listNum=j+1;
+                var machinecode=   handlefield("machinecode",data[j].MACHINECODE).valuealias;
+                var expnum=handlefield("expnum", data[j].EXPNUM).valuealias;
+                var expnumalias=handlefield("expnumalias", data[j].EXPNUM).valuealias;
+                data[j].EXPNUMALIAS= expnumalias;
+
+                var address= handlefield("address",data[j].ADDRESS).valuealias;
+                var picpaths= handlefield("picpaths",data[j].PICPATHS).valuealias;
+                var picpathe= handlefield("picpathe",data[j].PICPATHE).valuealias;
+                var managername=handlefield("managername",data[j].MANAGERNAME).valuealias;
+                var receiver= handlefield("receiver",data[j].RECEIVER).valuealias;
+                var receivetime= handlefield("receivetime",data[j].RECEIVETIME).valuealias;
+                var disposetime=   handlefield("disposetime",data[j].DISPOSETIME).valuealias;
+                dataArr.push({"listNum":listNum,"expnumalias":expnumalias,"expnum":expnum,"machinecode": machinecode,address:address,picpaths:picpaths,picpathe:picpathe,managername:managername,receiver: receiver,receivetime:receivetime,disposetime:disposetime});
+                showDataArr[expnum]= data[j] ;
+                $("#searchData").datagrid("loadData",dataArr);
+            }
+        }
+
+    </script>
+</head>
+<body id="container" class="easyui-layout">
+<div region="north" border="false" split="false" style="height:60px;text-align: left; ">
+
+    <!--<fieldset  style="width:100%">-->
+    <!--<legend>历史故障查询</legend>-->
+    <div style="float:left">
+        <div  style="margin-left: 10px;margin-top: 10px;">
+            <label for="startDate">开始时间:</label>
+            <input id="startDate" class="easyui-datebox" style="width: 100px;"/>
+
+            <label for="endDate">结束时间:</label>
+            <input id="endDate" class="easyui-datebox" style="width: 100px;"/>
+
+
+            <label  >巡查员：</label>
+            <!--<select id="inspectorlist" style="  width: 80px; "/>-->
+            <span style="overflow:hidden" >
+            <select style="width:100px;"  id="inspectorlist" name="inspectorlist">
+
+            </select>
+        </span>
+            <label   >关键字：</label>
+            <input   id="keystr" style="width:100px; "/>
+            <button id="btnSearch"  onclick="searchdata()">搜索</button>
+        </div>
+
+
+    </div >
+
+    <!--</fieldset>-->
+
+
+
+
+
+</div>
+<div id="div_searchData" region="center" border="false" style="overflow-y: hidden;overflow-x: hidden;"  style="height:100%">
+
+    <div>查询结果： <label id="totalcount_label">0个</label>（双击定位）</div>　
+    <div style="float:right;">
+        <input  id="InfoCheck"  type="checkbox"  checked="checked"   >详细信息 </input>
+    </div>
+    <table  id="searchData" class="easyui-datagrid" data-options="fitColumns:true,singleSelect:true "   style="height:100px" >
+
+        <thead>
+        <tr >
+            <th data-options="field:'listNum',width:50,height:100,formatter:formatCellTooltip">序号</th>
+
+            <th data-options="field:'expnumalias',width:100 ,formatter:formatCellTooltip">井盖编号</th>
+            <th data-options="field:'expnum',width:100 ,formatter:formatCellTooltip,hidden:'true'">井盖编号</th>
+            <th data-options="field:'machinecode',width:100,height:100,formatter:formatCellTooltip">触发器编号</th>
+            <th data-options="field:'address',width:100,height:100,formatter:formatCellTooltip">发生地点</th>
+            <th data-options="field:'picpaths' ,width:100,height:100,formatter:picsFormatter">照片(前)</th>
+            <th data-options="field:'picpathe' ,width:100,height:100 ,formatter:piceFormatter">照片(后)</th>
+            <th data-options="field:'managername' ,width:100,height:100 ,formatter:formatCellTooltip">派单人员</th>
+            <th data-options="field:'receiver' ,width:100,height:100 ,formatter:formatCellTooltip">巡查人员</th>
+            <th data-options="field:'receivetime' ,width:100,height:100 ,formatter:formatCellTooltip">派单时间</th>
+            <th data-options="field:'disposetime' ,width:100,height:100 ,formatter:formatCellTooltip">处理时间</th>
+
+        </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+</div>
+
+
+<div region="south" border="false" style="height: 50px;overflow:hidden">
+    <%--  页码开始--%>
+    <ul  class="pagination" style=" width:100%; text-align:center;">
+        <li  class="firstpageli"><img src="../../image/test/firstpage.png" ></li>
+        <li class="prepageli"><img src="../../image/test/prepage.png"></li>
+        第
+        <li  class="currentpageli"><input  style="width:20px;" value=' '/></li>
+        页
+        <li class="nextpageli"><img src="../../image/test/nextpage.png" ></li>
+        <li class="endpageli"><img src="../../image/test/endpage.png" ></li>
+        共<li  class="totalpageli">&nbsp;</li>页
+    </ul>
+    <%--  页码结束--%>
+
+    <!--<div style="margin-top: 0px; float: right;margin-right: 10px;">-->
+        <!--<button id="statistics"  style="margin-left: 10px;">统计</button>-->
+    <!--</div>-->
+    <!--<div style="margin-top: 0px; float: right;margin-right: 10px;">-->
+        <!--<button id="importExcelBtn"  style="margin-left: 10px;">导出excel</button>-->
+    <!--</div>-->
+</div>
+
+
+
+<div  id="searchtip_div" class="tipdivclass"   > 正在查询.... </div>
+<div id="nodatatip_div" class="tipdivclass"  > 没有查到相关结果 </div>
+
+<!--<div id="dlg" class="easyui-dialog" title="照片浏览" style="width:400px;height:400px;"-->
+     <!--data-options="iconCls:'icon-close',resizable:true,modal:true,closed:true">-->
+   <!--<img id="simg"  style="width:100% ; height: 100%"/>-->
+<!--</div>-->
+</body>
+</html>

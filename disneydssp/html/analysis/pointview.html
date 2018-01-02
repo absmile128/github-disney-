@@ -1,0 +1,86 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>视野分析</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/common.css"/>
+
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+</head>
+<body id="container"  >
+<div style="text-align: center;margin-top: 30px;" >
+    <span>观察高度:&nbsp;</span>
+    <input  id="height" name="height" type="text" value="2" width="100px"/>
+    <span>米</span>
+</div>
+<!--<div style="text-align: center;">-->
+<!--<button id="btnStart" >开始分析</button>-->
+<!--&lt;!&ndash;    <button id="clear"  >退出</button>&ndash;&gt;-->
+
+
+<div style="border-bottom:1px dashed #000000;  margin-top: 20px;"></div>        <!--虚线-->
+<div  style=" text-align: right;  margin-top: 30px;">
+    <!--<button class="largeBtn"    id="btnStart" >开始分析</button>-->
+    <button class="normal2Btn"    id="btnStart" >开始分析</button>
+
+
+</div>
+
+<script src="../../js/CITYPLAN_config.js"></script>
+
+<script src="../../js/project.js"></script>
+<script src="../../js/common.js"></script>
+<!--<script src="../../js/index.js"></script>-->
+<script src="../../js/analysis.js"></script>
+
+<script>
+        var earth = parent.earth;
+        var analysis = CITYPLAN.Analysis(earth);
+        $(function () {
+
+
+                $("#btnStart").click(function(){
+
+                    if(check()){
+                        if($("#btnStart").text()==="开始分析"){
+                            $("#btnStart").attr("disabled","disabled");
+
+                            analysis.fixedObserver($("#height").val());
+                            $("#height").attr("disabled","disabled") ;
+                        }
+                    }
+                });
+//                $("#btnStop").click(function(){
+//                    analysis.clear();
+//                    $("#height").removeAttr("disabled")  ;
+//                    $("#btnStart").removeAttr("disabled")  ;
+//                });
+
+//            $("#clear").click(function(){
+//                parent.clearHtmlBallon(earth.htmlBallon);
+//            });
+            window.onunload=function(){
+
+
+                analysis.clear();
+            };
+        }) ;
+
+
+        function check(){
+            if(isNaN($("#height").val()) == true){
+                alert("无效的观察高度");
+    //            $("#height").select();
+    //            $("#height").focus();
+                return false;
+            }
+            return true;
+        }
+
+</script>
+</body>
+</html>

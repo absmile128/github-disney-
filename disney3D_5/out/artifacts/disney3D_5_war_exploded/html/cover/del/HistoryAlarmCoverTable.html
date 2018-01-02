@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+<!-- saved from url=(0014)about:internet -->
+<head>
+    <meta charset="utf-8"/>
+    <title> 历史故障信息表 </title>
+    <meta name="Generator" content="EditPlus">
+    <meta name="Author" content="">
+    <meta name="Keywords" content="">
+    <meta name="Description" content="">
+    <link rel="stylesheet" href="../../../css/table.css"/>
+
+
+    <script src="../../../js/common.js"></script>
+
+    <link rel="stylesheet" href="../../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../../css/easyui/icon.css"/>
+
+
+    <script type="text/javascript" src="../../../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../../js/attachment_64.js"></script>
+    <script src="../../../js/CITYPLAN_config.js"></script>
+    <script src="../../../js/cover/handle.js"></script>
+　
+    <script>
+
+        var earth=null;
+
+        function postData(obj) {
+
+            earth = obj.earth;
+            var historyAlarmInfo = obj.historyAlarmInfo;  //历史故障信息
+            //获取基本信息
+            var triggercode = obj.triggercode;
+            getWellCoverByMachinecode(triggercode) ;
+
+
+            //设置历史故障信息表
+            sethistoryAlarmInfo(historyAlarmInfo)
+
+
+        }
+
+        //获取基本信息
+        function  getWellCoverByMachinecode(triggercode) {
+            debugger;
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/TriggerHandler.ashx?action=GetPagedTriggerList",
+                data: {
+                    str:triggercode,
+                    alarmstate:"",
+                    pageNo:1 ,
+                    pageSize:10
+
+                },
+                cache: false,
+                success: function (data) {
+
+                    //设置基本信息表
+                    setBasicInfodata(data.List)
+                },
+                error:function (x,t,e) {
+
+                }
+            });
+        }
+
+        //设置基本信息表
+        function  setBasicInfodata(data)   {
+
+
+            for (var key in data) {
+                var namealias=  handlefield(key, data[0][key]).namealias;
+                var valuealias  =handlefield(key, data[0][key]).valuealias;
+                if(displayfield("BASICINFOTABLE",key)){
+                    htmlStr +='<tr ><td   class="texttdclass">'+ namealias + '</td><td    class="texttdclass">' + valuealias + '</td></tr>';
+                }
+
+            }
+            htmlStr = htmlStr + '</table>';
+
+
+
+
+
+
+            var htmlStr = '<table >';
+
+
+//            var htmlStr = '<table style="font-size:14px;  width: 100%;border-collapse: collapse;border-spacing: 0;overflow-y:auto;color:#000000">';
+            if (data==null||data.length==0) {
+                htmlStr += '<tr ><td  >无基本信息！</td></tr>';
+            }else {
+
+                for (var key in data[0]) {
+                    debugger;
+                    var namealias=  handlefield(key, data[0][key]).namealias;
+                    var valuealias  =handlefield(key, data[0][key]).valuealias;
+                    if(displayfield("BASICINFOTABLE",key)){
+//                        htmlStr += '<tr ><td  >' + namealias + '</td><td   >' + valuealias + '</td></tr>';
+
+                        htmlStr +='<tr ><td   class="texttdclass">'+ namealias + '</td><td    class="texttdclass">' + valuealias + '</td></tr>';
+
+                    }
+                }
+                htmlStr = htmlStr + '</table>';
+
+            }
+            $("#jb_div").html(htmlStr);
+
+        }
+
+        //设置历史故障信息表
+        function  sethistoryAlarmInfo(historyAlarmInfo) {
+            if (historyAlarmInfo == null) {
+                htmlStr += '<tr ><td  >无历史故障信息！</td></tr>';
+            } else {
+                var htmlStr = '<table >';
+//                var htmlStr = '<table style="font-size:14px;  width: 100%;border-collapse: collapse;border-spacing: 0;overflow-y:auto;color:#000000">';
+                for (var key in historyAlarmInfo) {
+                    var namealias=  handlefield(key, historyAlarmInfo[key]).namealias;
+                    var valuealias  =handlefield(key, historyAlarmInfo[key]).valuealias;
+                   if(displayfield("HISTORYALARMINFO",key)){
+
+//                        htmlStr += '<tr ><td  >' + namealias + '</td><td   >' + valuealias+ '</td></tr>';
+
+                       htmlStr +='<tr ><td   class="texttdclass">'+ namealias + '</td><td    class="texttdclass">' + valuealias + '</td></tr>';
+
+                   }
+                }
+                htmlStr = htmlStr + '</table>';
+                $("#lsgz_div").html(htmlStr);
+
+
+
+            }
+        }
+    </script>
+
+</head>
+
+<body>
+
+
+
+<div class="easyui-tabs" style=" height:250px">
+    <div title="基本信息" id="jb_div" style="padding:10px">
+
+    </div>
+    <div title="历史故障信息" id="lsgz_div" style="padding:10px">
+
+    </div>
+
+</div>
+
+</body>
+</html>

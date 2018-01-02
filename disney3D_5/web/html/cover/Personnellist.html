@@ -1,0 +1,131 @@
+<html xmlns:v="http://www.w3.org/2001/XMLSchema">
+<head>
+    <title>市政巡查人员</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <script type="text/javascript" src="../../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script>
+
+        var params = window.dialogArguments;
+
+        $(function () {
+
+//            var alarmCoverInfo=params.alarmCoverInfo;//管线信息数组 需要排序 按照间距的大小排序
+            setpersonnellist();
+
+        });
+        function  getinitpersonnellist() {
+            $.ajax({
+                type: "POST",
+                url: "/disneySZ/CoverServlet",
+                data: {
+                    commdCode: "getWellCoverByMachinecode",
+                    machinecode:"",
+                    pageNo:pageNo ,
+                    pageSize:pageSize
+                },
+                dataType: "json",
+                success: function (data) {
+                    setpersonnellist(data)
+                }
+            });
+        }
+        function  setpersonnellist() {
+            var setting = {
+//                check: {
+//                    enable: true, //是否显示checkbox或radio
+//                    chkStyle: "checkbox" //显示类型,可设置(checbox,radio)
+//                },
+                data: {
+                    simpleData: {
+                        enable: true
+                    }
+                },
+                view: {
+                    dblClickExpand: false, //双击节点时，是否自动展开父节点的标识
+                    expandSpeed: "", //节点展开、折叠时的动画速度, 可设置("","slow", "normal", or "fast")
+                    selectedMulti: false //设置是否允许同时选中多个节点
+                },
+                callback: {
+                    onDblClick: function (event, treeId, node) {
+                        if (node && node.id) {
+                            var layer = earth.LayerManager.GetLayerByGUID(node.id);
+
+                        }
+                    },
+                    onCheck: function (event, treeId, node) {
+                        var layer = earth.LayerManager.GetLayerByGUID(node.id);
+                        layer.Visibility = node.checked;
+                    }
+                }
+            };
+//        var layer = earth.LayerManager.GetLayerByGUID(prjGuid);
+//
+//        var treeData = [];
+//        treeData.push({id: layer.Guid, pId: 0, name: layer.Name, open: true, nocheck: false, type: "currentproject"});
+
+
+
+            var treeData =[
+
+              { id:1, pId:0, name:"绿化组", open:true},
+                { id:11, pId:1, name:"张三"},
+                { id:11, pId:1, name:"李四"},
+              { id:2, pId:0, name:"河道组", open:true},
+                { id:21, pId:2, name:"张三"},
+                { id:21, pId:2, name:"李四"}
+            ];
+
+
+
+            $.fn.zTree.init($("#personnellistTree"), setting, treeData);
+
+        }
+        function  dispose() {
+            var treeObj = $.fn.zTree.getZTreeObj("personnellistTree");
+            var  nodes=treeObj.getSelectedNodes(true);
+            if(nodes.length==1) {
+                var  disposerID=nodes[0].id;
+                var disposerName=nodes[0].name;
+                var msg = params.alarmCoverInfo.machinecode+"已派单给"+disposerName;
+                 if (confirm(msg)==true){
+                     close();
+                     return true;
+
+                 }else{
+                    return false;
+                 }
+            }
+
+
+
+
+        }
+        function  close() {
+            window.returnValue = "已派单"; //定义返回值
+            window.close();
+        }
+    </script>
+</head>
+
+<body style="background: white;">
+<table align="center">
+    <tr>
+        <td>
+            <div id="h2" style="text-align: center;"><h2>市政巡查人员</h2></div></td>
+    </tr>
+    <tr>
+        <td style="width: 100%; vertical-align: top">
+            <div title="巡查人员列表">
+                <ul id="personnellistTree" class="ztree"></ul>
+            </div>
+        </td>
+    </tr>
+
+</table>
+
+
+</body>
+</html>

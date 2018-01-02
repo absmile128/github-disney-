@@ -1,0 +1,593 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+
+		<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+		<meta http-equiv="Content-Type" content="textml; charset=UTF-8" />
+		<title>上海国际旅游度假区地下管线审批系统</title>
+		<!--                       CSS                       -->
+		<!-- jQeury EasyUI Style sheet -->
+		<link rel="stylesheet" type="text/css" href="css/easyui/gray/easyui.css"/>
+	    <link rel="stylesheet" type="text/css" href="css/easyui/icon.css"/>
+	    <link rel="stylesheet" type="text/css" href="util/zTreeStyle/zTreeStyle.css"/>
+        <!--		 Main Style sheet -->
+	    <link rel="stylesheet" type="text/css" href="css/common.css"/>
+	    <link rel="stylesheet" type="text/css" href="css/reset.css"/>
+		<!-- BreadCrumbs button in TopMenu Style sheet -->
+	    <link rel="stylesheet" type="text/css" href="css/breadcrumbs.css"/>
+	    <link rel="stylesheet" type="text/css" href="css/main.css"/>
+
+		<!--                       Javascripts                       -->
+		<!--          jQuery        -->
+		<script type="text/javascript" src="util/jquery.js"></script>
+		<script type="text/javascript" src="util/easyui/jquery.easyui.js"></script>
+		<script type="text/javascript" src="util/zTreeStyle/jquery.ztree.js"></script>
+		<script type="text/javascript" src="util/jquery.xml2json.js"></script>
+		
+
+		<!-- 不连接政务网时不加载以上文件，以免造成页面初始化过慢
+		坐标转换异步调用初始化
+		<script type='text/javascript' src='http://10.108.3.24:8080/sh2wgs84ProxyNew/dwr/engine.js'></script>
+		<script type='text/javascript' src='http://10.108.3.24:8080/sh2wgs84ProxyNew/dwr/util.js'></script>
+		<script type='text/javascript' src='http://10.108.3.24:8080/sh2wgs84ProxyNew/dwr/interface/sh2wgs.js'></script>
+ -->
+	</head>
+	<body id="container" class="easyui-layout" oncontextmenu="return false;" >
+		<div region="north" border="false" style="z-index:99; height: 102px; background: #000;">
+			<div id="topmenu">
+				<!-- Main top menu -->
+				<table id="TopMenuTbl">
+					<tr>
+						<td id="topTblLeft" style=" vertical-align: top;">
+							<div style="margin:55px 0 0 50px; width:510px; ">
+								<a href="javascript:ViewTranSettingClick('ViewTranSetting')" ><img id="ViewTranSetting" tag="selected" src="images/linkbutton1.png"  alt="调节地面透明度" /></a>
+								<a href="javascript:ViewUndergroundModeClick('ViewUndergroundMode')"><img id="ViewUndergroundMode" tag="unselected" src="images/linkbutton2_1.png"  alt="地下浏览" /></a>             
+		  						<a href="javascript:showLargeDialog('html/accordionChart.html', '管线图层管理')"><img src="images/linkbutton3_1.png" onmouseover="this.src='images/linkbutton3.png'" onmouseout="this.src='images/linkbutton3_1.png'" alt="管线图层管理" /></a>  
+			<!--					<a href="javascript:EagleEyeClick('EagleEyes_button');"><img id="EagleEyes_button" tag="unselected" src="images/linkbutton4_1.png"  alt="二维鹰眼" /></a>
+							<a href="javascript:DisplayModes.legendShowing(true)"><span> <img src="images/linkbutton3_1.png" onmouseover="this.src='images/linkbutton3.png'" onmouseout="this.src='images/linkbutton3_1.png'" alt="图层管理" /> </span></a>-->
+							</div>
+						</td>
+						<td id="topTblCenter" style="">
+							<div id="tabsMenu" class="easyui-tabs" tools="#tab-tools"	style="fit: true; margin: 0; height: 95px; width: 700px">
+								<div title="漫 游"  >
+									<div>
+										<ul class="shortcut-buttons-set">
+											<li>
+										<!--		<a class="shortcut-button"
+													href="javascript:showLargeDialog('html/view/track.html', '飞行浏览');"><span> <img
+															src="css/images/tab_pro_fly.png" alt="园区漫游"
+															title="园区漫游" /> </span> </a>-->
+												<a class="shortcut-button" tag="ViewFlyMode"><span> <img
+															src="css/images/tab_pro_fly.png" alt="园区漫游"
+															title="园区漫游" /> </span> </a>											</li>
+											<li>
+												<a class="shortcut-button" tag="LoadAllLayers"><span> <img
+															src="css/images/tab_pro_layers.png" alt="所有图层"
+															title="所有图层" /> </span> </a>
+											</li>
+
+											<li>
+												<a class="shortcut-button" tag="LoadAllGCpipes"><span>
+														<img src="css/images/tab_pro_pipeopen.png"
+															alt="加载跟测管线" title="加载跟测管线" /> </span> </a>
+											</li>
+<!-- 数据尚不完善，暂时关闭 2015 DEC 03
+											<li>
+												<a class="shortcut-button" tag="hideBlockRoadLayers"><span>
+														<img src="css/images/tab_pro_road.png"
+															alt="关闭道路模型" title="关闭道路模型" /> </span> </a>
+											</li>
+
+											<li>
+												<a class="shortcut-button" tag="clearBlocks"><span>
+														<img src="css/images/tab_pro_buildingclose.png"
+															alt="关闭建筑模型" title="关闭建筑模型" /> </span> </a>
+											</li>
+
+											<li>
+												<a class="shortcut-button" tag="addAllModels"><span>
+														<img src="css/images/tab_pro_buildingopen.png"
+															alt="加载所有模型" title="加载所有模型" /> </span> </a>
+											</li>
+-->
+										</ul>
+										<!-- End .shortcut-buttons-set -->
+									</div>
+								</div>								
+								<div title="查 询"  >
+									<div>
+										<ul class="shortcut-buttons-set">
+
+											<li>
+												<a class="shortcut-button" tag="QueryProperty"><span>
+														<img src="css/images/tab_sear_attribute.png"
+															alt="属性查询" title="属性查询" /> </span> </a>
+											</li>
+
+											<li>
+												<a class="shortcut-button" tag="QueryRoad"><span> <img
+															src="css/images/tab_sear_space.png" alt="道路查询"
+															title="道路查询" /> </span> </a>
+											</li>
+
+											<li>
+												<a class="shortcut-button" tag="QueryAttachment"><span> <img
+															src="css/images/tab_sear_well.png" alt="附属物查询"
+															title="附属物查询" /> </span> </a>
+											</li>
+
+											<li>
+												<a class="shortcut-button" tag="MeasureHorizontalDis"><span> <img
+															src="css/images/tab_sear_hormeasure1.png" alt="水平距离量测"
+															title="水平距离量测" /> </span> </a>
+											</li>
+											
+											<li>
+												<a class="shortcut-button" tag="MeasureVerticalDis"><span> <img
+															src="css/images/tab_sear_vermeasure1.png" alt="垂直距离量测"
+															title="垂直距离量测" /> </span> </a>
+											</li>
+											
+											<li>
+												<a class="shortcut-button" tag="MeasureSpaceDis"><span> <img
+															src="css/images/tab_sear_spacemeasure1.png" alt="空间距离量测"
+															title="空间距离量测" /> </span> </a>
+											</li>
+											
+											<li>
+												<a class="shortcut-button" tag="MeasurePipelineHorDis"><span> <img
+															src="css/images/tab_sear_hormeasure.png" alt="管间水平距离量测"
+															title="管间水平距离量测" /> </span> </a>
+											</li>
+											
+											<li>
+												<a class="shortcut-button" tag="MeasurePipelineVerDis"><span> <img
+															src="css/images/tab_sear_vermeasure.png" alt="管间垂直距离量测"
+															title="管间垂直距离量测" /> </span> </a>
+											</li>
+											
+											<li>
+												<a class="shortcut-button" tag="MeasurePipelineSpaceDis"><span> <img
+															src="css/images/tab_sear_spacemeasure.png" alt="管间空间距离量测"
+															title="管间空间距离量测" /> </span> </a>
+											</li>	
+											
+											<li>
+												<a class="shortcut-button" tag="AnalysisTranSection"><span> <img
+															src="css/images/tab_sear_graph.png" alt="横断面查询"
+															title="横断面查询" /> </span> </a>
+											</li>
+										</ul>
+										<!-- End .shortcut-buttons-set -->
+									</div>
+								</div>
+								<div title="统  计">
+									<div>
+										<ul class="shortcut-buttons-set">
+
+											<li>
+												<a class="shortcut-button" tag="StatisticsDiameterClass"><span> <img
+															src="css/images/tab_stat_width.png" alt="管径统计"
+															title="管径统计" /> </span> </a>
+											</li>
+
+											<li>
+												<a class="shortcut-button" tag="StatisticsLength"><span> <img
+															src="css/images/tab_stat_length.png" alt="长度统计"
+															title="长度统计" /> </span> </a>
+											</li>
+
+											<li>
+												<a class="shortcut-button" tag="StatisticsCoveringDepth"><span> <img
+															src="css/images/tab_stat_depth.png" alt="埋深统计"
+															title="埋深统计" /> </span> </a>
+											</li>
+
+											<li>
+												<a class="shortcut-button" tag="StatisticsMaterialClass"><span> <img
+															src="css/images/tab_stat_material.png" alt="材料统计"
+															title="材料统计" /> </span> </a>
+											</li>
+
+										</ul>
+										<!-- End .shortcut-buttons-set -->
+									</div>
+								</div>
+								<div title="规划审批">
+									<div>
+										<ul class="shortcut-buttons-set">
+
+											<li>
+												<a class="shortcut-button" tag="AcceptImportXml"><span> <img
+															src="css/images/tab_exam_add.png" alt="数据导入"
+															title="数据导入" /> </span> </a>
+											</li>
+
+											<li>
+												<a class="shortcut-button" id="Approval2DCompare" tag="Approval2DCompare"  ><span> <img
+															src="css/images/tab_exam_compare.png"
+															alt="平面位置比对" title="平面位置比对" /> </span> </a>
+											</li>
+
+											<li>
+												<a class="shortcut-button" id="ApprovalCollisionAnalysis" tag="ApprovalCollisionAnalysis"><span> <img
+															src="css/images/tab_exam_collision.png"
+															alt="撞管分析" title="撞管分析" /> </span> </a>
+											</li>
+					
+											<li>
+												<a class="shortcut-button" id="ApprovalDisionAnalysis" tag="ApprovalDistanceAnalysis" ><span> <img
+															src="css/images/tab_exam_check.png" alt="避让检查"
+															title="避让检查" /> </span> </a>
+											</li>
+											<li>
+												<a class="shortcut-button" id="AcceptCompare" tag="Accept3DCompare" ><span> <img
+															src="css/images/tab_finish_compare.png"
+															alt="三维位置比对" title="三维位置比对" /> </span> </a>
+											</li>
+
+											<li>
+												<a class="shortcut-button" id="AcceptWellCompare" tag="AcceptWellPosCompare" ><span> <img
+															src="css/images/tab_finish_well.png" alt="井室位置比对"
+															title="井室位置比对" /> </span> </a>
+											</li>
+																																															
+										</ul>
+										<!-- End .shortcut-buttons-set -->
+									</div>
+								</div>
+								<div title="掘路审批">
+									<div>
+										<ul class="shortcut-buttons-set">
+											<li>
+												<a class="shortcut-button" tag="AnalysisExcava"><span> <img
+															src="css/images/tab_excavate.png" alt="道路开挖"
+															title="道路开挖" /> </span> </a>
+											</li>
+<!--											<li>
+												<a class="shortcut-button" href="javascript:showLittleDialog('html/edit/customClip.html', '自由开挖',500)"><span> <img
+															src="css/images/tab_excavate_user.png" alt="自由开挖"
+															title="自由开挖" /> </span> </a>
+											</li>
+											<li>
+												<a class="shortcut-button" href="javascript:TerrainExcavate.hideTempTerrain('hidenClipTabs');"><span> <img id="hidenClipTabs" tag="unselected"
+															src="css/images/tab_excavate_hide.png" alt="隐藏开挖"
+															title="隐藏开挖" /> </span> </a>
+											</li>
+											<li>
+												<a class="shortcut-button" href="javascript:TerrainExcavate.deleteTempTerrain()"><span> <img
+															src="css/images/tab_excavate_clear.png" alt="清除开挖"
+															title="清除开挖" /> </span> </a>
+											</li>
+											<li>
+												<a class="shortcut-button" href="javascript:TerrainExcavate.exportList(earth)"><span> <img
+															src="css/images/tab_excavate_list.png" alt="输出列表"
+															title="输出列表" /> </span> </a>
+											</li>											
+-->	
+											<li>
+												<a class="shortcut-button" tag="ImportGLG"><span> <img
+															src="css/images/tab_excavate_import.png" alt="导入过路管"
+															title="导入过路管" /> </span> </a>
+											</li>											
+										</ul>
+										<!-- End .shortcut-buttons-set -->
+									</div>
+								</div>
+
+							</div>
+
+						</td>
+						<td id="topTblRight" style="text-align:center; background:url('images/top_right.png') right no-repeat; " >
+						   <div id="logoutDiv" style=" position:absolute; top:70px; right:5px; width:100px;">
+							  <a style="text-decoration:underline; cursor: hand; font-size:15px; " onclick="logout()">退出</a>
+						   </div>
+
+						</td>
+					</tr>
+				</table>
+			</div>
+			<!-- Menu Top ends -->
+		</div>
+
+		<div region="west" title="图层管理" style="width:280px;">	
+<!--			<div id="divMenu" class="easyui-layout" fit="true" border="false">
+				<div region="center" border="false" style="overflow:hidden;">
+					<div class="easyui-tabs" fit="true" border="false">
+						<div title="管线图层">
+							<ul id="pipelineLayerTree" class="ztree"></ul>
+						</div>
+						<div title="基础图层">
+							<ul id="layerTree" class="ztree"></ul>
+						</div>
+					</div>-->
+
+					<div id="aa" class="easyui-accordion" fit="true" style="autoHeight:false;width:100%; height:100%;">
+						<div title="基本图层" style="overflow: auto; padding: 10px;">
+							<ul id="layerTree" class="ztree"></ul>
+						</div>
+						<div title="管线图层"  selected="true" style="padding: 10px;">
+							<ul id="PipelineLayerTree" class="ztree"></ul>
+						</div>
+					</div>				
+<!--				</div>				
+				
+			</div>-->
+			
+		</div>
+
+		<div region="center" style="margin:0px;padding:0px;">  
+			 <iframe name="ifEarth" id="ifEarth" frameborder="0" style="width: 100%; height: 99.6%;"></iframe>
+		</div>
+		
+		<div id="dlgResult" title="My Dialog" style="padding:5px;width:280px;overflow:hidden">
+			<iframe name="ifResult" id="ifResult" frameborder="0" style="width: 100%;height: 100%;"></iframe>
+		</div>
+		<object id="dataProcess" classid="clsid:DDA7E893-8EEE-4A1E-A506-867932BD0FB9" style="display:none;"></object>
+<!--		<script type="text/javascript" src="js/index.js"></script>-->
+		<script type="text/javascript" src="js/index.js" charset="gb2312"></script>
+		<script type="text/javascript" src="util/jquery.js" charset="gb2312"></script>
+		<script type="text/javascript" src="util/easyui/jquery.easyui.js" charset="gb2312"></script>
+		<script type="text/javascript" src="util/zTreeStyle/jquery.ztree.js" charset="gb2312"></script>
+		<script type="text/javascript" src="util/FileValueStringMap.js" charset="gb2312"></script>
+		<script type="text/javascript" src="util/jquery.xml2json.js" charset="gb2312"></script>
+		<script type="text/javascript" src="js/common.js" charset="gb2312"></script>
+		<script type="text/javascript" src="js/common.js" charset="gb2312"></script>
+		<script type="text/javascript" src="js/approvalMgr.js" charset="gb2312"></script>
+		<script type="text/javascript" src="js/PipelineStandard.js" charset="gb2312" ></script>
+		<script type="text/javascript" src="js/statistics.js" charset="gb2312"></script>
+		<script type="text/javascript" src="js/sliderMgr.js" charset="gb2312"></script>
+		<script type="text/javascript" src="js/analysis.js" charset="gb2312"></script>
+		<script type="text/javascript" src="js/measure.js" charset="gb2312"></script>		
+		<script type="text/javascript" src="js/parameter.js"></script>
+        <script type="text/javascript" src="../js/authentication.js"></script>
+        <script type="text/javascript" src="js/authorityConfig.js"></script>
+		<script type="text/javascript">
+			var earth = null;
+			var projectListVal="";
+			var pipeListVal="";
+			var importPipeLineType="";
+			var headerHeight;
+			var funcPanel;
+			/** 显示所有图层按钮 
+				2015 DEC 2
+				by JIA RONG
+			*/
+			function LoadAllLayersClick(){
+				window.hideLargeDialog();
+			}
+			/** 导入过路管 
+				2015 DEC 2
+				by JIA RONG
+			*/
+			function ImportGLGClick(){
+				ApprovalMgr.importGUOLUGUAN();			
+			}
+			/** 退出系统时，记录当前工程和视角 
+				2015 NOV 4
+				by JIA RONG
+			*/
+			//获取当前视角
+			function getViewPos(){
+				var obj = {};
+				obj.longitude=earth.GlobeObserver.TargetPose.Longitude;
+				obj.latitude=earth.GlobeObserver.TargetPose.Latitude;
+				obj.altitude=earth.GlobeObserver.TargetPose.Altitude;
+				obj.tilt=earth.GlobeObserver.Pose.Tilt;
+				obj.heading=earth.GlobeObserver.Pose.Heading;
+				obj.roll=earth.GlobeObserver.Pose.Roll;
+				obj.range=earth.GlobeObserver.Pose.Range;
+				var viewPoint = obj.longitude+","+obj.latitude+","+obj.altitude+","+obj.tilt+","+obj.heading+","+obj.roll+","+obj.range;
+				return viewPoint;
+			}
+
+			//图层layer下是否含有管线图层
+		/*    function hasPipelinelayer(layer){
+				var bHasPipeline = false;
+				var layerCount = layer.GetChildCount();
+				for(var s=0;s<layerCount;s++){
+					var childLayer = layer.GetChildAt(s);
+					var pipelayerType = childLayer.LayerType;
+					if(pipelayerType === "Pipeline"){
+						return true;
+					}else if(pipelayerType === "Folder"){
+						bHasPipeline = hasPipelinelayer(childLayer);
+						if(bHasPipeline){
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+			//获取第一个包含管线图层的工程
+			function getFirstPipelineProject(){
+				var pipeProjectList = [];
+				var rootLayerList = earth.LayerManager.LayerList;
+				var projectCount = rootLayerList.GetChildCount();
+				for(var i = 0; i < projectCount; i++){
+					var childLayer = rootLayerList.GetChildAt(i);
+					var layerType = childLayer.LayerType;
+					if(layerType === "Project"){  //17
+						var  pipeTag = false;
+						pipeTag = hasPipelinelayer(childLayer);
+						if(pipeTag){
+						var projectId = childLayer.Guid;
+						var projectName = childLayer.Name;
+							return {id:projectId,name:projectName};		//获取第一个图层返回			
+						}
+					}
+				}
+				return null;
+			}*/
+			/*获取当前管线工程id
+			function getProject(){
+				var pipeProjArr = StatisticsMgr.getPipelineProjectList();
+				if (pipeProjArr.length > 0) {
+					for(var i=0; i<pipeProjArr.length; i++){
+						var name = pipeProjArr[i].name;
+						if (name =="跟测管线"){
+							obj = {
+								ip: top.params.ip,
+								project: pipeProjArr[i].id
+							};	
+							break;
+						}
+					}
+				}
+				return obj.project;
+			}*/
+			function getAlt(layerId){
+				var ProLayer = earth.LayerManager.GetLayerByGUID(layerId);
+				if(ProLayer){
+					var alt = ProLayer.ProjectSetting.UnderRefAlt;
+					return alt;
+				}else{
+					return 0;
+				}
+			}
+			//=========关闭浏览器前，保存当前设置==============
+			function saveConfig(){
+				var params = new Array();
+				params.project="";//getProject();
+				params.Position=getViewPos();
+				params.Alt=getAlt(params.project);
+				SystemSetting.setSystemConfig(params);
+			}
+			//=========点击退出登录===============
+			function logout(){
+				try{
+					authMgr.delCookie('userName');
+					authMgr.delCookie('password');
+				  //  if(earth && earth.UserLog.NeedSecurity(CITYPLAN_config.server.ip)){
+						earth.UserLog.Logout();
+				 //   }
+
+					authMgr.clearAll(); //清理缓存的权限信息 add by zc 2014-08-18 13:51:37
+				 //   authMgr.setMenuEnable(null, true);
+					jump2Login();
+				}catch(e){
+
+				}
+			}
+			//跳转到登录页面
+			function jump2Login(){
+
+				try{
+					var url = top.location.href;
+					url = url.substring(0,url.lastIndexOf('/'));
+					url = url.substring(0,url.lastIndexOf('/'))+ '/login.html';
+					top.location.assign(url);
+				}catch(e){
+
+				}
+			}
+			$(function(){
+				$("#ifEarth").attr("src", "3DMain.html");	
+				document.getElementById("Approval2DCompare").disabled=true;
+				document.getElementById("ApprovalCollisionAnalysis").disabled=true;
+				document.getElementById("ApprovalDisionAnalysis").disabled=true;
+				document.getElementById("AcceptCompare").disabled=true;
+				document.getElementById("AcceptWellCompare").disabled=true;	    	
+				$(".shortcut-button").click(function(){
+					eval($(this).attr("tag")+"Click()"); //为菜单添加onclick事件
+				});
+				var panelMenu = $("#container").layout("panel", "west");
+				headerHeight = panelMenu.panel("header").outerHeight(); //panel面板头的高度
+			//	funcPanel = $("#divMenu").layout("panel", "south");
+				
+				// 浏览器大小（主要指高度）变化时，动态改变弹出面板的高度
+				panelMenu.panel({
+					onResize:function (w, h) {
+						if (!$("#dlgResult").panel("options").closed) {
+							$("#dlgResult").panel("resize", {height:h});
+						}
+					}
+				});
+				//设置头菜单右部分宽度值
+				function settopMenuRight(){
+					var topRight = document.getElementById("topTblRight");
+					var winWidth = $(window).width();
+					var w = winWidth-1000;
+					topRight.style.width=w+'px';		
+				}
+				
+				
+				
+				/**
+				 * 显示菜单面板下半部分的小面板
+				 * @param src 面板加载网页的地址
+				 * @param title 面板的标题
+				 */
+				window.showLittleDialog = function(src, title) {
+					funcPanel.panel("setTitle", title);    //动态改变panel的标题
+					//funcPanel.children("iframe").attr("src", src);
+		
+					openMenuPanel();
+				//	if (funcPanel.panel("options").collapsed) {
+				//		$("#divMenu").layout("expand", "south");
+				//	}
+				};
+		
+				/**
+				 * 关闭主页，保存当前位置信息等。
+				 */
+				window.onunload = function (){
+					saveConfig();
+				}
+				/**
+				 * 隐藏菜单面板下半部分的小面板
+				 
+				window.hideLittleDialog = function() {
+					$("#divMenu").layout("collapse", "south");
+				};*/
+				
+				/**
+				 * 显示左侧面板，覆盖在左侧菜单面板之上
+				 * @param src 面板加载网页的地址
+				 * @param title 面板的标题
+				 */
+				window.showLargeDialog = function (src, title) {
+					openMenuPanel();
+			
+					$("#dlgResult").dialog({
+						shadow:false,
+						draggable:false,
+						title:title,
+						onClose:function () {  // 对话框窗口关闭时清除临时图形
+							earth.ShapeCreator.Clear();
+							//earth.Paint.ClearHighlightObject();
+							clearHtmlBalloons();
+							// 对话框关闭时卸载页面，页面自身按需要清除临时数据
+							$("#ifResult").attr("src", "");
+						}
+					}).panel({height:panelMenu.height() + headerHeight})
+							.panel("move", {top:"102px", left:"0px"});
+					$("#ifResult").attr("src", src);
+				};
+			
+				/**
+				 * 隐藏左侧大面板
+				 */
+				window.hideLargeDialog = function() {
+					$("#dlgResult").dialog({}).dialog("close");
+				};
+				/**
+				*改变窗口大小触发事件
+				*/
+				window.onresize =function(){
+					settopMenuRight();
+				}
+				/**
+				 * 显示左侧菜单面板
+				 */
+				function openMenuPanel() {
+					if (panelMenu.panel("options").collapsed) {
+						$("#container").layout("expand", "west");
+					}
+				}
+				//打开管线图层列表	
+	//			showLargeDialog('html/accordionChart.html', '管线图层管理')
+				
+			});
+		</script>	
+	</body>
+</html>

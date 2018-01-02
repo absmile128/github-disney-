@@ -1,0 +1,131 @@
+/**
+ * User: wyh
+ * Date: 12-11-21
+ * Time: 下午10:29
+ * Desc: 
+ */
+@CHARSET "UTF-8";
+
+table { border-collapse: collapse; border-spacing: 0; }
+table td{ padding: 0; }
+
+/*调整jquery easyui控件的样式*/
+.tabs-header{
+    background: none !important;
+}
+
+ul.tabs > li {
+    border: none;
+}
+
+.tabs li.tabs-selected{
+    background-color: #eef1f6;
+}
+
+.tabs-inner {
+    background: none !important;
+}
+
+.tabs-title {
+    font-size: 13px;
+}
+/* 去掉主菜单按钮点击时默认的虚线外包框 */
+button:focus{ outline: none;}
+
+#systemMenu .tabs-panels {
+    background: url("../image/bgToolbar.png") repeat-x;
+}
+
+div.toolbar-panel{
+    float: left;
+    border: 1px double #8b8b8c;
+    margin-left: 3px;
+    margin-top: 3px;
+}
+
+div.toolbar-panelTitle{
+    width: 100%;
+    text-align: center;
+    background: url("../image/bgPanelTitle.png") repeat-x;
+    font-size: 13px;
+}
+
+div.toolbar-item {
+    float: left;
+    text-align: center;
+    cursor: pointer;
+    overflow: hidden;
+    margin:3px 8px;
+    font-size: 13px;
+}
+
+div.toolbar-item:hover {
+    color: #534fe6;
+    background-color: #778899;
+}
+div[tag="TerrainTransparency"]:hover,div[disabled]:hover{
+    color: #000000;
+    background-color:transparent;
+}
+
+div.toolbar-item button{
+    width: 40px;
+    height: 40px;
+    background: transparent url(../image/toolbar.png);
+    cursor: pointer;
+    border-style: none;
+}
+
+/* 工具按钮选中样式 */
+div.selected {
+    color: #534fe6;
+    font-weight: bold;
+    background-color: #fec981;
+}
+
+div.toolbar-item[disabled] div{
+    color:#a0a0a0;
+}
+
+.s-mask {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1040;
+    background-color: #000000;
+    opacity: 0.5;
+    filter: alpha(opacity=50);
+}
+.s-overmask{
+    z-index: 1050;
+}
+
+.s-progressBar-Container1{
+    position:absolute;
+    left:10px;
+    top:240px;
+    margin-left:0px;
+    padding:5px;
+    background-color:#545658;
+    font-size: 12px;
+}
+.s-progressBar-Container2{
+    background-color:#f5f7f8;
+    padding:4px;
+    border:1px solid #468847;
+    /*text-align:center;*/
+}
+
+.s-progressBar-text{
+    margin: 0px 0px 3px 0px;
+    white-space: nowrap;
+    text-overflow:ellipsis;
+}
+
+.progressbar-value{
+    background-color:#66DE20;
+}

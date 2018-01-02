@@ -1,0 +1,545 @@
+﻿<!doctype html>
+<html class="no-js" lang="zh-Hans">
+<!--<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">-->
+<!--<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">-->
+<head>
+<meta charset="utf-8">
+<!--<meta http-equiv="X-UA-Compatible" content="IE=edge">-->
+<!--<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.5">-->
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+    <title>上海国际旅游度假区三维空间基础信息平台</title>
+    <link rel="stylesheet" href="css/chinaz.css">
+
+
+
+	<script type="text/javascript" src="js/lib/jquery.js"></script>
+	<script  type="text/javascript"  src="js/lib/jquery.easyui.min.js"></script>
+	<script src="js/lib/locale/easyui-lang-zh_CN.js"></script>
+	<script src="js/lib/jquery.ztree.all.min.js"></script>
+	<script  type="text/javascript"  src="js/lib/jquery.ztree.all.min.js"></script>
+	<script src="js/lib/49f8daee.vendors.js"></script>
+	<script  type="text/javascript"  src="js/CITYPLAN_config.js"></script>
+	<script   type="text/javascript"  src="js/authentication.js"></script>
+    <script src="js/lib/jquery.min.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/lib/jquery.xml2json.js"></script>
+
+
+
+	<script type="text/javascript">
+		var systype="";
+		$(function(){
+			authMgr.delCookie('username');
+			authMgr.delCookie('userpwd');
+			authMgr.clearAll(); //清理缓存的权限信息
+
+
+			$(".centera  a.dsgh").click(function(){
+				$('#username').val('' );
+				$('#userpwd').val('' );
+				$("#yhdl").fadeIn().siblings(".yhdl").hide();
+				$(".yhdl_title").html("地上建筑审批管理系统登录");
+				systype="dssp";
+
+			})
+			$(".centera  a.dxgh").click(function(){
+				$("#yhdl").fadeIn().siblings(".yhdl").hide();
+				$(".yhdl_title").html("地下管线审批管理系统登录");
+				systype="dxsp";
+
+			})
+			$(".centera  a.wgh").click(function(){
+				alert("待建设！");return;
+				$("#yhdl").fadeIn().siblings(".yhdl").hide();
+				$(".yhdl_title").html("网格化区域管理系统登录");
+				systype="wgh";
+			})
+			$(".centera  a.zhsz").click(function(){
+
+				$("#yhdl").fadeIn().siblings(".yhdl").hide();
+				$(".yhdl_title").html("市政设施运维管理系统登录");
+				systype="zhsz";
+			})
+			$(".centera  a.zhxf").click(function(){
+				$("#yhdl").fadeIn().siblings(".yhdl").hide();
+				$(".yhdl_title").html("消防设施运维管理系统登录");
+				systype="zhxf";
+				gotoxfsys();
+			})
+			$(".centera  a.swys").click(function(){
+
+				$("#yhdl").fadeIn().siblings(".yhdl").hide();
+				$(".yhdl_title").html("规划招商展示系统登录");
+				systype="swys";
+			})
+
+		})
+
+		function    loadEarth  (realusername,realuserpwd){
+			$("#earthtemp").show();
+
+//            var ieVersion = window.navigator.platform;
+//            var stampCAB = 'codebase="CAB/stamp32.CAB#version=3,1,2,1"'; //32位cab包
+//            if(ieVersion == "Win64"){
+//                stampCAB = 'codebase="CAB/stamp64.CAB#version=3,1,2,1"'; //64为cab包
+//            }
+//            $("#earthDiv0").html('<object id="tearth" classid="clsid:EA3EA17C-5724-4104-94D8-4EECBD352964" ' +
+//                    'data="data:application/x-oleobject;base64,Xy0TLBTXH0q8GKFyFzl3vgAIAADYEwAA2BMAAA==" ' +
+//                    stampCAB + ' ' +
+//                    'width="100%" height="100%"></object>');
+
+
+			$("#earthtemp").html('<object id="tearth" classid="clsid:EA3EA17C-5724-4104-94D8-4EECBD352964" ' +
+					'data="data:application/x-oleobject;base64,Xy0TLBTXH0q8GKFyFzl3vgAIAADYEwAA2BMAAA==" ' +
+					'width="100%" height="100%"></object>');
+			    tearth.Event.OnCreateEarth = function () {
+				tearth.Event.OnCreateEarth = function () {};
+
+				userLogin(realusername,realuserpwd);
+				return;
+			};
+		}
+		function   userLogin (realusername,realuserpwd){
+			var stampusername="";
+			var stampuserpwd="";
+			var url="";
+
+			debugger;
+			if(systype=="zhsz") {
+				stampusername= CITYPLAN_config.user.disneysz.username;
+				stampuserpwd=CITYPLAN_config.user.disneysz.userpwd;
+				url = CITYPLAN_config.service.authentication+'&p=disneysz'
+						+ '&u='+ escape(stampusername)
+						+ '&pwd=' + escape(stampuserpwd);
+			}else  if(systype=="dssp"){
+				stampusername= CITYPLAN_config.user.disneydssp.username;
+				stampuserpwd=CITYPLAN_config.user.disneydssp.userpwd;
+				url = CITYPLAN_config.service.authentication+'&p=disneydssp'
+						+ '&u='+ escape(stampusername)
+						+ '&pwd=' + escape(stampuserpwd);
+			}else  if(systype=="dxsp"){
+				stampusername= CITYPLAN_config.user.disneydxsp.username;
+				stampuserpwd=CITYPLAN_config.user.disneydxsp.userpwd;
+				url = CITYPLAN_config.service.authentication+'&p=disneydxsp'
+						+ '&u='+ escape(stampusername)
+						+ '&pwd=' + escape(stampuserpwd);
+			}  else  if(systype=="swys"){
+                stampusername= CITYPLAN_config.user.disneyswys.username;
+                stampuserpwd=CITYPLAN_config.user.disneyswys.userpwd;
+                url = CITYPLAN_config.service.authentication+'&p=disneyswys'
+                        + '&u='+ escape(stampusername)
+                        + '&pwd=' + escape(stampuserpwd);
+            }
+
+			tearth.Event.OnEditDatabaseFinished = function(response){
+				tearth.Event.OnEditDatabaseFinished = function(){};
+
+				$('#earthtemp').hide();
+
+				var menuAuthXml = response.AttributeName;
+
+
+				var menuAuthJson = new Object();
+				menuAuthJson = $.xml2json(menuAuthXml);
+				menuAuthJson.result=1;
+				if(menuAuthJson == undefined){
+					alert('内部权限控制的用户名或密码错误');
+					return;
+				}else{
+					if(menuAuthJson.result <= 0){
+						alert('内部权限控制的用户名或密码错误');
+						return;
+					}
+
+//					   authMgr.init(true);
+					// authMgr.setMenus(menuAuthJson);
+					//内部登录成功
+					authMgr.setCookie('username', realusername, 24);
+					authMgr.setCookie('userpwd', realuserpwd, 24);
+					jumpToMain();
+				}
+			}
+			tearth.DatabaseManager.GetXml(url);
+			$('#earthtemp').hide();
+		}
+		function  login() {
+
+			var realusername=$('#username').val( );
+			var realuserpwd=$('#userpwd').val( );
+			if(realusername==""||realuserpwd==""){
+				alert("请输入用户名和密码！");
+				return;
+			} else {
+				if (systype == "zhsz") {
+					szlogin(realusername,realuserpwd);
+				} else  if(systype=="dssp") {
+					dssplogin(realusername,realuserpwd);
+				}else  if(systype=="dxsp") {
+					dxsplogin(realusername,realuserpwd);
+				}
+                else  if(systype=="swys") {
+                    swyslogin(realusername,realuserpwd);
+                }
+			}
+		}
+        function swyslogin(realusername,realuserpwd){
+//			//宝信参数值
+//			var  clientid="4XacdVnU7VdM2CDYrMdMQg=="  ;
+//			var   clientpwd="7YgmbUBwVaU="  ;
+//			var name=  username;
+//			var pwd=   password;
+//
+//			var webserviceurl=CITYPLAN_config.disney.loginUrl;    //代理服务地址
+//			var args="?name="+name+"&pwd="+pwd+"&clientid="  +clientid+"&clientpwd="+clientpwd;
+//			var XmlHttp=new ActiveXObject("Microsoft.XMLHTTP")
+//			XmlHttp.onreadystatechange=function()
+//			{
+//				if(XmlHttp.readyState==4)
+//				{
+//					if(XmlHttp.status==200)
+//					{
+//						var flag=XmlHttp.responseText;
+//
+//						if(flag.toString()=="1")    //用户可以登录系统
+//						{
+//							//登录成功
+//							loadEarth(realusername,realuserpwd);
+//						}
+//
+//						else
+//						{
+//							alert('用户名密码错误或您没有权限登录此系统!');
+//							return;
+//
+//						}
+//
+//
+//
+//
+//					}
+//				}
+//			}
+//			XmlHttp.open("get",webserviceurl+args,false)  ;
+//			XmlHttp.send() ;
+
+            $.ajax({
+                dataType: 'JSONP',
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl + "/UserHandler.ashx?action=Login",
+                data: {
+                    uid:realusername,
+                    pwd:realuserpwd,
+                    type:"1"    //1管理员     0巡检员
+                },
+                cache: false,
+                success: function (data) {
+                    if(data==true){
+
+                        //登录成功
+                        if(CITYPLAN_config.auth.enableAuth) {
+//                            alert("内部控制") ;
+                            loadEarth(realusername, realuserpwd);
+                        } else{
+                            authMgr.setCookie('username', realusername, 24);
+                            authMgr.setCookie('userpwd', realuserpwd, 24);
+                            jumpToMain();
+                        }
+
+
+                    }   else {
+                        alert("用户名密码错误或您没有权限登录此系统！");
+                    }
+                },
+                error: function (x, t, e) {
+                    alert("发生错误，请联系管理员！");
+                }
+            });
+
+
+        }
+		function dssplogin(realusername,realuserpwd){
+//			//宝信参数值
+//			var  clientid="4XacdVnU7VdM2CDYrMdMQg=="  ;
+//			var   clientpwd="7YgmbUBwVaU="  ;
+//			var name=  username;
+//			var pwd=   password;
+//
+//			var webserviceurl=CITYPLAN_config.disney.loginUrl;    //代理服务地址
+//			var args="?name="+name+"&pwd="+pwd+"&clientid="  +clientid+"&clientpwd="+clientpwd;
+//			var XmlHttp=new ActiveXObject("Microsoft.XMLHTTP")
+//			XmlHttp.onreadystatechange=function()
+//			{
+//				if(XmlHttp.readyState==4)
+//				{
+//					if(XmlHttp.status==200)
+//					{
+//						var flag=XmlHttp.responseText;
+//
+//						if(flag.toString()=="1")    //用户可以登录系统
+//						{
+//							//登录成功
+//							loadEarth(realusername,realuserpwd);
+//						}
+//
+//						else
+//						{
+//							alert('用户名密码错误或您没有权限登录此系统!');
+//							return;
+//
+//						}
+//
+//
+//
+//
+//					}
+//				}
+//			}
+//			XmlHttp.open("get",webserviceurl+args,false)  ;
+//			XmlHttp.send() ;
+
+            $.ajax({
+                dataType: 'JSONP',
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl + "/UserHandler.ashx?action=Login",
+                data: {
+                    uid:realusername,
+                    pwd:realuserpwd,
+                    type:"1"    //1管理员     0巡检员
+                },
+                cache: false,
+                success: function (data) {
+                    if(data==true){
+
+                        //登录成功
+                        if(CITYPLAN_config.auth.enableAuth) {
+//                            alert("内部控制") ;
+                            loadEarth(realusername, realuserpwd);
+                        } else{
+                            authMgr.setCookie('username', realusername, 24);
+                            authMgr.setCookie('userpwd', realuserpwd, 24);
+                            jumpToMain();
+                        }
+
+
+                    }   else {
+                        alert("用户名密码错误或您没有权限登录此系统！");
+                    }
+                },
+                error: function (x, t, e) {
+                    alert("发生错误，请联系管理员！");
+                }
+            });
+
+
+		}
+		function dxsplogin(realusername,realuserpwd){
+//			//宝信参数值
+//			var  clientid="4XacdVnU7VdM2CDYrMdMQg=="  ;
+//			var   clientpwd="7YgmbUBwVaU="  ;
+//			var name=  username;
+//			var pwd=   password;
+//
+//			var webserviceurl=CITYPLAN_config.disney.loginUrl;    //代理服务地址
+//			var args="?name="+name+"&pwd="+pwd+"&clientid="  +clientid+"&clientpwd="+clientpwd;
+//			var XmlHttp=new ActiveXObject("Microsoft.XMLHTTP")
+//			XmlHttp.onreadystatechange=function()
+//			{
+//				if(XmlHttp.readyState==4)
+//				{
+//					if(XmlHttp.status==200)
+//					{
+//						var flag=XmlHttp.responseText;
+//
+//						if(flag.toString()=="1")    //用户可以登录系统
+//						{
+//							//登录成功
+//							loadEarth(realusername,realuserpwd);
+//						}
+//
+//						else
+//						{
+//							alert('用户名密码错误或您没有权限登录此系统!');
+//							return;
+//
+//						}
+//
+//
+//
+//
+//					}
+//				}
+//			}
+//			XmlHttp.open("get",webserviceurl+args,false)  ;
+//			XmlHttp.send() ;
+
+			$.ajax({
+				dataType: 'JSONP',
+				type: "GET",
+				url: CITYPLAN_config.disney.WebServiceUrl + "/UserHandler.ashx?action=Login",
+				data: {
+					uid:realusername,
+					pwd:realuserpwd,
+					type:"1"    //1管理员     0巡检员
+				},
+				cache: false,
+				success: function (data) {
+					if(data==true){
+
+						//登录成功
+						if(CITYPLAN_config.auth.enableAuth) {
+
+							loadEarth(realusername, realuserpwd);
+						} else{
+							authMgr.setCookie('username', realusername, 24);
+							authMgr.setCookie('userpwd', realuserpwd, 24);
+							jumpToMain();
+						}
+
+
+					}   else {
+						alert("用户名密码错误或您没有权限登录此系统！");
+					}
+				},
+				error: function (x, t, e) {
+					alert("发生错误，请联系管理员！");
+				}
+			});
+
+
+		}
+		function szlogin(realusername,realuserpwd){
+
+            $.ajax({
+                dataType: 'JSONP',
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl + "/UserHandler.ashx?action=Login",
+                data: {
+                    uid:realusername,
+                    pwd:realuserpwd,
+                    type:"1"    //1管理员     0巡检员
+                },
+                cache: false,
+                success: function (data) {
+                    if(data==true){
+
+                        //登录成功
+                        if(CITYPLAN_config.auth.enableAuth) {
+                            //alert("内部控制") ;
+                            loadEarth(realusername, realuserpwd);
+                        } else{
+                            authMgr.setCookie('username', realusername, 24);
+                            authMgr.setCookie('userpwd', realuserpwd, 24);
+                            jumpToMain();
+                        }
+
+
+                    }   else {
+                        alert("用户名密码错误或您没有权限登录此系统！");
+                    }
+                },
+                error: function (x, t, e) {
+                    alert("发生错误，请联系管理员！");
+                }
+            });
+
+
+        }
+		//跳转不同的子页面
+		function jumpToMain (){
+			try{
+
+				if(systype=="zhsz")
+				{
+					top.location.assign(CITYPLAN_config.url.disneysz.url);
+
+				} else if(systype=="dssp")
+				{
+
+					top.location.assign(CITYPLAN_config.url.disneydssp.url);
+				}  else if(systype=="dxsp")
+				{
+
+					top.location.assign(CITYPLAN_config.url.disneydxsp.url);
+				} else if(systype=="swys")
+                {
+
+                    top.location.assign(CITYPLAN_config.url.disneyswys.url);
+                }
+
+			}catch(e){
+
+			}
+		}
+		//cy:管理员页面
+		var gotoglyurl=function(){
+			window.open (CITYPLAN_config.server.stampMgrUrl );
+		}
+		//cy:下载页面
+		var gotodownurl=function(){
+			window.open ("down.html");
+		}
+		//cy:消防子系统，外部系统
+		var gotoxfsys=function(){
+			window.open (   CITYPLAN_config.disney.xfsysUrl);
+		}
+	</script>
+</head>
+<body>
+
+<!--<div class="headline-bg index-headline-bg wavesWapper">-->
+    <!--<canvas id="waves" class="waves"></canvas>-->
+<!--</div>-->
+<!--<div id="gly_url" style="z-index:999;position:absolute;top:20px;right:60px;">-->
+	<!--<a style="font-weight: bold;color:#ffffff;text-decoration:underline; cursor: hand; " onclick="gotoglyurl()">管理员界面</a>-->
+<!--</div>-->
+<!--<div id="downcj_url" style="z-index:999;position:absolute;top:20px;right:160px;">-->
+	<!--<a style="font-weight: bold;color:#ffffff;text-decoration:underline; cursor: hand; " onclick="gotodownurl()">插件、用户手册下载</a>-->
+<!--</div>-->
+<div class="logo_wz">
+    <a href="#" onclick="gotodownurl()">插件、用户手册下载</a>、<a href="#" onclick="gotoglyurl()">管理员界面</a>
+</div>
+
+
+<div class="xiBak" style="position:absolute;left:50%;margin-left: -700px;top:10px;">
+    <object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"
+            codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,19,0" width="1400"
+            height="866"  >
+		<param name="movie" value="image/pageimg/bg.swf"/>
+        <param name="quality" value="high"/>
+        <param name="wmode" value="opaque"/>
+        <embed src="image/pageimg/bg.swf" quality="high" pluginspage="http://www.macromedia.com/go/getflashplayer"
+               type="application/x-shockwave-flash" width="1400" height="866" wmode="opaque"></embed>
+    </object>
+</div>
+
+
+<div class="center">
+	<div class="centera">
+		<a class="a1 dsgh">&nbsp;&nbsp;&nbsp;地上建筑<br>审批管理系统</a>
+		<a class="a2 dxgh">&nbsp;&nbsp;&nbsp;地下管线<br>审批管理系统</a>
+		<a class="a3 zhsz">&nbsp;&nbsp;&nbsp;市政设施<br>运维管理系统</a>
+		<a class="a4 zhxf">&nbsp;&nbsp;&nbsp;消防设施<br>运维管理系统</a>
+		<a class="a5 wgh">&nbsp;&nbsp;&nbsp;&nbsp;网格化<br>区域管理系统</a>
+		<a class="a6 swys">&nbsp;&nbsp;&nbsp;规划招商<br>&nbsp;&nbsp;&nbsp;管理系统</a>
+	</div>
+</div>
+   <!--用户登录开始 -->
+  <div class="yhdl" id="yhdl">
+     <div class="close"><a onClick="javascript:document.getElementById('yhdl').style.display='none';">╳</a></div>
+     <div class="yhdl_title"></div>
+     <!--<div class="yhm"><input id="username" type="text" class="search_Text"   placeholder="用户名"></div>-->
+     <!--<div class="yhm yhm1"><input id="userpwd" type="password" class="search_Text"    placeholder="密码"></div>-->
+	  <div class="yhm"><input id="username" type="text" class="search_Text"   ></div>
+	  <div class="yhm yhm1"><input id="userpwd" type="password" class="search_Text"     ></div>
+     <div class="dl"  >
+		 <input type="button"  onclick="login()" style="width:100%; height:45px; background-color:transparent; border:0px; cursor:hand;"/>
+	 </div>
+  </div>
+<!--用户登录结束 -->
+
+<div id='earthtemp'></div>
+
+</div>
+</body>
+</html>

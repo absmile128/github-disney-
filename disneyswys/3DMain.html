@@ -1,0 +1,347 @@
+﻿<!doctype html>
+<html>
+<head>
+    <title>3DMain</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="css/common.css"/>
+    <style>
+        div {
+            background: gray;
+            float: left;
+            display:inline;
+        }
+
+        .s1 {
+            top: 0;
+            width: 100%;
+            height: 100%;
+            display:inline;
+        }
+        /**方案比对 第二个球**/
+        .s2 {
+            top: 0;
+            width: 49.9%;
+            height: 99.9%;
+            display:inline;
+        }
+        /**方案比对 第三个球**/
+        .s3 {
+            top: 0;
+            width: 33.3%;
+            height: 99.9%;
+            display:inline;
+        }
+        .s4{
+            top: 0;
+            width:49.9%;
+            *width:49.9% !important;
+            *width: 49.9%;
+            height: 99.9%;
+            display:inline;
+        }
+        .hide {
+            display: none;
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return false;" onunload="unloadEarth()">
+<div id="earthDiv0" class="s1">
+    <!--<object id="seearth" classid="clsid:EA3EA17C-5724-4104-94D8-4EECBD352964"-->
+            <!--data="data:application/x-oleobject;base64,Xy0TLBTXH0q8GKFyFzl3vgAIAADYEwAA2BMAAA=="-->
+            <!--width="100%" height="100%"></object>-->
+</div>
+<div id="earthDiv1" class="hide"></div>
+<div id="earthDiv2" class="hide"></div>
+
+<script src="js/lib/jquery.min.js"></script>
+<script src="js/lib/jquery.xml2json.js"></script>
+<script type="text/javascript" src="js/CITYPLAN_config.js"></script>
+<script   type="text/javascript"  src="js/authentication.js"></script>
+<script src="js/3DMain.js"></script>
+<script type="text/javascript">
+  //  var earthArray = [];
+    var planIdArray = [];
+    var pmArray = [];
+
+    function unloadEarth() {
+        //alert("dagatg");
+        seearth.Suicide();
+        //球体释放后 把全局变量earth设置为null 从而在各个子页面里判断是否已经释放earth 避免刷新崩溃问题
+        parent.earth = null;
+    }
+
+    $(function (){
+        if(top.debug){
+            var time1 = new Date().getTime();
+            console.info('time8.2:%f',time1 - top.time);
+            top.time = time1;
+        }
+
+//        var ieVersion = window.navigator.platform;
+//        var stampCAB = 'codebase="CAB/stamp32.CAB#version=3,1,2,1"'; //32位cab包
+//        if(ieVersion == "Win64"){
+//            stampCAB = 'codebase="CAB/stamp64.CAB#version=3,1,2,1"'; //64为cab包
+//        }
+//        $("#earthDiv0").html('<object id="seearth" classid="clsid:EA3EA17C-5724-4104-94D8-4EECBD352964" ' +
+//                'data="data:application/x-oleobject;base64,Xy0TLBTXH0q8GKFyFzl3vgAIAADYEwAA2BMAAA==" ' +
+//                stampCAB + ' ' +
+//                'width="100%" height="100%"></object>');
+
+
+
+        $("#earthDiv0").html('<object id="seearth" classid="clsid:EA3EA17C-5724-4104-94D8-4EECBD352964" ' +
+                'data="data:application/x-oleobject;base64,Xy0TLBTXH0q8GKFyFzl3vgAIAADYEwAA2BMAAA==" ' +
+                'width="100%" height="100%"></object>');
+
+        try{
+        seearth.Event.OnCreateEarth = function () {
+            seearth.Event.OnCreateEarth = function () {};
+            if(top.debug){
+                var time1 = new Date().getTime();
+                console.info('time8.4:%f',time1 - top.time);
+                top.time = time1;
+            }
+            parent.earth = seearth;
+            parent.earthArray.push(seearth);
+            seearth.earthDIV = $("#earthDiv0");
+            seearth.Event.OnDocumentChanged = function (type, guid) {
+                if(top.debug){
+                    var time1 = new Date().getTime();
+                    console.info('time8.5:%f',time1 - top.time);
+                    top.time = time1;
+                }
+                if (type == 1) {
+                    setTimeout(function(){ parent.init(); }, 500);
+                    seearth.Analysis.AnalysisServer = CITYPLAN_config.server.ip;
+               //     seearth.Environment.SetDatabaseLink(CITYPLAN_config.server.dataServerIP);
+                }
+                seearth.Event.OnDocumentChanged = function () {
+                };
+            };
+			var auth = false;
+            var realusername = authMgr.getCookie('username');
+            var realuserpwd = authMgr.getCookie('userpwd');
+            debugger;
+             if(CITYPLAN_config.auth.enableAuth){
+               var stampusername= CITYPLAN_config.user.disneyswys.username;
+               var stampuserpwd=CITYPLAN_config.user.disneyswys.userpwd;
+
+                var needSecurity = seearth.UserLog.NeedSecurity(CITYPLAN_config.server.ip);    //安全服务
+                if(needSecurity){
+                    if((stampusername!=null&& stampuserpwd!=null)&&(realusername!=null && realuserpwd!=null)){
+                       auth =true;
+                        auth = seearth.UserLog.Login(CITYPLAN_config.server.ip, stampusername, stampuserpwd);
+                    }
+                }
+                else {
+                    if (realusername != null && realuserpwd != null) {
+                        auth = true;
+                    }
+                }
+
+            } else{
+                if(realusername!=null && realuserpwd!=null){
+                    auth = true;
+                }
+            }
+
+            if(!auth){
+                jump2Login();
+            }
+            seearth.Load(CITYPLAN_config.server.ip, CITYPLAN_config.server.screen);
+            seearth.Environment.TerrainTransparency = 255;
+          };
+        }
+            catch(e){
+
+            }
+            if(top.debug){
+                var time1 = new Date().getTime();
+                console.info('time8.3:%f',time1 - top.time);
+                top.time = time1;
+            }
+    });
+
+   function jump2Login(){
+
+    try{
+        //var url = top.location.href;
+      //  url = url.substring(0,url.lastIndexOf('/')) + '/login.html';
+//		var url ="http://10.0.1.142/disneysz/login.html";
+        top.location.assign(CITYPLAN_config.url.login.url);
+    }catch(e){
+
+    }
+}
+/*    *//**
+     * 设置多屏
+     * @param n 屏幕数
+     * @param planArr {id: XXX, name: XXX}，其长度应等于屏幕数
+     *//*
+    function setScreen(n, planArr) {
+        planIdArray = planArr;
+        if (n == 1) {
+            $("#earthDiv0,#earthDiv1,#earthDiv2").removeClass("s1 s2 s3").addClass("hide");
+            $("#earthDiv0").removeClass("hide").addClass("s1");
+            for (var i = earthArray.length - 1; i > 0; i--) {
+                earthArray[i].Suicide();
+                earthArray.pop();
+            }
+            $("#earthDiv2, #earthDiv1").empty();
+            earthArray[0].HtmlBalloon.Hide();
+
+            for(i=0; i< pmArray.length;i++){
+                pmArray[i].removeEditLayers();
+            }
+            pmArray = [];
+        } else if (n == 2) {
+            $("#earthDiv0,#earthDiv1,#earthDiv2").removeClass("hide s1 s2 s3").addClass("s2");
+            $("#earthDiv2").addClass("hide");
+            showPlan(earthArray[0], planArr[0].id);
+            showPlanName(earthArray[0], planArr[0].name);
+            createEarth("earth1", document.getElementById("earthDiv1"), planArr[1]);
+        } else if (n == 3) {
+            $("#earthDiv0,#earthDiv1,#earthDiv2").removeClass("hide s1 s2").addClass("s3");
+            showPlan(earthArray[0], planArr[0].id);
+            showPlanName(earthArray[0], planArr[0].name);
+            createEarth("earth1", document.getElementById("earthDiv1"), planArr[1]);
+            createEarth("earth2", document.getElementById("earthDiv2"), planArr[2]);
+        }
+    }
+    function showPlanName(earth, planName){
+        var html = "<html><head><style>html,body{margin:0;padding:0;}</style></head><body>" + planName + "</body></html>";
+        earth.HtmlBalloon.ShowHtmlInRect(html, 0, 0, 150, 50, false);
+    }
+    function showPlan(earth, planId){
+        var pm = CITYPLAN.ProjectManager(earth, null);
+        pm.showPlan(planId, 0, true);
+        pmArray.push(pm);
+    }
+    *//**
+     * 显示指标信息
+     * @param bShowIndex 等于true时在每个球左上角显示当前所加载方案的指标信息
+     *//*
+    function showIndex(bShowIndex) {
+        var i = 0;
+        var path = location.pathname.substring(0, location.pathname.lastIndexOf("/"));
+        if (bShowIndex) {        // 在每个球上显示指标窗口
+            while (i < earthArray.length) {
+                var url = location.protocol + "//" + location.hostname + path +
+                        "/html/investigate/planIndex.html?id="+planIdArray[i].id;
+                earthArray[i].HtmlBalloon.NavigateInRect(url, 0, 25, 225, 325, false);
+                i += 1;
+            }
+            gotoPose(0)();    // 将其他屏定位到第一屏的位置
+        } else {
+            while (i < earthArray.length) {
+                earthArray[i].HtmlBalloon.Hide();
+                i += 1;
+            }
+        }
+    }
+    *//**
+     * 设置联动
+     * @param bSync 等于true时表示联动
+     *//*
+    function setSync(bSync) {
+        var i = 0;
+        var emptyFunction = function () {
+        };
+        if (bSync) {        //联动
+            while (i < earthArray.length) {
+                earthArray[i].Event.OnLBDown = setFocus(i);    // 注册每个球的OnLBDown事件
+                i += 1;
+            }
+            gotoPose(0)();    // 将其他屏定位到第一屏的位置
+        } else {
+            while (i < earthArray.length) {      // 注销每个球绑定的事件
+                earthArray[i].Event.OnLBDown = emptyFunction;
+                earthArray[i].Event.OnObserverChanged = emptyFunction;
+                i += 1;
+            }
+        }
+    }
+    *//**
+     * 设置联动
+     * 注册当前球的OnObserverChanged事件
+     * 注销其他球的OnObserverChanged事件，给其他球的OnLBDown绑定事件，似的在左键点击时称为当前球
+     *//*
+    function setFocus(i) {
+        return function () {
+            earthArray[i].Event.OnObserverChanged = gotoPose(i);
+            for (var j = 0; j < earthArray.length; j++) {
+                if (i != j) {
+                    earthArray[j].Event.OnObserverChanged = function () {
+                    };
+                    earthArray[j].Event.OnLBDown = setFocus(j);
+                }
+            }
+        };
+    }
+    *//**
+     * 将所有非主球都定位到主球i的当前位置
+     * @param i
+     * @return {Function}
+     *//*
+    function gotoPose(i) {
+        return function () {
+            var pose = getPose(earthArray[i]);
+            var j = 0;
+            while (j < earthArray.length) {
+                if (j != i) {
+                    earthArray[j].GlobeObserver.GotoLookat(pose.longitude, pose.latitude, pose.altitude,
+                            pose.heading, pose.tilt, pose.roll, 0);
+                }
+                j += 1;
+            }
+            setFocus(i);
+        };
+    }
+    *//**
+     * 获得earthObj的当前位置
+     * @param earthObj
+     * @return {Object}
+     *//*
+    function getPose(earthObj) {
+        var data = {};
+        if (earthObj) {
+            data.longitude = earthObj.GlobeObserver.Pose.Longitude;
+            data.latitude = earthObj.GlobeObserver.Pose.Latitude;
+            data.altitude = earthObj.GlobeObserver.Pose.Altitude;
+            data.heading = earthObj.GlobeObserver.Pose.heading;
+            data.tilt = earthObj.GlobeObserver.Pose.tilt;
+            data.roll = earthObj.GlobeObserver.Pose.roll;
+        }
+        return data;
+    }
+
+    *//**
+     * 根据id和div容器创建Earth对象，并返回创建的对象
+     * @param id
+     * @param div
+     *//*
+    function createEarth(id, div, plan) {
+        var earth = document.createElement("object");
+        div.appendChild(earth);
+        earth.id = id;
+        earth.name = id;
+        earth.classid = "CLSID:EA3EA17C-5724-4104-94D8-4EECBD352964";
+        earth.style.width = "100%";
+        earth.style.height = "100%";
+        earth.Event.OnCreateEarth = function (searth) {
+            earth.Event.OnCreateEarth = function () {};
+            earthArray.push(searth);
+            searth.Load(CITYPLAN_config.server.ip, CITYPLAN_config.server.screen);
+            searth.Event.OnDocumentChanged = function (){
+                searth.Event.OnDocumentChanged = function (){};
+                earth.Analysis.AnalysisServer = CITYPLAN_config.server.ip;
+                earth.Environment.SetDatabaseLink(CITYPLAN_config.server.dataServerIP);
+                showPlan(searth, plan.id);
+                showPlanName(searth, plan.name);
+            };
+        };
+    }*/
+</script>
+</body>
+</html>

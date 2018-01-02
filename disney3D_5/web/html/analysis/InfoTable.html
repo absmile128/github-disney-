@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!-- saved from url=(0014)about:internet -->
+<head>
+    <meta charset="utf-8"/>
+    <title> 开挖管线信息 </title>
+    <meta name="Generator" content="EditPlus">
+    <meta name="Author" content="">
+    <meta name="Keywords" content="">
+    <meta name="Description" content="">
+    <link rel="stylesheet" href="../../css/table.css"/>　
+
+    <script src="../../js/common.js"></script>　
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>　
+    <script type="text/javascript" src="../../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/attachment_64.js"></script>
+    <script src="../../js/cover/handle.js"></script>
+
+    <script src="../../js/cover/handle.js"></script>
+
+    <script>
+
+        var earth=null;
+
+        function postData(obj) {
+
+            earth = obj.earth;
+            var info = obj.info;  //井盖现状信息
+
+            //井盖现状信息
+            setTable(info)
+
+
+        }
+
+
+        //设置基本信息表
+        function  setTable(data)   {
+
+            var htmlStr = '<table style="font-size:14px;  width: 100%; ">';
+            if (data==null||data.length==0) {
+                htmlStr += '<tr ><td  >无基本信息！</td></tr>';
+            }else {
+                debugger;
+
+                for (var key in data) {
+                    var namealias=  handlefield(key, data[key]).namealias;
+                    var valuealias  =handlefield(key, data[key]).valuealias;
+                    if(displayfield("COVERSITUATIONTABLE",key)){
+                        htmlStr += '<tr ><td   class="texttdclass">' + namealias + '</td><td    class="texttdclass">' + valuealias + '</td></tr>';
+                    }
+                }
+                htmlStr = htmlStr + '</table>';
+
+            }
+               $("#dataTable").html(htmlStr);
+
+
+        }
+
+    </script>
+
+</head>
+
+<body>
+
+
+
+
+<table id="dataTable">
+</table>
+
+</body>
+</html>

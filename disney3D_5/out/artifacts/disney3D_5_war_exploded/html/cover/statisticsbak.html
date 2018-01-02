@@ -1,0 +1,275 @@
+<html xmlns:v="http://www.w3.org/2001/XMLSchema">
+<head>
+    <title>历史故障井盖统计</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/common.css"/>
+
+
+    <script type="text/javascript" src="../../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.easyui.min.js"></script>
+
+    <script src="../../js/lib/locale/easyui-lang-zh_CN.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+
+
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>　
+    <script src="../../js/common.js"></script>
+    <script src="../../js/lib/jquery.jqpagination.js"></script>
+    <script src="../../js/cover/handle.js"></script>
+
+    <script>
+        var params = window.dialogArguments;
+
+        var pageSize = 16; //每页显示条数
+        var pageNo = 1;//页码数（第几页）
+        var totalcount=0;//总数
+        var totalpagecount = 0;//总页数
+        var resultdata =null;
+
+        $(function () {
+
+            getdata();
+            //窗口变化后，尺寸调整
+            window.onresize = function(){
+                //初始化设置高度
+                var divHeight =$(document).height()-80 ;
+                var divWidth = $(document).width()  ;
+                $('#searchData').datagrid('resize',{
+                    height:divHeight,
+                    width:divWidth
+                });
+            };
+
+            $(window).trigger("resize");
+
+            $('#searchData').datagrid({
+                onDblClickRow: dbclick
+            });
+
+        });
+
+        //格式化单元格提示信息
+        function formatCellTooltip(value){
+            return "<span title='" + value + "'>" + value + "</span>";
+        }
+
+        //datagrid双击事件
+        function dbclick(rowIndex,rowData){
+            var rows = $("#searchData").datagrid("getRows");
+            var expnum=rows[rowIndex].expnum//管点编号
+            var location=getlocation(expnum) ;  //获得定位地址              根据管点编号 得到gis 点位
+            //气泡显示的属性信息
+            var info ={
+                coverSituationInfo:showDataArr[expnum]
+            }
+            if( location ==null||info.coverSituationInfo==null) {
+                alert("没有对应井盖！");
+                return;
+            }else{
+                goToParse(location, info);
+            }
+
+            if(expnum=="" ) {
+                alert("没有对应井盖模型！");
+                return;
+            } else {
+                highlight(expnum);
+            }
+        }
+        //获得定位地址
+        function getlocation(expnum) {
+            var location =null;
+
+            var coverGisdata = getCoverGISInfo(expnum);
+
+            if (coverGisdata == null || coverGisdata.length == 0) {
+                return location;
+            }
+
+            var coordinateArr = coverGisdata[0]["SHAPE"]["Point"]["Coordinates"].split(',');
+            var point = earth.Factory.CreateGeoPoint();
+            for (var i = 0; (i + 2) < coordinateArr.length; i += 3) {
+                point.Longitude = coordinateArr[i];
+                point.Latitude = coordinateArr[i + 1];
+                //point.Altitude = earth.GlobeObserver.GetHeight(point.x, point.y); // 100;coordinateArr[i+2];
+                point.Altitude = earth.Measure.MeasureTerrainAltitude(point.x, point.y);
+            }
+            var location = {
+                lon: point.Longitude,
+                lat: point.Latitude,
+                alt: point.Altitude,
+            }
+            return location;
+        }
+        //定位
+        function goToParse(location,info){
+
+            if( location ==null||info.coverSituationInfo==null) {
+                return;
+            }
+
+//            earth.GlobeObserver.GotoLookat(location.lon , location.lat, location.alt, 0, 90, 0, 30); //定位
+            earth.GlobeObserver.GotoLookat(location.lon+0.0002 , location.lat, location.alt, 0, 90, 0, 60); //定位
+
+
+            var isneedinfo = $("#InfoCheck").attr('checked');
+            if (isneedinfo) {
+                searchAnalysis.createHtmlBollon("CoverSituationTable.html", info, location, 400, 420)
+            }
+        }
+        //回调函数
+        function getfunccallback(current_page) {
+            pageNo = current_page;
+            reformdata(); //重新获取数据
+        }
+        function  getdata() {
+             var start= params.info.start;
+             var end=  params.info.end;
+             var keystr=   params.info.keystr;
+
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/CaseHandler.ashx?action=GetHisAlarmInfoCount",
+                data: {
+                    starttime:start,
+                    endtime:end,
+                    str:keystr
+                },
+                cache: false,
+                async:false,
+                success: function (data) {
+
+                    setdata(data)
+
+                },
+                error:function (x,t,e) {
+
+                }
+            });
+        }
+        //设置页数+基本信息
+        function setdata(data,pageNo)         {
+            tipdivshow("search",false);
+            tipdivshow("nodata",false);
+            if(data===""||data===null||data===undefined||data.length==0){
+                tipdivshow("nodata",true);
+                return;
+            }
+            reformpagecount(data.otalCount);
+            resultdata=data.List;
+            reformdata();
+        }
+
+        //设置页数
+        function reformpagecount(data ) {
+            if (data == null || data == "0" || data == "") {
+                totalcount = 0;
+                totalpagecount = 0;
+            }
+            else {
+                totalcount= parseInt(data);
+                totalpagecount = Math.ceil (parseInt(data)    / pageSize);
+            }
+
+                $("#totalcount_label").html(totalcount+"个");  //设置总数
+                //初始化页码控件
+                $('.pagination').jqPagination({
+                    current_page: pageNo,
+                    max_page: totalpagecount,
+                    outerfunc: function (current_page) {
+                        return getfunccallback(current_page);
+                    }
+                });
+
+        }
+        //设置数据
+        function reformdata()    {
+
+            var dataArr = [];//结果集
+            var beginindex=(pageNo-1)*pageSize ;
+            var endindextemp= pageNo*pageSize-1 ;
+            var endindex=endindextemp<totalcount-1?endindextemp:totalcount-1;
+
+            for(var i=beginindex;i<endindex+1;i++){
+                dataArr.push(resultdata[i]);
+
+            }
+
+            var dataArr2 = [];//结果集
+            for(var j=0;j<dataArr.length;j++){
+                var listNum=j+1;
+
+                var expnum=handlefield("expnum", dataArr[j].ExpNum).valuealias;
+
+                var expnumalias=handlefield("expnumalias",dataArr[j].ExpNum).valuealias;
+                var alarmcount= handlefield("alarmcount",dataArr[j].AlarmCount).valuealias;
+                var reporttimearray=handlefield("reporttimearray",dataArr[j].ReportTimeArray).valuealias;
+                dataArr2.push({"listNum":listNum,"expnum":expnum,"expnumalias":expnumalias ,"alarmcount": alarmcount,"reporttimearray":reporttimearray});
+
+
+            }
+
+            $("#searchData").datagrid("loadData",dataArr2);
+        }
+
+    </script>
+</head>
+
+<body id="container" class="easyui-layout">
+<div region="north" border="false" split="false" style="height:60px;text-align: left;text-align: center;vertical-align: middle ">
+
+            <label style="font-size: 20px;font-weight: bold;margin-top: 20px">历史故障井盖统计表格</label>
+
+</div>
+<div id="div_searchData" region="center" border="false" style="overflow-y: hidden;overflow-x: hidden;"  style="height:100%">
+    <div style="float: right" 　>　　<label >双击定位</label></div>
+    <table  id="searchData" class="easyui-datagrid" data-options="fitColumns:true,singleSelect:true "   style="height:100px" >
+
+        <thead>
+        <tr >
+            <th data-options="field:'listNum',width:50">序号</th>
+            <!--<th data-options="field:'machinecode',width:100">井盖编号</th>-->
+            <th data-options="field:'expnumalias',width:100 ">管点编号</th>
+            <th data-options="field:'expnum',width:100,hidden:'true'">管点编号</th>
+            <th data-options="field:'alarmcount'  ,width:50">报警次数</th>
+            <th data-options="field:'reporttimearray' ,width:100 ">报警时间序列</th>
+
+        </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+</div>
+
+
+<div region="south" border="false" style="height: 50px;overflow:hidden">
+    <%--  页码开始--%>
+    <ul  class="pagination" style=" width:100%; text-align:center;">
+        <li  class="firstpageli"><img src="../../image/test/firstpage.png" ></li>
+        <li class="prepageli"><img src="../../image/test/prepage.png"></li>
+        第
+        <li  class="currentpageli"><input  style="width:20px;" value=' '/></li>
+        <li>页</li>
+        <li class="nextpageli"><img src="../../image/test/nextpage.png" ></li>
+        <li class="endpageli"><img src="../../image/test/endpage.png" ></li>
+        共<li  class="totalpageli">&nbsp;</li> <li>页</li>
+    </ul>
+    <%--  页码结束--%>
+
+</div>
+
+
+
+<div  id="searchtip_div" class="tipdivclass"   > 正在查询.... </div>
+<div id="nodatatip_div" class="tipdivclass"  > 没有查到相关结果 </div>
+
+
+
+</body>
+</html>

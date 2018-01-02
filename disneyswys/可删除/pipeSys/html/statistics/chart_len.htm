@@ -1,0 +1,246 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<!-- saved from url=(0014)about:internet -->
+
+<head>
+    <title id='Description'>统计图</title>
+    <link rel="stylesheet" href="jqwidgets/styles/jqx.base.css" type="text/css" />
+    <script type="text/javascript" src="scripts/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="jqwidgets/jqxcore.js"></script>
+    <script type="text/javascript" src="jqwidgets/jqxchart.js"></script>
+    <script type="text/javascript" src="jqwidgets/jqxdata.js"></script>
+    <script type="text/javascript" src="jqwidgets/jqxdata.js"></script>
+    <script type="text/javascript" src="../../js/lib/json.js"></script>
+    <script type="text/javascript">
+    var statisAryData;
+    var displayF;
+    var chartTitle;
+    var dataT = "dataType";
+
+    function getdata(data) {
+        statisAryData = [];
+        var obj = JSON.parse(data); //由JSON字符串转换为JSON对象
+        var layerN;
+        var layerNames = [];
+        displayF = obj[0].fields;
+        chartTitle = obj[0].chartTitle;
+
+
+        //解析json对象
+        for (var i = 0; i < obj.length; i++) {
+            var layerObj = obj[i];
+            layerN = obj[i].layer;
+            var layerObjLen = layerObj.dataList.length;
+            var layerParam = [];
+            if (layerObjLen > 1) {
+                var layerName = layerObj.dataList[0].layerName;
+                layerNames.push(layerName);
+                for (var j = 1; j < layerObjLen; j++) {
+                    var layerObjParam = layerObj.dataList[j];
+                    if (layerObjParam.dataType == "小计" || layerObjParam.dataType == "总计") {
+                        continue;
+                    } // hr add
+                    layerParam.push({
+                        "dataNum": layerObjParam.dataNum,
+                        "dataType": layerObjParam.dataType,
+                        "length": layerObjParam.length
+                    });
+                    dataT = "dataType";
+                }
+                statisAryData.push({
+                "layerName": layerName,
+                "layerParam": layerParam
+                });
+            }  
+        }
+    }
+    var roadobj = "";
+    var query = function() {
+        var layerData=[];
+        if (statisAryData) {
+            for (var i = 0; i < statisAryData.length; i++) {
+				var pipetype=statisAryData[i].layerName;
+				var num = 0.00;
+				var len = 0.00;
+				for(var j = 0; j< statisAryData[i].layerParam.length; j++){
+					num += parseFloat(statisAryData[i].layerParam[j].dataNum);
+					len += parseFloat(statisAryData[i].layerParam[j].length);
+				}
+				layerData.push({dataNum:num,dataType:pipetype,length:len});
+            };
+        }
+
+        var vv2 = $("#selobjs option:selected");
+        roadobj = vv2.val();
+        showChart(layerData);
+    };
+
+    var getDisplayField = function(property) {
+            for (var i = 0; i < displayF.length; i++) {
+                var obj = displayF[i];
+                for (var p in obj) {
+                    if (property === p) {
+                        return obj[p];
+                    }
+                }
+            }
+        }
+
+    var showChart = function(data) {
+        var width = 75;
+        var chartData = [];
+        var finishCharDatas = [];
+        var fields = [];
+        for (var i = 0; i < data.length; i++) {
+            chartData.push({
+                "dataType": data[i].dataType,
+                "dataNum": data[i].dataNum,
+                "length": data[i].length
+            });
+        };
+        if (data && data[0]) {
+            var i = 0;
+            for (var property in data[0]) { //对象键值对的遍历是无序的!要注意!
+                if (property != "dataType") {
+                    var dis = getDisplayField(property);
+                    fields.push({
+                        dataField: property,
+                        displayText: dis
+                    });
+                }
+                i++;
+            }
+            i = 0;
+        }
+
+        width = width * chartData.length;
+        if (width < 680) {
+            width = 680;
+        }
+        $('#chartContainer').width(width); //自动计算统计图的宽度
+
+        //找到统计图Y轴最大值
+        var temp = 0;
+
+        var type = "";
+        var vv = $("#seltype option:selected");
+        type = vv.val();
+        if (type == "数量") {
+
+                for (var i = 0; i < chartData.length; i++) {
+                    finishCharDatas.push({
+                        "dataType": chartData[i].dataType,
+                        "dataNum": chartData[i].dataNum
+                    });
+
+                }
+        } else {
+            for (var i = 0; i < chartData.length; i++) {
+                finishCharDatas.push({
+                    "dataType": chartData[i].dataType,
+                    "length": chartData[i].length
+                });
+            }
+        }
+
+
+        if (finishCharDatas.length > 0 && (finishCharDatas[0].dataNum != undefined || finishCharDatas[0].pointNum != undefined)) {
+                for (var i = 0; i < finishCharDatas.length; i++) {
+
+                    if (parseFloat(finishCharDatas[i].dataNum) > parseFloat(temp)) {
+                        temp = finishCharDatas[i].dataNum;
+                    }
+                }
+        }
+        else
+        {
+             for (var i = 0; i < finishCharDatas.length; i++) {
+
+                    if (parseFloat(finishCharDatas[i].length) > parseFloat(temp)) {
+                        temp = finishCharDatas[i].length;
+                    }
+                }
+        }
+        if (finishCharDatas.length > 0 && (finishCharDatas[0].dataNum != undefined || finishCharDatas[0].pointNum != undefined)) {
+            temp = parseInt(temp / 10 + 1);
+        }
+        else
+        {
+
+             temp = parseInt(temp / 10 + 1);
+        }
+        var settings = {
+            title: chartTitle,
+            description: "",
+            enableAnimations: true,
+            showLegend: true,
+            padding: {
+                left: 5,
+                top: 5,
+                right: 5,
+                bottom: 5
+            },
+            titlePadding: {
+                left: 90,
+                top: 0,
+                right: 0,
+                bottom: 10
+            },
+            source: finishCharDatas,
+            categoryAxis: {
+                text: 'Category Axis',
+                dataField: dataT,
+                showTickMarks: true,
+                tickMarksInterval: 1,
+                tickMarksColor: '#888888',
+                unitInterval: 1,
+                showGridLines: true,
+                // gridLinesInterval: 3,
+                textRotationAngle: -45,
+                gridLinesColor: '#888888'
+                //axisSize: 'auto'
+            },
+            colorScheme: 'scheme05',
+            seriesGroups: [{
+                type: 'column',
+                valueAxis: {
+                    minValue: 0,
+                    displayValueAxis: true,
+                    description: type=="数量"?'数值(个)':'数值（km）',
+                    //  interval: 1,
+                    unitInterval: temp,
+                    //gridLinesInterval: 1,
+                    tickMarksColor: '#888888'
+                },
+                series: fields
+            }]
+        };
+        $('#chartContainer').jqxChart(settings);
+
+    };
+    </script>
+</head>
+
+<body style="background:white;">
+    <div style="padding-bottom: 5px;">
+<!--        <label for="selLayers" style="font-size:13px">指定图层:</label>
+        <select id="selLayers" style="width: 100px;"></select>
+
+        <label id="selobjslabel" for="selobjs" style="font-size:13px; ">指定对象:</label>
+        <select id="selobjs" style="width: 100px;" onchange="selobjsChange()">
+            <option>管线</option>
+            <option>管点</option>
+        </select>
+-->
+        <label id="seltypelabel" for="selobjs" style="font-size:13px; ">统计对象:</label>
+        <select id="seltype" style="width: 100px;">
+            <option>数量</option>
+            <option>长度</option>
+        </select>
+
+        <button id="btnQuery" onClick="query()">生成统计图</button>
+    </div>
+    <div id='chartContainer' style="height: 380px;" />
+</body>
+
+</html>

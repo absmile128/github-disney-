@@ -1,0 +1,239 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>方案比选</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css" />
+    <link rel="stylesheet" href="../../css/easyui/icon.css" />
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css" />
+    <link rel="stylesheet" href="../../css/common.css" />
+    <style>
+        #divButtons{ border: 1px solid #d3d3d3; text-align: center;}
+        button{ width:65px; height: 30px; margin: 5px 3px;}
+        select{ width: 150px; }
+        label { margin: 0 20px; width: 50px; cursor: pointer;}
+    </style>
+    <script src="../../js/lib/jquery.min.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+</head>
+<body id="container" class="easyui-layout" >
+    <div region="north" border="false" style="height:75px;">
+        <div id="divButtons">
+            <button id="btnCompare" disabled >多屏比选</button>
+            <button id="btnIndexCompare" disabled>指标比选</button>
+            <button id="btnSync" disabled>多屏联动</button>
+
+        </div>
+        <div  style="height:20px;text-align: center;padding-top: 5px;">
+            <label><input type="radio" id="doubleScreen" checked>两屏</label>
+            <label><input type="radio" id="threeScreen" >三屏</label>
+        </div>
+    </div>
+    <div region="center" id="centerDiv"  border="false" style="overflow:hidden; padding: 5px;">
+        <fieldset id="fsTree" style="height: 100%;">
+            <ul id="planTree" class="ztree"></ul>
+        </fieldset>
+    </div>
+    <script src="../../js/common.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>
+    <script src="../../js/project.js"></script>
+    <script>
+        $(function (){
+            var earth = parent.earth;
+            var projManager = CITYPLAN.ProjectManager(earth);
+            var tree = null;
+            var bMultiple = false;   // 当前是否是多屏显示状态
+            var bSync = false;       // 当前是否联动
+            var bShowIndex = false;  // 当前是否显示指标信息窗口
+
+            parent.hideLayers();
+            //已看 复选框状态控制
+            $("#doubleScreen").click(function (){
+                $("#threeScreen").removeAttr("checked");
+                $("#doubleScreen").attr("checked","checked");
+                chkboxToButton(2);
+            });
+            $("#threeScreen").click(function (){
+                $("#doubleScreen").removeAttr("checked");
+                $("#threeScreen").attr("checked","checked");
+                chkboxToButton(3);
+            });
+            //checkbox改变时，根据当前树状态改变按钮状态
+            var chkboxToButton = function(tag){
+                if(tag  === 2){
+                  if(nodesArr.length>2) {
+                      var planTree =  $.fn.zTree.getZTreeObj("planTree");
+                      nodesArr[0].checked = false;
+                      planTree.updateNode(nodesArr[0]);
+                      nodesArr.splice(0,1);
+                      $("#btnCompare").removeAttr("disabled");
+                  }else if(nodesArr.length<2){
+                      $("#btnCompare").attr("disabled", "disabled");
+                  } else{
+                      $("#btnCompare").removeAttr("disabled");
+                  }
+                }
+                if(tag  === 3){
+                  if(nodesArr.length<3){
+                        $("#btnCompare").attr("disabled", "disabled");
+                    }
+                }
+            }
+            //xi项目树check事件
+            var nodesArr = [];
+            var onCheckTreeNode = function (event, treeId, node) {
+                // alert(node.id);
+                if(node.isParent){
+                    return;
+                }
+                if(!bMultiple){//单屏  分屏租了处理，这不需处理多屏情况
+                    var planTree =  $.fn.zTree.getZTreeObj(treeId);
+                    //var checkedNodes =planTree.getCheckedNodes();
+                    if(node.checked === false){
+                        for(var i=0;i<nodesArr.length;i++){
+                              if(node.id === nodesArr[i].id){
+                                 nodesArr.splice(i,1);
+                              }
+                        }
+
+                    } else{
+                        nodesArr.push(node);
+                    }
+
+                    if(($("#doubleScreen").attr("checked") == "checked"&&nodesArr.length<2)||
+                            $("#threeScreen").attr("checked") == "checked"&&nodesArr.length<3 ) {
+                        $("#btnCompare").attr("disabled", "disabled");
+                        return;
+                    };
+                    if($("#doubleScreen").attr("checked") == "checked"){
+                        if(nodesArr.length>2){
+                            nodesArr[0].checked = false;
+                            planTree.updateNode(nodesArr[0]);
+                            nodesArr.splice(0,1);
+                        }
+                        $("#btnCompare").removeAttr("disabled");
+                    }else if($("#threeScreen").attr("checked") == "checked"){
+                        if(nodesArr.length>3){
+                            nodesArr[0].checked = false;
+                            planTree.updateNode(nodesArr[0]);
+                            nodesArr.splice(0,1);
+                        }
+                        $("#btnCompare").removeAttr("disabled");
+                    }
+                }
+            };
+            var initPlanTree  = function (treeData){
+                var setting={
+                    check:{
+                        enable:true, //是否显示checkbox或radio
+                        chkStyle:"checkbox", //显示类型,可设置(checbox,radio)
+                        chkboxType: { "Y": "p", "N": "p" }
+
+                    },
+                    data: {
+                        simpleData: {
+                            enable: true
+                        }
+                    },
+                    view:{
+                        dblClickExpand:false, //双击节点时，是否自动展开父节点的标识
+                        expandSpeed:"", //节点展开、折叠时的动画速度, 可设置("","slow", "normal", or "fast")
+                        selectedMulti:false //设置是否允许同时选中多个节点
+                    },
+                    callback:{
+                        onCheck:onCheckTreeNode
+                    }
+                };
+                tree = $.fn.zTree.init($("#planTree"), setting, treeData);
+                tree.expandAll(true);
+            };
+            var planDataArr = [];
+            var proId = projManager.loadApproveXML();
+            var proData = projManager.getPlanData(proId);
+            var nodes = {id:1, pId:0, name:"项目",open:true,isParent:true};
+            var planNodes =[];
+            //该树的图层显示顺序 先显示方案的节点 最后再显示现状图层的节点
+            $.each(proData,function(i,node){
+                planNodes.push({id:node["CPPLAN.ID"],name:node["CPPLAN.NAME"],pId:1})
+                planDataArr.push({id:node["CPPLAN.ID"],plan:node});
+            });
+            // if(parent.currentLayerIdList&&parent.currentLayerIdList.length>0){
+            //     planNodes.push({id:"",name:"现状"});// todo:现状节点不知道还需不需要别的操作
+            // }
+            if(parent.parcelLayerGuid2){//现状图层guid
+                 planNodes.push({id:parent.parcelLayerGuid2,name:"现状"});
+            }
+            nodes.children =  planNodes;
+            initPlanTree(nodes) ;
+
+            $("#btnCompare").click(function (){
+                if(bMultiple){
+                    $(this).text("多屏比选");
+                    parent.setSync(bSync);
+                    parent.setScreen(1);   // 恢复到一屏
+                    bMultiple = false;
+                    bSync = false;
+                    //parent.showIndexes(false,planDataArr);
+
+                    $("#btnSync").text("多屏联动").attr("disabled", "disabled");
+                    $("#btnIndexCompare").attr("disabled", "disabled");
+                    $("#doubleScreen").removeAttr("disabled");
+                    $("#threeScreen").removeAttr("disabled");
+                    bShowIndex = false;
+                    $(".blockMask").hide();
+                    //隐藏图层
+                    parent.hideLayers();
+                }else{
+                    $(this).text("单屏显示");
+                    bMultiple = true;
+                    $("#btnSync").text("多屏联动").removeAttr("disabled");
+                    $("#btnIndexCompare").removeAttr("disabled");
+                    $("#doubleScreen").attr("disabled","disabled");
+                    $("#threeScreen").attr("disabled","disabled");
+
+                    var planTree =  $.fn.zTree.getZTreeObj("planTree");
+                    var checkedNodes =planTree.getCheckedNodes();
+                    var planIdArr = [];
+                    for(var i = 0; i< checkedNodes.length; i++){
+                        if(checkedNodes[i].isParent){
+                             continue;
+                        }
+                        planIdArr.push( { id: checkedNodes[i].id, name: checkedNodes[i].name }  );
+                    }
+                    parent.setScreen(planIdArr.length, planIdArr, projManager, parent.currentApproveProjectGuid, parent.currentLayerObjList);
+                    parent.setSync(false);
+                    //加一个遮罩层
+                    var divObj = document.getElementById("centerDiv");
+                    var blockMask= $("<div style=' position:absolute; display:none;  z-index:300; background-color:"+"#eef5fd"+"; filter:alpha(opacity=50); -moz-opacity:0.5;  -khtml-opacity: 0.5;  opacity: 0.5;' />").css("width",$(divObj).width()).css("top",3).css("left",$(divObj).offset().left+5).css("height",$(divObj).height());
+                    blockMask.attr("class","blockMask")
+                    $(divObj).append(blockMask);
+                    blockMask.show();
+                }
+            });
+            $("#btnIndexCompare").click(function (){
+                bShowIndex = !bShowIndex;
+                //var data  = projManager.getPlanById(nodesArr[0].id);
+                parent.showIndexes(bShowIndex,planDataArr);
+            });
+            $("#btnSync").click(function (){
+                bSync = !bSync;
+                parent.setSync(bSync);
+                $(this).text( bSync ? "取消联动" : "多屏联动" );
+            });
+            $(window).unload(function (){
+                if(parent.earth == null){
+                    return;
+                }
+                if( $(".blockMask")){
+                    $(".blockMask").hide();
+                }
+                parent.setScreen(1);   // 恢复到一屏
+                //隐藏图层
+                parent.hideLayers();
+            });
+        });
+    </script>
+</body>
+</html>

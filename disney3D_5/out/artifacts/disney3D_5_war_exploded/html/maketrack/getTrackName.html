@@ -1,0 +1,62 @@
+﻿<html>
+<head>
+	<title>名称&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</title>
+    <style>
+        html,body{ width: 100%; overflow: hidden; padding-top: 5px;}
+        button{ width: 75px; height: 30px; margin: 5px;}
+        div{ width: 100%; text-align: center; margin-top: 15px;}
+        span{ display: inline-block; width:75px; text-align: center; }
+    </style>
+	<script type="text/javascript">
+        var param = window.dialogArguments;
+		function setTrackName(){
+			window.returnValue = trackName.value;
+			window.close();
+		}
+		
+		function init(){
+			if(param && param.name){
+				trackName.value = param.name;
+			}
+		}
+        function check(){
+            if(trackName.value == ""){
+                //alert("名称不能为空！");
+                trackName.focus();
+                document.getElementById("butAdd").disabled = true;
+                return;
+            }
+            if(containSpecial(trackName.value)){
+                alert("名称不能有特殊字符！");
+                trackName.focus();
+                document.getElementById("butAdd").disabled = true;
+                return;
+            }
+            if(param){
+                for(var i=0; i<param.length; i++){
+                    if(trackName.value == param[i].NAME){
+                        alert("名称不能重复！");
+                        trackName.focus();
+                        return;
+                    }
+                }
+            }
+            document.getElementById("butAdd").disabled = false;
+        }
+        function containSpecial( s ){
+            var containSpecial = RegExp(/[(\ )(\~)(\!)(\@)(\#)(\$)(\%)(\^)(\&)(\*)(\()(\))(\-)(\_)(\+)(\=)(\[)(\])(\{)(\})(\|)(\\)(\;)(\:)(\')(\")(\,)(\.)(\/)(\<)(\>)(\?)(\)]+/);
+            return ( containSpecial.test(s) );
+        }
+    </script>
+</head>
+	<body onload="init()" style="text-align: center;">
+		<div>
+            <span>名  称:</span>
+            <input type="text" name="trackName" id="trackName"  onkeyup="check()"/>
+		</div>
+		<div>
+            <button id="butAdd" onClick="setTrackName()" disabled >确定</button>
+            <button onClick="window.close();">取消</button>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>分布图浏览</title>
+
+    <link href="../../css/pdfobject.css" rel="stylesheet" />
+
+
+</head>
+
+<body>
+
+
+<div id="results" class="hidden"></div>
+
+<div id="pdfdiv" ></div>
+<script src="../../js/lib/jquery.js"></script>
+<script src="../../js/lib/jquery.min.js"></script>
+<script src="../../js/lib/jquery.easyui.min.js"></script>
+<script src="../../js/common.js"></script>
+<script src="../../js/PDFObject-master/pdfobject.min.js"></script>
+<script>
+
+    window.onload = function (){
+
+    var pdfpath=parent.getRootPath()+  "/pdf/xfsinfo.pdf";
+    PDFObject.embed(pdfpath);
+
+    };
+
+
+
+</script>
+</body>
+</html>

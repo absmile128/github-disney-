@@ -1,0 +1,115 @@
+/**
+ * User: wyh
+ * Date: 12-11-21
+ * Time: 下午10:23
+ * Desc: 
+ */
+@CHARSET "UTF-8";
+*{
+    margin: 0;
+    padding: 0;
+}
+html,body{
+    height:100%;
+    overflow:hidden;
+    font-size: 12px;
+}
+
+button.normalBtn{
+    background:url(../../images/normalBtn.gif);
+    border-style:none;
+    width: 70px;
+    height: 23px;
+}
+
+/*button.normal2Btn{*/
+    /*background:url(../images/normal2Btn2.gif);*/
+    /*border-style:none;*/
+    /*width: 80px;*/
+    /*height: 23px;*/
+/*}*/
+
+button.normal2Btn{
+background:url(../css/images/normal2Btn.png);
+border-style:none;
+width: 80px;
+height: 23px;
+}
+
+
+button.smallBtn{
+    background:url(../images/select_bt.png);
+    border-style:none;
+    width: 49px;
+    height: 23px;
+}
+
+button.largeBtn{
+    background:url(../images/largeBtn.png);
+    border-style:none;
+    width: 85px;
+    height: 23px;
+}
+button.smallBtn_border{
+    background:url(../../css/images/select_bt.png);
+    width: 59px;
+    height: 23px;
+}
+
+button.largeBtn_border{
+    background:url(../image/largeBtn.gif);
+    width: 85px;
+    height: 23px;
+}
+
+body.dialogBG{
+    background-color: #eef5fd;
+    text-align: center;
+    font-size: 12px;
+}
+
+.textFieldNor{
+    width:120px;
+}
+
+.textFieldLong{
+    width:200px;
+}
+
+.buttonPanel{
+    text-align:center;
+    height: 40px;
+}
+
+td.rightMouseImgBg{
+    background-color:#B0C4DE;
+    width:30px;
+    height:20px;
+}
+
+td.rightMouseTextBg{
+    background-color:#D0D0CE;
+    width:60px;
+    font-size: 12px;
+}
+
+.borderSty{
+    border: 1px double #ACA899;
+}
+
+.seperatorLine{
+    border-right: 1px double #ACA899;
+}
+
+.littleDialogBody{
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    font-size: 13px;
+}
+.largeDialogBody{
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    font-size: 13px;
+}

@@ -1,0 +1,1755 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>漫游浏览</title>
+    <link rel="stylesheet" href="../../../css/easyui/gray/easyui.css" />
+    <link rel="stylesheet" href="../../../css/easyui/icon.css" />
+    <link rel="stylesheet" href="../../../css/zTree/zTreeStyle.css" />
+    <link rel="stylesheet" href="../../../css/common.css" />
+    <style>
+        .hide{ display: none; }
+        button{ width: 55px; height: 28px; margin: 5px;}
+        #divRoleTrack>div{ width:80px; text-align: left; float: left; padding: 3px 10px;}
+        #divChcekControl>div{width:85px; float: right;}
+        input[type=image]{ margin: 0 5px;}
+        input[type=radio],input[type=checkbox]{ margin-right: 3px;}
+        select{ width:135px;}
+        #divRoleDynObj>div{ width: 100px; float: left;}
+    </style>
+    <script src="../../../js/lib/jquery.min.js"></script>
+    <script src="../../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../../js/lib/jquery.xml2json.js"></script>
+    <script src="../../../js/config.js"></script>
+    <script src="../../../js/CITYPLAN_config.js"></script>
+</head>
+<body oncontextmenu="return false" >
+<div id="divTrackList" class="easyui-layout" data-options="fit:true" style="height: 100%;">
+    <div region="north" style="height:130px;padding: 3px; overflow:hidden; text-align: center;">
+        <!--<div style="padding: 0 5px;"><label>飞行对象：<select id="selFlyObj"></select></label></div>-->
+        <div style="width: 100%; text-align: center; margin-top: 5px;">
+            <div style="float: left">
+                <input type="image" src="../../../image/track/viewList.png" title="新建" id="btnNew" /> </br>
+                <div>新建</div>
+            </div>
+            <div  style="float: left">
+                <input type="image" src="../../../image/track/passbreak.png" title="飞行点" id="btnStationPass" disabled/> </br>
+                <div>飞行点</div>
+            </div>
+            <div style="float: left">
+                <input type="image" src="../../../image/track/lookatbreak.png" title="观察点" id="btnStationLookat" disabled /> </br>
+                <div>观察点</div>
+            </div>
+            <div style="float: left">
+                <input type="image" src="../../../image/track/surroundbreak.png" title="环绕点" id="btnStationSurround"  disabled/>
+                <div>环绕点</div>
+            </div>
+            <!--<button id="btnStart" disabled>飞行</button>-->
+
+            <!--<button id="btnStop" disabled>停止</button>-->
+
+
+
+                <button id="btnStart" class="normal2Btn" disabled>开始漫游</button>
+                <button  id="btnStop"  class="normal2Btn" disabled>停止漫游</button>
+
+
+        </div>
+        <!--<div id="divRoleTrack" style="width: 100%; margin: 5px 0" disabled>-->
+            <!--<div><label><input type="radio" value="1"/>第一人称</label></div>-->
+            <!--<div><label><input type="radio" value="3" checked/>跟随</label></div>-->
+            <!--<br/>-->
+        <!--</div>-->
+        <!--<div id="progressbar" class="easyui-progressbar" style="width:200px;"></div>-->
+        <div id="divChcekControl" style="width: 100%; margin: 5px;">
+            <!--<div id="divRealTimeControl" disabled><label><input type="checkbox" id="chkRealTimeControl" />实时控制</label></div>-->
+            <div id="divShowRoute" disabled><label><input type="checkbox" id="chkShowRoute" />显示轨迹</label></div>
+            <!--    <div id="divShowActor" disabled><label><input type="checkbox" id="chkShowActor" />显示人</label></div>-->
+        </div>
+    </div>
+    <div region="center"   style="height:200px;padding: 3px; margin-top:5px;overflow:auto; text-align: center;border:1px; ">
+        <ul id="trackTree" class="ztree"></ul>
+    </div>
+</div>
+<div id="divTrackEditor" class="easyui-layout hide" data-options="fit:true" style="height: 100%;">
+    <div region="north" style="height:45px; text-align: left;  padding: 0px; overflow:hidden;">
+        <input type="image" src="../../../image/track/return.gif" title="返回" id="btnReturn" />
+    </div>
+    <div region="center" border="false">
+        <ul id="trackStationTree" class="ztree"></ul>
+    </div>
+</div>
+<div id="rootMenu" class="easyui-menu" style="width:100px;">
+    <div id="importImg" iconCls="icon-edit">导入</div>
+    <div class="menu-sep" id="we" ></div>
+    <div id="exportImg" iconCls="icon-no">导出</div>
+</div>
+<!-- 漫游路径树右键菜单 -->
+<div id="contextMenuTrack" class="easyui-menu" style="width:100px;">
+    <div id="divRenameTrack" iconCls="icon-edit">属性</div>
+    <div id="divDeleteTrack" iconCls="icon-no">删除</div>
+</div>
+<!-- 漫游路径节点树右键菜单 -->
+<div id="contextMenuStation" class="easyui-menu" style="width:100px;">
+    <div id="divEditStation" iconCls="icon-edit">属性</div>
+    <div class="menu-sep" id="sep" ></div>
+    <div id="divDeleteStation" iconCls="icon-no">删除</div>
+</div>
+<object id="dataProcess" classid="clsid:DDA7E893-8EEE-4A1E-A506-867932BD0FB9" style="display:none;"></object>
+<script src="../../../js/config.js"></script>
+<script src="../../../js/maketrack/track.js"></script>
+<script>
+var earth;
+var treeTrack = null;
+
+
+//cy：10.17
+//var TrackTypeval=1;//第一人称
+var TrackTypeval=CITYPLAN_config.disney.TrackTypeval;//选择飞行方式（第一人称或跟随）   (在 CITYPLAN_config.js里配置)
+var FlyObjval=CITYPLAN_config.disney.FlyObjval;//选择飞行物体   (在 CITYPLAN_config.js里配置)
+$(function (){
+    earth = parent.earth;
+    var trackManager = STAMP.TrackManager(earth);
+         // 漫游路径树
+    var treeTrackStation = null;  // 漫游路径节点树
+    var numFlying = 0;   // 当前正在飞行的漫游路线
+    var curEditingTrack = null;   // 当前正在被编辑的漫游路径
+    var action = " ";
+    var isvideo = false;
+    var bNew = true;   // 是新建路径(true)还是编辑路径(false)
+    // 树基本设置
+    var setting = {
+        data: {
+            simpleData: {
+                enable: true
+            }
+        },
+        view:{
+            dblClickExpand:false, //双击节点时，是否自动展开父节点的标识
+            expandSpeed:"", //节点展开、折叠时的动画速度, 可设置("","slow", "normal", or "fast")
+            selectedMulti:false, //设置是否允许同时选中多个节点
+            showTitle:false
+        },
+        edit: {
+            enable: true,
+            drag: {
+                prev: true,
+                inner: false,
+                next: true
+            },
+            showRemoveBtn: false,
+            showRenameBtn: false
+        },
+        callback:{
+            //beforeDrop: zTreeBeforeDrop
+        }
+    };
+
+    //拖拽结束后的事件回调
+    function zTreeOnDrop(event, treeId, treeNodes, targetNode, moveType) {
+
+        //先处理xml节点保存
+        if(targetNode) {
+            var treeObj = $.fn.zTree.getZTreeObj("trackTree");
+            var parentNode = treeNodes[0].getParentNode();
+            if(targetNode.level === 1){
+                //level == 1 表示漫游路径节点 track节点操作 
+                //alert(targetNode.id + " " + treeNodes[0].id);
+                trackManager.sortTrack(treeNodes[0].id, targetNode.id, moveType);
+            } else {
+                //路径xml操作
+                var trackID;
+                var dragGuid = treeNodes[0].id;
+                if(targetNode.level === 2){//路径节点下级别
+                    trackID = parentNode.id;
+                } else if(targetNode.level === 3) {//pass内节点级别
+                    trackID = parentNode.getParentNode().id;
+                }
+
+                //如果两个节点相邻 并且要把dragGuid放在targetNode的后面 则只需要一步处理即可
+                // var dragIndex;
+                // var targetIndex;
+                // for (var i = 0; i < parentNode.children.length; i++) {
+                //     if(treeNodes[0].id === parentNode.children[i].id){
+                //         dragIndex = i;
+                //     }
+                //     if(targetNode.id === parentNode.children[i].id){
+                //         targetIndex = i;
+                //     }
+                // };
+
+                //alert(dragIndex + " " + targetIndex);
+
+                //保存到本地xml
+                var dragLevel = targetNode.level;
+                trackManager.sortStation(trackID, dragGuid, targetNode.id, moveType, dragLevel);
+                //同步到场景中
+                var track = earth.TrackControl.GetTrack(trackID);
+                if (moveType === "prev") {
+
+                    track.SortStation(dragGuid, targetNode.id);
+                    track.CommitChanges();
+
+                } else if(moveType === "next"){
+                    // if(dragIndex === targetIndex + 1){
+                    //     track.SortStation(targetNode.id, dragGuid);
+                    //     track.CommitChanges();
+                    //     //alert(targetNode.id + " " + dragGuid);
+                    // }else {
+                    //注意:这里要转换两次
+                    track.SortStation(dragGuid, targetNode.id);
+                    //track.CommitChanges();
+                    track.SortStation(targetNode.id, dragGuid);
+                    track.CommitChanges();
+                    // }
+                };
+            }
+        }
+    };
+
+    //文件夹允许拖拽
+    function zTreeBeforeDrag(treeId, treeNodes) {
+        return true;
+    };
+
+    //拖拽释放时触发 如果目标对象是父节点或者跨级 则拖拽设置为无效
+    function zTreeBeforeDrop(treeId, treeNodes, targetNode, moveType) {
+        //不允许同一个路径下不同route下的station平跨拖拽
+        if (targetNode.getParentNode().id != treeNodes[0].getParentNode().id) {
+            return false;
+        }
+        //处理一个路径下的不同pass文件夹里的不同子节点之间的拖拽
+        if (treeNodes[0].isParent === false && targetNode.isParent === false && treeNodes[0].level === 3 && targetNode.level === 3 && treeNodes[0].getParentNode().getParentNode().id === targetNode.getParentNode().getParentNode().id) {
+            return true;
+        }
+        //拖拽对象的父对象
+        if (treeNodes[0].getParentNode().id  != targetNode.getParentNode().id) {
+            return false;
+        }
+        return true;
+    };
+
+    // 新建按钮激活状态
+    var enableNew = function (){
+        if(numFlying == 0){
+            $("#btnNew").removeAttr("disabled");
+        }else{
+            $("#btnNew").attr("disabled", "disabled");
+        }
+    };
+    // 飞行中路径数减1，最小为0
+    var decreaseNumFlying = function (){
+        numFlying -= 1;
+        if(numFlying < 0){
+            numFlying = 0;
+        }
+    };
+
+    // region 漫游路径树鼠标事件
+    var onSelectTrackNode = function (node){
+        if(node.id != -1 && node.pId == -1){ // 漫游路径对象节点
+            var track = earth.TrackControl.GetTrack(node.id);
+            if(track){
+                $("#divShowRoute,#btnStart,#divChcekControl").removeAttr("disabled");
+//                $("#divRoleTrack :radio").removeAttr("checked");
+//                $("#divRoleTrack :radio[value=" + track.TrackType + "]").attr("checked", "checked");
+
+                if(track.Status == 0){  // stop
+//                    $("#selFlyObj").removeAttr("disabled");
+                    enableNew();
+                    $("#btnStop").attr("disabled", "disabled");
+                    $("#divRealTimeControl,#divShowActor").attr("disabled", "disabled");
+                    $("#btnStart").text("开始漫游");
+//                    $("#selFlyObj").val($("#selFlyObj option:first-child").val());
+//                    $("#divRoleTrack :radio").removeAttr("checked");
+//                    $("#divRoleTrack :radio[value=3]").attr("checked", "checked");
+                }else if(track.Status == 1){  // play
+//                    $("#selFlyObj").attr("disabled","disabled");
+                    enableNew();
+                    $("#btnStop").removeAttr("disabled");
+                    $("#divRealTimeControl,#divShowActor").removeAttr("disabled");
+                    $("#btnStart").text("暂停漫游");
+//                    $("#selFlyObj").val(track.BindObject);
+                    earth.TrackControl.SetMainTrack(node.id, 0);
+                }else if(track.Status == 2){  // pause
+//                    $("#selFlyObj").attr("disabled","disabled");
+                    enableNew();
+                    $("#btnStop").removeAttr("disabled");
+                    $("#divRealTimeControl,#divShowActor").attr("disabled", "disabled");
+                    $("#btnStart").text("继续漫游");
+//                    $("#selFlyObj").val(track.BindObject);
+                    earth.TrackControl.SetMainTrack(node.id, 0);
+                }
+
+                if(track.Visibility){
+                    $("#chkShowRoute").attr("checked", "checked");
+                }else{
+                    $("#chkShowRoute").removeAttr("checked");
+                }
+                if(node.showActor == true){
+                    $("#chkShowActor").attr("checked", "checked");
+                }else{
+                    $("#chkShowActor").removeAttr("checked");
+                }
+            }
+        }else{
+            $("#btnStart,#btnStop,#divChcekControl,#divRealTimeControl").attr("disabled","disabled");
+        }
+
+    }
+
+    //树节点单击
+    var clickTrackNode = function (event, treeId, node){
+        if(node){
+            onSelectTrackNode(node);
+            if(node.isParent&&node.pId==-1&&node.id!=-1){
+                curEditingTrack = earth.TrackControl.GetTrack(node.id);
+                //处理radio状态
+                if(curEditingTrack.TrackType ===1 ){
+//                    $("#divRoleTrack :radio").removeAttr("checked");
+//                    $("#divRoleTrack :radio[value=1]").attr("checked", "checked");
+                }else if(curEditingTrack.TrackType ===3 ){
+//                    $("#divRoleTrack :radio").removeAttr("checked");
+//                    $("#divRoleTrack :radio[value=3]").attr("checked", "checked");
+                }
+                if(videoTag){
+                    $("#btnStart").attr("disabled","disabled");
+                    $("#btnStop").attr("disabled",false);
+                }
+                $("#btnStationPass").removeAttr("disabled");
+                $("#btnStationLookat").removeAttr("disabled");
+                $("#btnStationSurround").removeAttr("disabled");
+                $("#btnStationPass").attr("src","../../../image/track/pass.gif");
+                $("#btnStationLookat").attr("src","../../../image/track/lookat.gif");
+                $("#btnStationSurround").attr("src","../../../image/track/surround.gif");
+            }else if(node.id != -1 && node.pId != -1&& node.isParent){
+                var parentNode=node.getParentNode();
+                if(parentNode.pId==-1){
+                    curEditingTrack = earth.TrackControl.GetTrack(parentNode.id);
+                }
+                //处理radio状态
+//                $("#divRoleTrack :radio").removeAttr("checked");
+//                $("#divRoleTrack :radio[value=3]").attr("checked", "checked");
+                $("#btnStationPass").removeAttr("disabled");
+                $("#btnStationLookat").attr("disabled","disabled");
+                $("#btnStationSurround").attr("disabled","disabled");
+                $("#btnStationPass").attr("src","../../../image/track/pass.gif");
+                $("#btnStationLookat").attr("src","../../../image/track/lookatbreak.png");
+                $("#btnStationSurround").attr("src","../../../image/track/surroundbreak.png");
+            }else if(node.id == -1 && node.pId != -1){
+                curEditingTrack="";
+                $("#btnStationPass").attr("disabled","disabled");
+                $("#btnStationLookat").attr("disabled","disabled");
+                $("#btnStationSurround").attr("disabled","disabled");
+                $("#btnStationPass").attr("src","../../../image/track/passbreak.png");
+                $("#btnStationLookat").attr("src","../../../image/track/lookatbreak.png");
+                $("#btnStationSurround").attr("src","../../../image/track/surroundbreak.png");
+            } else{
+                var parentNode=node.getParentNode().getParentNode();
+                if(parentNode){
+                    curEditingTrack = earth.TrackControl.GetTrack(parentNode.id);
+                }
+                $("#btnStationPass").attr("disabled","disabled");
+                $("#btnStationLookat").attr("disabled","disabled");
+                $("#btnStationSurround").attr("disabled","disabled");
+                $("#btnStationPass").attr("src","../../../image/track/passbreak.png")  ;
+                $("#btnStationLookat").attr("src","../../../image/track/lookatbreak.png")  ;
+                $("#btnStationSurround").attr("src","../../../image/track/surroundbreak.png")  ;
+            }
+
+            if(node.level === 1){
+                if(node.children === null || node.children === undefined){
+                    $("#btnStart").attr("disabled","disabled");
+//                    $("#video").attr("disabled","disabled");
+                    $("#divShowRoute").attr("disabled", "disabled");
+                }
+                if(node.children && node.children.length === 0){
+                    $("#btnStart").attr("disabled","disabled");
+//                    $("#video").attr("disabled","disabled");
+                    $("#divShowRoute").attr("disabled", "disabled");
+                }
+            }
+            //飞行状态下按钮状态控制
+            var tracks = trackManager.getTracks();
+            if(tracks.length != 0){
+                for (var s= 0;s<tracks.length;s++){
+                    var track = earth.TrackControl.GetTrack(tracks[s].ID);
+                    if(track.Status === 1||track.Status === 2){
+//                        $("#video").attr("disabled","dsabled");
+                        $("#btnNew").attr("disabled","disabled");
+                        $("#btnStationPass").attr("disabled","disabled");
+                        $("#btnStationLookat").attr("disabled","disabled");
+                        $("#btnStationSurround").attr("disabled","disabled");
+                        $("#btnStationPass").attr("src","../../../image/track/passbreak.png");
+                        $("#btnStationLookat").attr("src","../../../image/track/lookatbreak.png");
+                        $("#btnStationSurround").attr("src","../../../image/track/surroundbreak.png");
+                    }
+                }
+            }
+        }
+    };
+    // 双击漫游路径定位到第一个节点
+    var dblClickTrackNode = function (event, treeId, node){
+        var track = null;
+        if(node){
+            if(node.isParent){
+                treeTrack.expandNode(node);
+                track = earth.TrackControl.GetTrack(node.id);
+                trackManager.locateToTrack(track);
+            }else{
+                var station;
+                var parentNode=node.getParentNode().getParentNode();
+                if(parentNode.pId==-1){
+                    track = earth.TrackControl.GetTrack(parentNode.id);
+                    station=track.GetStationByGuid(node.id);
+                    trackManager.locateToStation(station);
+                }
+                if(node.getParentNode().pId==-1){
+                    track = earth.TrackControl.GetTrack(node.getParentNode().id);
+                    station=track.GetStationByGuid(node.id);
+                    trackManager.locateToStation(station);
+                }
+            }
+        }
+    };
+    var zTreeOnExpand = function(event,treeId,node){
+        if(node.isParent&&node.pId==-1&&node.id!=-1){
+            var track = earth.TrackControl.GetTrack(node.id);
+            if(track.Status === 1){
+                node.icon = "../../../image/track/loading.gif";
+            }
+        }
+        treeTrack.updateNode(node);
+    }
+    var zTreeOnCollapse = function(event,treeId,node){
+        if(node.isParent&&node.pId==-1&&node.id!=-1){
+            var track = earth.TrackControl.GetTrack(node.id);
+            if(track.Status === 1){
+                node.icon = "../../../image/track/loading.gif";
+            }
+        }
+        treeTrack.updateNode(node);
+    }
+    // 右键选中节点，并弹出右键菜单
+    var displayTag = "false";
+    var rightClickTrackNode = function (event, treeId, node){
+        $.fn.zTree.getZTreeObj(treeId).selectNode(node);
+        clickTrackNode(event, treeId, node);
+        if(node){
+            if(numFlying == 0){
+                if(node.id != -1 && node.pId == -1){ // 漫游路径对象节点
+                    treeTrack.selectNode(node);
+                    //onSelectTrackNode(node);
+                    $('#contextMenuTrack').menu('show', {   //track
+                        left: event.pageX,
+                        top: event.pageY
+                    });
+                }else if(node.id == -1 && node.pId != -1){      //根节点 g
+                    $('#rootMenu').menu('show', {
+                        left: event.pageX,
+                        top: event.pageY
+                    });
+                } else if(node.id != -1 && node.pId != -1&& node.isParent){ // pass屏蔽pass右键p
+                    divDeleteStation.style.display = "";
+                    $('#contextMenuStation').menu('show', {
+                        left: event.pageX,
+                        top: event.pageY
+                    });
+                    var parentNode=node.getParentNode();
+                    if(parentNode.pId==-1){
+                        curEditingTrack = earth.TrackControl.GetTrack(parentNode.id);
+                    }
+                } else if(node.id != -1 && node.pId != -1&&node.getParentNode().pId==-1&& !node.isParent){
+                    $('#contextMenuStation').menu('show', {
+                        left: event.pageX,
+                        top: event.pageY
+                    });
+                    var parentNode=node.getParentNode();
+                    if(parentNode.pId==-1){
+                        curEditingTrack = earth.TrackControl.GetTrack(parentNode.id);
+                    }
+                }else {
+                    //子节点
+                    var passNode=node.getParentNode();
+                    //这里判断有问题!!! 对于观察点与环绕点 应该也出现删除选项... todo
+                    if(passNode &&passNode.pId!=-1 && passNode.children.length<=3){
+                        divDeleteStation.style.display = "none";
+                        sep.style.display = "none";
+                        displayTag = "true";
+                    } else if(displayTag === "true"){
+                        divDeleteStation.style.display = "";
+                        sep.style.display = "";
+                        displayTag = "false";
+                    }
+                    $('#contextMenuStation').menu('show', {   //station
+                        left: event.pageX,
+                        top: event.pageY
+                    });
+
+                    if (node.level === 2) {
+                        divDeleteStation.style.display = "";
+                    }
+
+                    var parentNode=node.getParentNode().getParentNode();
+                    if(parentNode.pId==-1){
+                        curEditingTrack = earth.TrackControl.GetTrack(parentNode.id);
+                    }
+                }
+            }
+        }
+    };
+    // endregion
+
+    // region 漫游路径节点树鼠标事件
+    var dblClickStationNode = function (event, treeId, node){
+        var station = null;
+        if(node.isParent){
+            treeTrackStation.expandNode(node);
+        }else{
+            station = curEditingTrack.GetStationByGuid(node.id);
+            trackManager.locateToStation(station);
+        }
+    };
+    var canDelete = function (node){
+        var station = curEditingTrack.GetStationByGuid(node.id);
+        var route = null;
+        if(station.Rtti == 501){  // pass
+            route = curEditingTrack.GetStationByGuid(node.id);
+            return route.GetChildCount() > 3;
+        }
+        return true;
+    };
+    // endregion
+
+    // var innerTree= function(treeId, treeNodes, targetNode) {
+    //     return targetNode!=null && targetNode.isParent;
+    // };
+
+
+    var initTrackTree = function (){
+        var tracks = trackManager.getTracks();
+        //var stations = trackManager.getStations(track);
+        var trackTreeData = [{id:-1, name:'漫游路径',open:true,isParent:true}];
+
+        setting.callback = {
+            onClick: clickTrackNode,
+            onDblClick: dblClickTrackNode,
+            onRightClick: rightClickTrackNode,
+            onExpand: zTreeOnExpand,
+            onCollapse: zTreeOnCollapse,
+            beforeDrop: zTreeBeforeDrop,
+            beforeDrag: zTreeBeforeDrag,
+            onDrop: zTreeOnDrop
+        };
+
+        //保持父节点属性
+        setting.data.keep = {
+            parent: true
+        };
+
+        $.each(tracks, function (i, track){
+            trackTreeData.push({
+                id: track["ID"],
+                pId: -1,
+                name: track["NAME"],
+                showActor: false, // 自定义属性：是否显示人
+                isParent:true
+            });
+            trackManager.createTrack(track["ID"], track["NAME"]);
+            var curTrack = earth.TrackControl.GetTrack(track["ID"]);
+            var stations = trackManager.getStations(curTrack);
+            if(stations){
+                $.each(stations,function(k,station){
+                    trackTreeData.push(station);
+                });
+            }
+
+        });
+        treeTrack = $.fn.zTree.init($("#trackTree"), setting, trackTreeData)
+    };
+    var dataProcess=document.getElementById("dataProcess");
+    dataProcess.Load();
+    function filter(node){
+        return node.id === id2dTo3d;
+    }
+    $("#exportImg").click(function(){
+        var filePath =  earth.UserDocument.SaveFileDialog(earth.RootPath, "*.rad","rad");
+        if (filePath == ""){
+            return;
+        }
+        dataProcess.BaseFileProcess.FilePackage(earth.RootPath+"track",filePath);
+    });
+    //插入节点到目标节点后面
+    function insertAfter1(newElement, targetElement) {
+        var parent = targetElement.parentNode;
+        if (parent.lastChild == targetElement) {
+            parent.appendChild(newElement);
+        } else {
+            parent.insertBefore(newElement,targetElement.nextSibling);
+        }
+    };
+    $("#importImg").click(function(){
+        var isRepeat = false;
+        var filePath =  earth.UserDocument.OpenFileDialog(earth.RootPath, "rad文件(*.rad)|*.rad");
+        if (filePath == ""){
+            return;
+        }
+        dataProcess.BaseFileProcess.FileUnPackage(filePath,earth.RootPath);
+        var tracks = earth.UserDocument.LoadXmlFile( earth.RootPath + "trackList"+ ".xml");
+        tracks = loadXMLStr(tracks).getElementsByTagName("record");
+        if(!tracks){
+            return;
+        }
+        var treeObj = $.fn.zTree.getZTreeObj("trackTree");
+        var xmlTrackData = earth.UserDocument.LoadXmlFile( earth.RootPath + "\\track\\trackList" + ".xml");
+        if(!xmlTrackData){
+            var xml = "<xml>\n</xml>";
+            earth.UserDocument.SaveXmlFile(earth.RootPath + "\\track\\trackList", xml);
+            xmlTrackData = earth.UserDocument.LoadXmlFile( earth.RootPath + "\\track\\trackList" + ".xml");
+        }
+        var xmlDoc = loadXMLStr(xmlTrackData);
+        $.each(tracks, function (i, track){
+            var node = treeObj.getNodesByFilter(function(node){
+                return node.id === track.getAttribute("ID");
+            }, true); // 仅查找一个节点
+            if(node === null || node ===""){
+                var records = xmlDoc.getElementsByTagName("record");
+                if(records.length>0){
+                    insertAfter1(track, records[records.length-1]);
+                } else{
+                    xmlDoc.documentElement.appendChild(track);
+                }
+
+                earth.UserDocument.SaveXmlFile(earth.RootPath + "\\track\\trackList", xmlDoc.xml);
+                var xmlTrackData = earth.UserDocument.LoadXmlFile( earth.RootPath + "\\trackList" + track.getAttribute("ID")+ ".xml");
+                earth.UserDocument.SaveXmlFile(earth.RootPath + "\\track\\trackList" +  track.getAttribute("ID"),xmlTrackData);
+            }else{
+                var deleteXML = earth.RootPath + "\\track\\trackList" +  track.getAttribute("ID") + ".xml";
+                earth.UserDocument.DeleteXmlFile(deleteXML);
+                var xmlTrackData = earth.UserDocument.LoadXmlFile( earth.RootPath + "\\trackList" + track.getAttribute("ID")+ ".xml");
+                earth.UserDocument.SaveXmlFile(earth.RootPath + "\\track\\trackList" +  track.getAttribute("ID"),xmlTrackData);
+                isRepeat = true;
+            }
+        });
+        if(isRepeat){
+            alert("重复漫游路径进行了更新！");
+        }
+        initTrackTree();
+    });
+    initTrackTree();
+    var saveTrackList = function (){
+        var treeObj = $.fn.zTree.getZTreeObj("trackTree");
+        var nodes = treeObj.transformToArray(treeObj.getNodes());
+        var i = 0;
+        var node = null;
+        var xml = "<xml>";
+        while(i<nodes.length){
+            node = nodes[i];
+            if(node.isParent&&node.pId==-1&&node.id!=-1){
+                xml += "\n\t<record ID='"+ node.id + "' NAME='" + node.name + "' />";
+            }
+            i++;
+        }
+        xml += "\n</xml>";
+        earth.UserDocument.SaveXmlFile(earth.RootPath + "\\track\\trackList", xml);
+    };
+
+    function fomatFloat(src, pos){
+        return Math.round(src*Math.pow(10, pos))/Math.pow(10, pos);
+    }
+
+    // region 路线节点编辑
+    var setStationAttributes = function (station, pos, passSelected){
+        if(!station){
+            return;
+        }
+        var params = null;
+        var bChanged = false;
+        var i= 0, pt = null;
+        var pass = null;
+        var position = earth.GlobeObserver.Pose;
+        switch (station.Rtti){
+            case 502:  // lookat
+                params = showModalDialog("lookatSetting.html",{
+                    name: station.Name,
+                    Longitude : pos ? pos.Longitude : station.Longitude,
+                    Latitude : pos ? pos.Latitude : station.Latitude,
+                    Altitude : pos ? pos.Altitude : station.Altitude,
+
+                    Heading : pos ? fomatFloat(position.Heading, 1) : fomatFloat(station.Heading, 1),
+                    Tilt :  pos ? Math.round(position.Tilt) : Math.round(station.Tilt),
+                    Roll : pos ? fomatFloat(position.Roll, 1) : fomatFloat(station.Roll, 1),
+                    Range : pos ? fomatFloat(position.range, 1) : fomatFloat(station.range, 1),
+                    StopTime : station.StopTime
+                },"dialogWidth=400px;dialogHeight=330px;status=no");
+                if(params){
+                    station.name = params.name;
+                    station.Longitude = params.Longitude;
+                    station.Latitude = params.Latitude;
+                    station.Altitude = params.Altitude;
+                    station.Heading = params.Heading;
+                    station.Tilt = params.Tilt;
+                    //这里四舍五入一下 底层做度与弧度转换的时候有精度误差
+                    station.Tilt = Math.round(station.Tilt);
+                    station.Roll = params.Roll;
+                    station.range = params.Range;
+                    //station.time = params.Time;
+                    station.StopTime = params.StopTime;
+                    bChanged = true;
+                }
+                break;
+            case 503:  // surround
+                params = showModalDialog("surroundSetting.html",{
+                    name: station.Name,
+                    Longitude : pos ? pos.Longitude : station.Longitude,
+                    Latitude : pos ? pos.Latitude : station.Latitude,
+                    Altitude : pos ? pos.Altitude : station.Altitude,
+                    FlyHeight : station.FlyHeight,
+                    Radius : station.Radius,
+                    NumberOfCycle : station.NumberOfCycle,
+                    Speed : station.Speed
+                },"dialogWidth=400px;dialogHeight=275px;status=no");
+                if(params){
+                    station.name = params.name;
+                    station.Longitude = params.Longitude;
+                    station.Latitude = params.Latitude;
+                    station.Altitude = params.Altitude;
+                    station.FlyHeight = params.FlyHeight;
+                    station.Radius = params.Radius;
+                    station.NumberOfCycle = params.NumberOfCycle;
+                    station.Speed = params.Speed;
+                    bChanged = true;
+                }
+                break;
+            case 504:  // route
+                var name='Station#';
+
+                var selectNode = treeTrack.getSelectedNodes()[0];
+                var track = earth.TrackControl.GetTrack(selectNode.getParentNode().id);
+                var paramObj ;
+
+                if(track && selectNode.children){
+                    var stat = selectNode.children[0];
+                    var stationTemp = track.GetStationByGuid(stat.id);
+                    var passTemp = track.GetStationByGuid(selectNode.id);
+                    paramObj = {name : station.Name, passSelected: true, Rate:passTemp.Rate, Speed: stationTemp.Speed, FlyHeight:stationTemp.FlyHeight, Tilt:Math.round(passTemp.Pitch), Heading:Math.round(passTemp.Yaw)};
+                } else {
+                    paramObj =  {name : station.Name, passSelected: true, Rate:0.01};
+                }
+                //如果pass文件被选中 此时右键的时候 属性显示为其子station的第一个属性值
+                params = showModalDialog("routeSetting.html", paramObj , "dialogWidth=400px;dialogHeight=250px;status=no");
+                var childrenLen = 0;
+                if(selectNode.children&&selectNode.id != -1 && selectNode.pId != -1){
+                    childrenLen = selectNode.children.length;
+                }
+                if(params){
+                    i = 0;
+                    station.Name = params.name;
+                    station.Rate = params.Rate;
+                    station.Yaw = params.Heading;
+                    station.Pitch = params.Tilt;
+                    if(pos){  // 新建route
+                        while(i < pos.Count){
+                            pt = pos.Items(i);
+                            pass = earth.Factory.CreateStationPass(earth.Factory.CreateGUID(), 'Station#'+(childrenLen+i+1));
+                            pass.Longitude = pt.X;
+                            pass.Latitude = pt.Y;
+                            pass.Altitude = pt.Z;
+                            //pass.Yaw = params.Heading;
+                            //pass.Pitch = params.Tilt;
+                            //pass.Roll = 0;
+                            pass.FlyHeight = params.FlyHeight;
+                            pass.Speed = params.Speed;
+                            //pass.Rate = params.Rate;
+                            station.AddStation(pass);
+                            i += 1;
+                        }
+                    }else{
+                        while(i < station.GetChildCount()){
+                            pass = station.GetChildAt(i);
+                            //pass.Yaw = params.Heading;
+                            //pass.Pitch = params.Tilt;
+                            //pass.Roll = 0;
+                            pass.FlyHeight = params.FlyHeight;
+                            pass.Speed = params.Speed;
+                            //pass.Rate = params.Rate;
+                            i += 1;
+                        }
+                    }
+                    bChanged = true;
+                }
+                break;
+            case 501:  // pass
+                var param;
+                if (passSelected) {
+                    param =  {
+                        name : station.Name,
+                        Longitude : pos ? pos.Longitude : station.Longitude,
+                        Latitude : pos ? pos.Latitude : station.Latitude,
+                        Altitude : pos ? pos.Altitude : station.Altitude,
+                        //Heading : Math.round(station.Yaw),
+                        //Tilt : Math.round(station.Pitch),
+                        FlyHeight : station.FlyHeight,
+                        Speed : station.Speed,
+                        //Rate : station.Rate,
+                        passSelected:passSelected
+                    }
+                } else {
+                    param =  {
+                        name : station.Name,
+                        Longitude : pos ? pos.Longitude : station.Longitude,
+                        Latitude : pos ? pos.Latitude : station.Latitude,
+                        Altitude : pos ? pos.Altitude : station.Altitude,
+                        //Heading : Math.round(station.Yaw),
+                        //Tilt : Math.round(station.Pitch),
+                        FlyHeight : station.FlyHeight,
+                        Speed : station.Speed
+                        //Rate : station.Rate
+                    }
+                }
+
+                params = showModalDialog("routeSetting.html" ,param, "dialogWidth=400px;dialogHeight=250px;status=no");
+
+                if(params){
+                    station.name = params.name;
+                    //station.Yaw = params.Heading;
+                    //station.Pitch = params.Tilt;
+                    if (!passSelected) {
+                        station.Longitude=params.Longitude;
+                        station.Latitude=params.Latitude;
+                        station.Altitude=params.Altitude;
+                    }
+                    //station.Roll = 0;
+                    station.FlyHeight = params.FlyHeight;
+                    station.Speed = params.Speed;
+                    //station.Rate = params.Rate;
+                    bChanged = true;
+                }
+                break;
+        }
+        return bChanged ? station : null;
+    };
+    var bAppendPass = false;
+
+    //添加飞行路径 点击"飞行点"触发
+    $("#btnStationPass").click(function (){
+        $("#checkBntn div",window.top.document).attr("disabled", true);
+        $("#btnNew").attr("disabled", true);
+        $("#btnStart").attr("disabled", true);
+//        $("#video").attr("disabled", true);
+        var selNode = treeTrack.getSelectedNodes()[0];
+        if((selNode.id != -1 && selNode.pId != -1&& selNode.isParent) || (selNode.children && selNode.children[0] && selNode.children[0].isParent)){
+            bAppendPass=true;
+        }
+        earth.Event.OnCreateGeometry = function (pFeat){
+            earth.Event.OnCreateGeometry = function (){};
+            earth.ShapeCreator.Clear();
+            var route = null, pass = null;
+            var i = 0, pt = null;
+
+            route = curEditingTrack.GetStationByGuid(selNode.id);
+
+            if(route){
+                bAppendPass = true;
+                action = "pass";
+            }else{
+                bAppendPass = false;
+                if(pFeat.Count < 3){
+                    alert("路径点不能少于3个");
+                }else{
+                    action = "pass";
+                    route = earth.Factory.CreateStationRoute(earth.Factory.CreateGUID(), 'pass');
+                }
+            }
+            var passStation;
+            if(bAppendPass){
+                passStation = setStationAttributes(route, pFeat, true);
+                if(passStation){
+                    route.AddStation(passStation);
+                } else{
+                    return;
+                }
+            } else {
+                route = setStationAttributes(route, pFeat);
+            }
+
+            if(route){
+                action = " ";
+                if(!bAppendPass){
+                    curEditingTrack.AddStation(route);
+                }
+                curEditingTrack.CommitChanges();
+                var stations = trackManager.getStations(curEditingTrack);
+                if(bAppendPass){
+
+                    if(selNode.pId === -1){
+                        treeTrack.removeChildNodes(selNode);
+                        treeTrack.addNodes(selNode,stations);
+                    } else {
+                        treeTrack.removeChildNodes(selNode.getParentNode());
+                        treeTrack.addNodes(selNode.getParentNode(),stations);
+                    }
+                    bAppendPass = false;
+                } else{
+                    treeTrack.removeChildNodes(selNode);
+                    treeTrack.addNodes(selNode,stations);
+                }
+
+                //如果当前选中的是pass文件夹 则不可用 
+                if (selNode.level === 2) {
+                    $("#btnStart").attr("disabled", "disabled");
+//                    $("#video").attr("disabled", "disabled");
+                    $("#divShowRoute").attr("disabled", "disabled");
+                } else {
+                    $("#btnStart").removeAttr("disabled");
+//                    $("#video").removeAttr("disabled");
+                    $("#divShowRoute").removeAttr("disabled");
+                }
+
+                trackManager.saveTrack(curEditingTrack);
+            }
+            $("#btnNew").removeAttr("disabled");
+            $("#btnStart").removeAttr("disabled");
+//            $("#video").removeAttr("disabled");
+            $("#checkBntn div",window.top.document).attr("disabled", false);
+        };
+        earth.ShapeCreator.CreatePolyline(2,0xffff0000);
+        $("#chkShowRoute").attr("checked", "checked");
+    });
+
+    //点击"观察点"弹出观察点页面
+    $("#btnStationLookat").click(function (){
+        $("#checkBntn div",window.top.document).attr("disabled", true);
+        $("#btnNew").attr("disabled", true);
+        $("#btnStart").attr("disabled", true);
+//        $("#video").attr("disabled", true);
+        var selNode = treeTrack.getSelectedNodes()[0];
+        earth.Event.OnCreateGeometry = function (pFeat){
+            earth.Event.OnCreateGeometry = function (){};
+            earth.ShapeCreator.Clear();
+            var id = earth.Factory.CreateGUID();
+            var lookat = earth.Factory.CreateStationLookat ( id, "观察点" );
+            lookat.Range = 100; //设置观察点默认高度值为100
+            lookat = setStationAttributes(lookat, pFeat);
+            if(lookat){
+                curEditingTrack.AddStation(lookat);
+                curEditingTrack.CommitChanges();
+                //initTrackStationTree(curEditingTrack);
+                var stations = trackManager.getStations(curEditingTrack);
+
+                treeTrack.removeChildNodes(selNode);
+                treeTrack.addNodes(selNode,stations);
+                trackManager.saveTrack(curEditingTrack);
+
+                $("#btnStart").removeAttr("disabled");
+//                $("#video").removeAttr("disabled");
+                $("#divShowRoute").removeAttr("disabled");
+            }
+            $("#btnNew").removeAttr("disabled");
+            $("#btnStart").removeAttr("disabled");
+//            $("#video").removeAttr("disabled");
+            $("#checkBntn div",window.top.document).attr("disabled", false);
+        };
+        earth.ShapeCreator.CreatePoint();
+    });
+    $("#btnStationSurround").click(function (){
+        $("#checkBntn div",window.top.document).attr("disabled", true);
+        $("#btnNew").attr("disabled", true);
+        $("#btnStart").attr("disabled", true);
+//        $("#video").attr("disabled", true);
+        var selNode = treeTrack.getSelectedNodes()[0];
+        earth.Event.OnCreateGeometry = function (pFeat){
+            earth.Event.OnCreateGeometry = function (){};
+            earth.ShapeCreator.Clear();
+            var id = earth.Factory.CreateGUID();
+            var surround = earth.Factory.CreateStationSurround ( id, "环绕点" );
+            surround.Radius = 200;//环绕点范围半径默认值设置为200
+            surround = setStationAttributes(surround, pFeat);
+            if(surround){
+                curEditingTrack.AddStation(surround);
+                curEditingTrack.CommitChanges();
+                //initTrackStationTree(curEditingTrack);
+                var stations = trackManager.getStations(curEditingTrack);
+                treeTrack.removeChildNodes(selNode);
+                treeTrack.addNodes(selNode,stations);
+                trackManager.saveTrack(curEditingTrack);
+
+                $("#btnStart").removeAttr("disabled");
+//                $("#video").removeAttr("disabled");
+                $("#divShowRoute").removeAttr("disabled");
+            }
+            $("#btnNew").removeAttr("disabled");
+            $("#btnStart").removeAttr("disabled");
+//            $("#video").removeAttr("disabled");
+            $("#checkBntn div",window.top.document).attr("disabled", false);
+        };
+        earth.ShapeCreator.CreatePoint();
+    });
+    $("#btnReturn").click(function (){
+        $("#divTrackEditor").addClass("hide");
+        $("#divTrackList").removeClass("hide");
+        $.parser.parse('#divTrack');
+        var treeObj = $.fn.zTree.getZTreeObj("trackTree");
+        treeObj.addNodes(treeObj.getNodeByParam("id", -1, null), {
+            id: curEditingTrack.Guid,
+            pId: -1,
+            name: curEditingTrack.Name,
+            showActor: false  // 自定义属性：是否显示人
+        });
+        if(bNew){
+            saveTrackList();
+        }
+        trackManager.saveTrack(curEditingTrack);
+        curEditingTrack = null;
+        $("#divShowRoute").attr("disabled", "disabled");
+    });
+    // endregion
+
+    //添加pass(新建)
+    $("#btnNew").click(function (){
+
+        var tracks = trackManager.getTracks();
+        var trackName = showModalDialog("getTrackName.html",tracks,"dialogWidth=300px;dialogHeight=150px;status=no");
+        if(trackName){
+            $.parser.parse('#divTrack');
+            bNew = true;
+            curEditingTrack = earth.Factory.CreateTrack(earth.Factory.CreateGUID(), trackName);
+            var treeObj = $.fn.zTree.getZTreeObj("trackTree");
+            var newNode = {
+                id: curEditingTrack.Guid,
+                pId: -1,
+                name: curEditingTrack.Name,
+                showActor: false,// 自定义属性：是否显示人
+                childOuter:false, //自定义属性:不允许子节点拖拽出去
+                isParent:true
+            };
+            treeObj.addNodes(treeObj.getNodeByParam("id", -1, null), newNode);
+
+            //添加的路线呈选中状态(貌似不起作用...)
+            treeObj.selectNode(treeObj.getNodeByParam("id", newNode.id, null));
+            //三个按钮变为可用状态
+            $("#btnStationPass").removeAttr("disabled");
+            $("#btnStationLookat").removeAttr("disabled");
+            $("#btnStationSurround").removeAttr("disabled");
+            $("#btnStationPass").attr("src","../../../image/track/pass.gif");
+            $("#btnStationLookat").attr("src","../../../image/track/lookat.gif");
+            $("#btnStationSurround").attr("src","../../../image/track/surround.gif");
+
+            //添加pass后 飞行按钮 视频按钮 显示轨迹变为可用
+            $("#btnStart").attr("disabled", "disabled");
+//            $("#video").attr("disabled", "disabled");
+            $("#divShowRoute").attr("disabled", "disabled");
+
+            if(bNew){
+                saveTrackList();
+            }
+        }
+    });
+
+    var flyNodes = [];
+    var flyCount = 0;
+    //飞行开始
+    $("#btnStart").click(function () {
+
+
+        if ($("#btnStart").text() == "开始漫游" || $("#btnStart").text() == "继续漫游") {
+
+            if (flyCount <= 0) {
+                $("#checkBntn div", window.top.document).attr("disabled", true);
+                treeTrack.setting.callback.onDblClick = null;
+                treeTrack.setting.callback.onRightClick = null;
+            }
+            flyCount++;
+        }
+        else {
+            flyCount--;
+            if (flyCount <= 0) {
+                $("#checkBntn div", window.top.document).attr("disabled", false);
+                treeTrack.setting.callback.onRightClick = rightClickTrackNode;
+                treeTrack.setting.callback.onDblClick = dblClickTrackNode;
+            }
+        }
+        //free update 2014年7月24日17:00:01
+
+        var trackId = treeTrack.getSelectedNodes()[0].id;
+        var node=treeTrack.getSelectedNodes()[0];
+        flyNodes.push(node);
+        var track = earth.TrackControl.GetTrack(trackId);
+
+
+
+        if (track) {
+
+
+            //$("#checkBntn div",window.top.document).attr("disabled", true);
+            ////飞行过程中设置树右键不可用
+            //// document.getElementById("contextMenuStation").style.display = "none";
+            //// document.getElementById("contextMenuTrack").style.display = "none";
+            //treeTrack.setting.callback.onDblClick = null;
+            //treeTrack.setting.callback.onRightClick = null;   free delete 2014年8月11日15:22:17
+            if(track.Status == 0){  // stop
+                earth.Event.OnDynamicListLoaded = function (list){// 请求运动物体列表完成事件 先拿到所有的运动物体列表才能加载运动物体
+
+                    earth.Event.OnDocumentChanged = function(type, newGuid){
+                    if(type == 3){
+                        return;
+                    }
+                    if(type == 2){  // 飞行对象加载成功
+                        $("#btnStationPass").attr("src","../../../image/track/passbreak.png")  ;
+                        $("#btnStationLookat").attr("src","../../../image/track/lookatbreak.png")  ;
+                        $("#btnStationSurround").attr("src","../../../image/track/surroundbreak.png")  ;
+                        node.icon = "../../../image/track/loading.gif";
+                        treeTrack.updateNode(node);
+                        earth.Event.OnTrackFinish = function (tId, objId) {    //todo:
+
+
+                            //这里的tid等于上面的node的id
+                            bShow = false;
+                            decreaseNumFlying();
+                            //这句话导致崩溃......
+
+                         //   earth.DynamicSystem.UnLoadDynamicObject(FlyObjval);
+
+                            earth.DynamicSystem.UnLoadDynamicObject(objId);
+
+                            earth.GlobeObserver.StopTracking();
+                            earth.GlobeObserver.Stop();
+                            $("#btnStationPass").attr("src","../../../image/track/pass.gif")  ;
+                            $("#btnStationLookat").attr("src","../../../image/track/lookat.gif")  ;
+                            $("#btnStationSurround").attr("src","../../../image/track/surround.gif")  ;
+                            $("#btnStop").attr("disabled", "disabled");
+                            var currentNode = null;
+                            //处理飞行后的图标问题
+                            for (var i = flyNodes.length - 1; i >= 0; i--) {
+                                 currentNode = flyNodes[i];
+                                if(tId === currentNode.id){
+                                    //修改飞行完毕后的图标
+                                    if(currentNode.open){
+                                        currentNode.icon = "";
+                                    } else{
+                                        currentNode.icon = "";
+                                    }
+                                    //从数组中删除
+                                    flyNodes.splice(i, 1);
+                                    break;
+                                };
+                            };
+
+
+                            //处理radio状态
+//                            $("#divRoleTrack :radio").removeAttr("checked");
+//                            $("#divRoleTrack :radio[value=3]").attr("checked", "checked");
+
+                            folderTag=true;
+                            treeTrack.updateNode(currentNode);
+                           // $("#selFlyObj,#btnNew,#video").removeAttr("disabled");
+                            $("#btnStart").removeAttr("disabled").text("开始漫游");
+                            //$("#chkRealTimeControl").removeAttr("checked");
+                            //$("#chkRealTimeControl,#divRealTimeControl,#divRoleTrack").attr("disabled", "disabled");
+                            if(treeTrack.getSelectedNodes().length > 0){
+                                $("#divShowRoute").removeAttr("disabled");
+                            }else{
+                                $("#divShowRoute").attr("disabled", "disabled");
+                            }
+//                            $("#chkRealTimeControl").removeAttr("checked");
+                            flyCount--;
+                            if (flyCount <= 0) {
+                                $("#checkBntn div", window.top.document).attr("disabled", false);
+                                treeTrack.setting.callback.onRightClick = rightClickTrackNode;
+                                treeTrack.setting.callback.onDblClick = dblClickTrackNode;
+                                $("#btnNew").removeAttr("disabled");
+
+                                $("#divRealTimeControl").attr("disabled", "disabled");
+                            }
+
+                           //free update 2014年8月11日14:47:27
+                            //$("#checkBntn div",window.top.document).attr("disabled", false);
+                            ////全部飞行完毕后 打开树右键菜单
+                            //if (flyNodes.length === 0) {
+                            //    treeTrack.setting.callback.onRightClick = rightClickTrackNode;
+                            //    treeTrack.setting.callback.onDblClick = dblClickTrackNode;
+                            //}
+                        };
+
+                        track.BindObject = newGuid;
+                        earth.TrackControl.SetMainTrack(trackId, 3);
+                        track.UpdateRate(2); //维持现状
+                        track.CommitChanges();
+                        track.Play(false);
+
+                        track.TrackType = TrackTypeval;
+
+                        // numFlying += 1;
+                        enableNew();
+                        $("#btnStop,#divChcekControl,#divShowActor,#addspeed,#divRealTimeControl").removeAttr("disabled");
+                        $("#btnNew").attr("disabled","disabled");
+                        $("#btnStart").text("暂停漫游");
+                    }
+                    earth.Event.OnDocumentChanged = function(){};
+                };
+                earth.DynamicSystem.LoadDynamicObject(FlyObjval);  };
+                    earth.DynamicSystem.ApplyDynamicList();// 疑问  请求运动物体列表
+            }else if(track.Status == 1){  // play
+                track.Pause();
+                enableNew();
+                $("#btnStart").removeAttr("disabled").text("继续漫游");
+//                $("#selFlyObj").attr("disabled","disabled");
+                $("#btnNew,#divShowActor").attr("disabled","disabled");
+            }else if(track.Status == 2){  // pause
+                track.Resume();
+                enableNew();
+                $("#btnStart").text("暂停漫游");
+//                $("#selFlyObj").attr("disabled","disabled");
+                $("#btnNew").attr("disabled","disabled");
+                $("#divRealTimeControl").removeAttr("disabled");
+            }
+        }
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    var recordState =false;
+    var folderTag=false;
+    $("#btnStop").click(function (){
+        var node =  treeTrack.getSelectedNodes()[0];
+        var trackId = treeTrack.getSelectedNodes()[0].id;
+        var track = earth.TrackControl.GetTrack(trackId);
+        if(track){
+            if(videoTag){
+                videoTag=false;
+                recordState=true;
+                // i = 0;
+                // total_frame_count = 0;
+                // current_frame_count = 0;
+                // //结束录制
+                // endCapture(); 
+                // recordState = false;
+//                $("#video").text("录制");
+                //add by yzp 2014-08-01 16:33 录制停止后开启菜单栏按钮可操作状态
+                $("#checkBntn div",window.top.document).attr("disabled", true);
+                setTimeout(endCapture, 500);
+            }else{
+                track.Stop();
+                decreaseNumFlying();
+                //按钮状态
+                enableNew();
+                bShow = false;
+            }
+
+//            $("#chkRealTimeControl").removeAttr("checked");
+            $("#btnStationPass").attr("src","../../../image/track/pass.gif")  ;
+            $("#btnStationLookat").attr("src","../../../image/track/lookat.gif")  ;
+            $("#btnStationSurround").attr("src","../../../image/track/surround.gif")  ;
+            if(node.open){
+                node.icon = "";
+            } else{
+                node.icon = "";
+            }
+            //处理radio状态
+//            $("#divRoleTrack :radio").removeAttr("checked");
+//            $("#divRoleTrack :radio[value=3]").attr("checked", "checked");
+            folderTag=true;
+            treeTrack.updateNode(node);
+
+            $(this).attr("disabled","disabled");
+//            $("#selFlyObj").removeAttr("disabled");
+            $("#btnStart").removeAttr("disabled").text("开始漫游");
+//            $("#video").removeAttr("disabled").text("视频");
+            $("#divShowActor,#addspeed,#divRealTimeControl").attr("disabled","disabled");
+            treeTrack.setting.callback.onRightClick = rightClickTrackNode;
+            treeTrack.setting.callback.onDblClick = dblClickTrackNode;
+        }
+        //endCapture();
+    });
+    var videoTag=false;
+    var total_frame_count = 0;
+    var current_frame_count = 0;
+//    $("#video").click(function(){
+//        if(!treeTrack.getSelectedNodes()[0]){
+//            alert("请先选择路径")
+//            return;
+//        }
+//        //录制视频添加 暂停/继续 功能
+//        var btnValue = $("#video").text();
+//        if ( btnValue === "视频") {
+//            //数据参数清空
+//            total_frame_count = 0;
+//            current_frame_count = 0;
+//            recordState = false;
+//            var trackId = treeTrack.getSelectedNodes()[0].id;
+//            videoRecord(trackId);
+//            if(isvideo){
+//                $("#checkBntn div",window.top.document).attr("disabled", true);
+//                videoTag=true;
+//                $("#btnStop").removeAttr("disabled");
+//                $("#btnStart,#addspeed,#lowspeed").attr("disabled","disabled");
+//                treeTrack.setting.callback.onRightClick = "";
+//                treeTrack.setting.callback.onDblClick = "";
+//            }
+//            if (current_frame_count < total_frame_count) {
+//                $("#video").text("暂停");
+//            }
+//        } else if ( btnValue === "暂停" ) {
+//            recordState = true;
+//            $("#video").text("继续");
+//            //alert("当前帧数为:" + current_frame_count);
+//        } else if (btnValue === "继续" )  {
+//            recordState = false;
+//            $("#video").text("暂停");
+//            chunk(total_frame_count, captureFrame, endCapture ,current_frame_count);
+//        }
+//
+//    });
+    $("#addspeed").click(function(){
+        var trackId = treeTrack.getSelectedNodes()[0].id;
+        var track = earth.TrackControl.GetTrack(trackId);
+        trackManager.UpdateRate(0,track);
+    });
+    $("#lowspeed").click(function(){
+        var trackId = treeTrack.getSelectedNodes()[0].id;
+        var track = earth.TrackControl.GetTrack(trackId);
+        trackManager.UpdateRate(1,track);
+    });
+    //track人称控制
+//    $("#divRoleTrack :radio").click(function (){
+//        $("#divRoleTrack :radio").removeAttr("checked");
+//        $(this).attr("checked", "checked");
+//        var trackId = treeTrack.getSelectedNodes()[0].id;
+//        var track = earth.TrackControl.GetTrack(trackId);
+//    //cy    track.TrackType = $(this).val();
+//        track.TrackType=TrackTypeval;
+//        /* if(track){
+//         if($(this).context.id){
+//         track.TrackType =4;
+//         if($(this).context.id=="low"){
+//         track.InitFollowTrack(0,0,-1,1);
+//         } else if($(this).context.id=="left"){
+//         //track.InitFirstPersonTrack(90,0);
+//         track.InitFollowTrack(90,0,-1,1);
+//         } else if($(this).context.id=="right"){
+//         track.InitFollowTrack(-90,0,-1,1);
+//         }else if($(this).context.id=="up"){
+//         track.InitFollowTrack(180,89,-1,1);
+//         }else if($(this).context.id=="down"){
+//         track.InitFollowTrack(180,-85,-1,1);
+//         }else if($(this).context.id=="free"){
+//         $("#freez").removeAttr("disabled");
+//         $("#freez").change( function(){
+//         earth.SceneSystem.InitFollowTrack($("#freez").val(),0,-1,1);
+//         });
+//         $("#freez").trigger("change");
+//         }
+//         track.TrackType =3;
+//         } else {
+//         track.TrackType = $(this).val();
+//         }
+//
+//         }*/
+//    }); //InitFollowTrack
+    var bShow=false;
+//    $("#chkRealTimeControl").click(function (){
+//        bShow  = $(this).attr("checked") == "checked";
+//        var selNode = treeTrack.getSelectedNodes()[0];
+//        var trackId = selNode.id;
+//        var track = earth.TrackControl.GetTrack(trackId);
+//        var stationCount = track.GetChildCount();
+//        for(var i=0; i<stationCount; i++){
+//            var station = track.GetChildAt(i);
+//            if(station.Rtti == 504){
+//                var passCount = station.GetChildCount();
+//                station.RealtimeMode = bShow;
+//                /*for(var j=0; j<passCount; j++){
+//                    var pass = station.GetChildAt(j);
+//                    pass.RealtimeMode = bShow;
+//                    //alert( pass.RealtimeMode+"1233"+bShow)
+//                }*/
+//            }
+//        }
+//    });
+
+    document.onkeydown = function(){
+        var selNode = treeTrack.getSelectedNodes()[0];
+        if(!selNode){
+            return;
+        }
+        var trackId = selNode.id;
+        var track = earth.TrackControl.GetTrack(trackId);
+        if(selNode){
+            if (event.keyCode == 187){//键盘“+”键按下
+                if(bShow){ //判断只有在选择实时控制时可用
+                    track.UpdateRate(0); //加速
+                    track.CommitChanges();
+                }
+
+            }else if (event.keyCode == 189){ //键盘“-”键按下
+                if(bShow){
+                    track.UpdateRate(1); //减速
+                    track.CommitChanges();
+                }
+
+            }else{ //其它任何键按下
+                if(bShow){
+                    track.UpdateRate(2); //维持现状
+                    track.CommitChanges();
+                }
+
+            }
+        }
+
+    }
+
+    $("#chkShowActor").click(function (){
+        var selNode = treeTrack.getSelectedNodes()[0];
+        var trackId = selNode.id;
+        var track = earth.TrackControl.GetTrack(trackId);
+        var bShow  = $(this).attr("checked") == "checked";
+        if(track){
+            track.ShowActor(bShow);
+            selNode.showActor = bShow;
+        }
+    });
+    $("#chkShowRoute").click(function (){
+        var trackId = treeTrack.getSelectedNodes()[0].id;
+        var track = earth.TrackControl.GetTrack(trackId);
+        if(track){
+            track.Visibility = $(this).attr("checked") == "checked";
+        }
+    });
+
+    // region Track树右键
+    $("#divRenameTrack").click(function (){
+        var node = treeTrack.getSelectedNodes()[0];
+        if(node){
+            var trackName = showModalDialog("getTrackName.html",{name: node.name},"dialogWidth=300px;dialogHeight=150px;status=no");
+            if(trackName && trackName != node.name){
+                node.name = trackName;
+                treeTrack.updateNode(node);
+                saveTrackList();
+            }
+        }
+    });
+    $("#divEditTrack").click(function (){
+        var trackId = treeTrack.getSelectedNodes()[0].id;
+        var track = earth.TrackControl.GetTrack(trackId);
+        if(track){
+            $("#divTrackList").addClass("hide");
+            $("#divTrackEditor").removeClass("hide");
+            bNew = false;
+            //initTrackStationTree( track );
+            curEditingTrack = track;
+            treeTrack.removeNode(treeTrack.getSelectedNodes()[0]);
+            $.parser.parse('#divTrack');
+        }
+    });
+    $("#divDeleteTrack").click(function (){
+        var trackId = treeTrack.getSelectedNodes()[0].id;
+        if(trackId){
+            if(confirm("是否确定要删除该条漫游路径？")){
+                treeTrack.removeNode(treeTrack.getSelectedNodes()[0]);
+                earth.TrackControl.DeleteTrack(trackId);
+                saveTrackList();
+                //1.当一个漫游路径都没有的时候 删除tracklist.xml文件(todo)
+                //2.如果这里移除的是父节点 就是删除整个tracklist + id .xml文件
+                var deleteXML = earth.RootPath + "\\track\\trackList" + trackId + ".xml";
+                earth.UserDocument.DeleteXmlFile(deleteXML);
+
+                //删除漫游路径后 按钮状态修改为不可用状态
+                $("#btnStationPass").attr("disabled","disabled");
+                $("#btnStationLookat").attr("disabled","disabled");
+                $("#btnStationSurround").attr("disabled","disabled");
+                $("#btnStationPass").attr("src","../../../image/track/passbreak.png")  ;
+                $("#btnStationLookat").attr("src","../../../image/track/lookatbreak.png")  ;
+                $("#btnStationSurround").attr("src","../../../image/track/surroundbreak.png")  ;
+                //按钮也变为不可用 显示轨迹也变为不可用
+                $("#btnStart").attr("disabled","disabled");
+//                $("#video").attr("disabled","disabled");
+                $("#divShowRoute").attr("disabled", "disabled");
+            }
+        }
+        // var treeObj = $.fn.zTree.getZTreeObj("trackTree");
+        // var nodes = treeObj.transformToArray(treeObj.getNodes());
+        // if(nodes.length === 1){
+        //     initTrackTree();
+        // }
+    });
+    // endregion
+
+    // region Station树右键
+
+    //右键属性编辑
+    $("#divEditStation").click(function (){
+        var node = treeTrack.getSelectedNodes()[0];
+        var station = null;
+
+        if(node.id){
+            station = curEditingTrack.GetStationByGuid(node.id);
+            if(node.id != -1 && node.pId != -1&& node.isParent){  //判断右键界面显示内容
+                action = "pass";
+            }
+            var isshow = false;
+            if(node.level === 2) {
+                isshow = true;
+            } else if( node.level === 3) {
+                isshow = false;
+            }
+            if(setStationAttributes(station, null, isshow)){
+                curEditingTrack.CommitChanges();
+                node.name = station.Name;
+            }
+        }
+        treeTrack.updateNode(node);
+        trackManager.saveTrack(curEditingTrack);
+    });
+
+    //当删除pass文件夹或者station节点时候处理
+    $("#divDeleteStation").click(function (){
+
+        if(!$(this).attr("disabled")){
+            var node = treeTrack.getSelectedNodes()[0];
+            if(node.id){
+                if(confirm("是否确定要删除该节点？")){
+                    var routeNode = node.getParentNode();
+
+                    curEditingTrack.DeleteStation( node.id );
+                    curEditingTrack.CommitChanges();
+                    treeTrack.removeNode( node );
+                    trackManager.saveTrack(curEditingTrack);
+
+                    //当路径node没有子节点的时候 相关按钮变为不可用状态
+                    var nodes = routeNode.children;
+                    if(nodes.length === 0){
+                        $("#btnStationPass").attr("disabled","disabled");
+                        $("#btnStationLookat").attr("disabled","disabled");
+                        $("#btnStationSurround").attr("disabled","disabled");
+                        $("#btnStationPass").attr("src","../../../image/track/passbreak.png");
+                        $("#btnStationLookat").attr("src","../../../image/track/lookatbreak.png");
+                        $("#btnStationSurround").attr("src","../../../image/track/surroundbreak.png");
+                        //飞行按钮也不可用
+                        $("#btnStart").attr("disabled","disabled");
+//                        $("#video").attr("disabled","disabled");
+                    }
+                }
+            }
+        }
+
+        //删除后相关按钮变为不可用
+        $("#btnStationPass").attr("disabled","disabled");
+        $("#btnStationLookat").attr("disabled","disabled");
+        $("#btnStationSurround").attr("disabled","disabled");
+        $("#btnStationPass").attr("src","../../../image/track/passbreak.png")  ;
+        $("#btnStationLookat").attr("src","../../../image/track/lookatbreak.png")  ;
+        $("#btnStationSurround").attr("src","../../../image/track/surroundbreak.png")  ;
+    });
+    // endregion
+
+    // 初始化动态对象列表
+//    trackManager.getDynamicObject(function (dynamic){
+//        $("#selDynamicObj").append('<option value="' + dynamic.Guid + '">' + dynamic.Name + '</option>');
+//    },function (fly){
+//        $("#selFlyObj").append('<option value="' + fly.Guid + '">' + fly.Name + '</option>');
+//    });
+
+    // 页面关闭时删除所有漫游路径
+    $(window).unload(function(){
+        if(earth.UserDocument){
+            trackManager.clearTracks();
+        }
+        if(earth.GlobeObserver){
+//            trackManager.out($("#selFlyObj").val());
+           trackManager.out(FlyObjval);
+        }
+
+    });
+    /*************************************************************************************************/
+    /**
+     * 视频录制
+     */
+
+//    function videoRecord(trackId){
+//        var obj={};
+//        obj.id=  trackId;
+//        obj.earth=earth;
+//        showModalDialog("videoRecord.html",obj,"dialogWidth=330px;dialogHeight=180px;status=no");
+//        var track = earth.TrackControl.GetTrack(trackId);
+//        if(obj.click=="true"){
+//            isvideo = true;
+//            if(track){
+//                /* $(this).attr("tag", "stop");
+//                 $("#btnRecord").text("停止录制");*/
+//                // todo 视频录制控制
+//                total_frame_count = earth.VideoRecorder.BeginCapture(track, obj.outpath,obj.rect, obj.txtFrame);
+//                $("#btnNew").attr("disabled","disabled");
+//                $("#btnStationPass").attr("src","../../../image/track/passbreak.png")  ;
+//                $("#btnStationLookat").attr("src","../../../image/track/lookatbreak.png")  ;
+//                $("#btnStationSurround").attr("src","../../../image/track/surroundbreak.png")  ;
+//                chunk(total_frame_count, captureFrame, endCapture, 0);
+//            }
+//        }
+//    }
+    /* function chunk(len,captureFrame,endCapture){
+     var i=0;
+     setTimeout(function(){
+     captureFrame(i,len);
+     i++;
+     if( i < len ){
+     setTimeout(arguments.callee,100);
+     }else{
+     endCapture(); //循环结束之后要做的操作
+     //$('#progressbar').progressbar('setValue', 100);
+     }
+     },0)
+     }
+     */
+    function chunk(len, captureFrame, endCapture, currentFrame){
+        var i = currentFrame;
+        setTimeout(function(){
+            var count = earth.GetDownloadCount();
+            if( count > 0 )
+            {
+                var time = 1000000;
+                var j = 0;
+                setTimeout(
+                        function sleep(time){
+                            j++;
+                            if( j < time )
+                                setTimeout(arguments.callee,20);
+                        },0);
+            }
+            else if(count == 0)
+            {
+                //alert("录制");
+                if(i > 0)
+                    captureFrame(i,len);
+                i++;
+                current_frame_count = i;
+            }
+            if( i < len && !recordState){
+                //alert("暂停!");
+                //当单击"暂停"时 由于上一次的函数可能还在执行(有一秒延迟) 因此会多出一帧才真正暂停下来 
+                setTimeout(arguments.callee,500);
+            }else if ( i === len){
+                //alert("开始停止录制!");
+                //录制完毕后变量清零处理
+                i = 0;
+                total_frame_count = 0;
+                current_frame_count = 0;
+                //结束录制
+                endCapture();
+                recordState = false;
+                var node = treeTrack.getSelectedNodes()[0];
+                $("#btnStationPass").attr("src","../../../image/track/pass.gif")  ;
+                $("#btnStationLookat").attr("src","../../../image/track/lookat.gif")  ;
+                $("#btnStationSurround").attr("src","../../../image/track/surround.gif")  ;
+                if(node.open){
+                    node.icon = "";
+                } else{
+                    node.icon = "";
+                }
+                folderTag=true;
+                treeTrack.updateNode(node);
+                $("#btnNew").removeAttr("disabled");
+                $("#btnRecord").text("开始录制");
+                $("#btnStop").attr("disabled", "disabled");
+                $("#btnStart").removeAttr("disabled");
+                $("#checkBntn div",window.top.document).attr("disabled", false);
+                //$('#progressbar').progressbar('setValue', 100);
+            }
+        },0);
+
+    }
+
+//    //保存某一帧
+//    function captureFrame(i,len){
+//        if(videoTag){
+//            //alert("啊大萨嘎地方");
+//        }
+//        earth.VideoRecorder.CaptureFrame(i/len);
+//        var value =(i/len)*100;
+//        value= value.toFixed(0) ;
+//        value=value/10;
+//        //$('#progressbar').progressbar('setValue', value);
+//    }
+//
+//    //停止录制
+//    function endCapture(){
+//        earth.VideoRecorder.EndCapture();
+//        $("#video").text("视频");
+//    }
+    var loadXMLStr=function(xmlStr){
+        var xmlDoc;
+        try {
+            if(window.ActiveXObject) {
+                var activeX = ['Microsoft.XMLDOM', 'MSXML5.XMLDOM', 'MSXML.XMLDOM', 'MSXML2.XMLDOM','MSXML2.DOMDocument'];
+                for (var i=0; i<activeX.length; i++){
+                    xmlDoc = new ActiveXObject(activeX[i]);
+                    xmlDoc.async = false;
+                    break;
+                }
+                if (/http/ig.test(xmlStr.substring(0,4))){
+                    xmlDoc.load(xmlStr);
+                }else{
+                    xmlDoc.loadXML(xmlStr);
+                }
+            } else if (document.implementation && document.implementation.createDocument) {
+                xmlDoc = document.implementation.createDocument('', '', null);
+                xmlDoc.loadXml(xmlStr);
+            } else {
+                xmlDoc = null;
+            }
+        }catch (exception){
+            xmlDoc = null;
+        }
+        return xmlDoc;
+    };
+
+});
+
+window.onbeforeunload=function(){
+    if(treeTrack.getSelectedNodes()[0]){
+        var trackId = treeTrack.getSelectedNodes()[0].id;
+        var track = earth.TrackControl.GetTrack(trackId);
+        if(track){
+            track.Stop();
+        }
+    }
+}
+
+</script></body>
+</html>

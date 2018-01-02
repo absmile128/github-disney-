@@ -1,0 +1,331 @@
+<!--    Tabs     -->
+.tabs-header {
+	height: 51px;
+	background: #1B57B7;
+	border: 0;
+}
+
+.tabs {
+	width:900px;
+	height: 51px;
+	border: 0;
+}
+
+.tabs li {
+	float: center;
+	margin-bottom: 0px;
+	border: 0;
+	height: 51px;
+}
+
+.tabs li a.tabs-inner {
+	font:18px;
+	font-weight:bold;
+	color: white;
+	vertical-align:bottom;
+	line-height:70px;
+	height: 50px;
+	width: 135px;
+	background:transparent;
+}
+
+.tabs li a.tabs-inner.tabs-title {
+	font:18px;
+	font-weight:bold;
+	line-height:40px;
+	vertical-align:bottom;
+}
+.tabs li.tabs-selected {
+	border: 0px;
+	border-bottom: 0px;
+	background: url('images/tabs_bg.png') left bottom transparent;
+}
+
+.tabs li.tabs-selected a.tabs-inner {
+	/*color: #1B57B7;*/
+	height: 50px;
+	width: 135px;
+	font:18px;
+	line-height:70px;
+	font-weight:bold;
+	background: url('images/tabs_bg.png') left bottom transparent;
+
+}
+.tabs li a.tabs-inner:hover{
+	background:transparent;
+}
+
+.tabs-panels {
+	background: url('../css/images/bg-toppanel.png') top left transparent;
+	border: 0;
+}
+<!--    Layout       -->
+.layout-expand-over{
+	/*background:#000;*/
+	
+}
+.layout-expand{
+	/*background:#BBBBBB;*/
+}
+.layout-split-north{
+	/*border-bottom:5px solid #C0C0C0;*/
+}
+.layout-split-south{
+	/*border-top:5px solid #C0C0C0;*/
+}
+.layout-split-east{
+	/*border-left:5px solid #C0C0C0;*/
+}
+.layout-split-west{
+	/*border-right:5px solid #C0C0C0;*/
+}
+.panel-header{
+	/*color:#777777;*/
+	/*border:1px solid #C0C0C0;*/
+}
+
+<!--    Top Menu     -->
+body {
+	background: transparent;
+}
+
+/* #body-wrapper { */
+/* 	width: 100%; */
+/* 	height: 100%; */
+/* } */
+#topmenu {
+    /*background: url('../images/bg-topmenu.png') top left no-repeat transparent;*/
+
+    width: 100%;
+	height: 100%;
+	position: absolute;
+	left: 0;
+	top: 0;
+	/*color: #000000;*/
+	font-size: 11px;
+}
+
+/* #topTblLeft a:hover { */
+/* 	margin:1px; */
+/* 	} */
+	
+
+/* } */
+#sidebar {
+	background: url('../images/bg-sidebar.gif') top left repeat;
+	width: 200px;
+	height: 100%;
+	position: absolute;
+	top: 90px;
+}
+
+#main-content {
+	background: black;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	padding: 0;
+	margin: 0;
+}
+
+<!--    shortcut-buttons     -->
+
+.shortcut-button span {
+                border: 1px solid #fff;
+                display:block;
+                padding: 15px 10px 15px 10px;
+                text-align: center;
+                color: #555;
+                font-size: 13px;
+                line-height: 1.3em;
+                }
+
+.shortcut-button span img {
+                margin-bottom: 10px;
+                }
+
+.shortcut-button:hover {
+                background: #fff;
+				
+                }
+				
+.shortcut-button span:hover {
+				color: #57a000; 
+                }
+
+ul.shortcut-buttons-set li {
+                float: left;
+                margin: 0 15px 0 0;
+				padding: 0 !important;
+				background: 0;
+                }
+
+
+.shortcut-button {
+	background: transparent;
+	width: 50px;
+	border: 0;
+	margin: 0;
+	border: 0;
+}
+
+.shortcut-button span {
+	border: 0;
+    padding: 1px 0px 0px 0px;
+}
+
+ul.shortcut-buttons-set li {
+	margin: 3px 5px 0;
+}
+
+.shortcut-button span img {
+	margin: 0;
+}
+
+.shortcut-button:hover {
+	background: transparent url(images/bg_button.png) center no-repeat;
+	margin: 1px;
+}
+
+.shortcut-button span:hover {
+	background-image: none;
+	margin: 1px;
+}
+
+.shortcut-button span img:hover {
+	background-image: none;
+	margin: 1px;
+}
+
+
+
+<!-- searchBox -->
+.searchinput {
+	border-right-width: 1px;
+	padding-left: 3px;
+	width: 170px;
+	font-family: arial;
+	float: left;
+	border-top-width: 0px;
+	border-bottom-width: 0px;
+	color: #636365;
+	margin-left: 4px;
+	font-size: 13pt;
+	vertical-align: middle;
+	border-left-width: 0px;
+	margin-right: 2px;
+}
+
+.tab_search {
+	/*border-bottom: #cccccc 0px solid;*/
+	/*border-left: #cccccc 0px solid;*/
+	height: 25px;
+	width: 25px;
+	/*border-top: #cccccc 0px solid;*/
+	/*border-right: #cccccc 0px solid;*/
+	/*border-top: #cccccc 0px solid;*/
+}
+
+.searchaction {
+	float: bottom;
+}
+
+		a.l-btn-plain{
+			border: 0px;
+			height:25px;
+			width:45px;
+			color:white;
+			font-weight:bold;
+			background:url(images/select_bt.png);
+		}
+		a.l-btn-selected{
+			background:black;
+			color:blue;
+		}
+		
+		a:hover.l-btn-plain {
+			border: 0px;
+			color:black;
+			background:url(../../images/select_bt.png);
+		}
+
+
+
+
+
+
+
+
+/*writer: cy */
+.selected {
+
+    background: transparent url(images/bg_button_selected.png) center no-repeat;
+    margin: 1px;
+}
+
+
+.selected {
+
+    background: transparent url(images/bg_button_selected.png) center no-repeat;
+    margin: 1px;
+}
+
+
+
+  /*主页面的菜单布局*/
+#menu {
+	/*background-image: url(image/test/menu_bk.png);*/
+	/*background-repeat: repeat-x;*/
+	/*background-color: #99cdff;*/
+	border:1px solid #b0c7f6;
+	background-color: #ffffff;
+}
+#menu ul li {
+	display: inline;
+	margin-left: 25px;
+	list-style: none;
+	height: 25px;
+}
+#menu ul li a {
+	/*font-family: '微软雅黑';*/
+	font-size: 15px;
+	color: #000000;
+	line-height: 25px;
+	font-weight: bold;
+	text-decoration: none;
+	padding: 5px 5px 5px 25px;
+}
+#menu-location {
+	background-image: url(../image/test/location.png);
+	background-repeat: no-repeat;
+}
+#menu-query{
+	background-image: url(../image/test/location.png);
+	background-repeat: no-repeat;
+}
+#menu-media {
+	background-image: url(../image/test/location.png);
+	background-repeat: no-repeat;
+}
+#menu-dig {
+	background-image: url(../image/test/location.png);
+	background-repeat: no-repeat;
+}
+#menu-apply {
+	background-image: url(../image/test/location.png);
+	background-repeat: no-repeat;
+}
+#menu-upload {
+	background-image: url(../image/test/location.png);
+	background-repeat: no-repeat;
+}
+
+/*主页面的工具栏*/
+
+#toolbar ul li {
+	display: inline;
+	margin-left: 8px;
+	list-style: none;
+	width: 25px;
+	height: 25px;
+}

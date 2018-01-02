@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+
+    <script src="../../js/lib/jquery.min.js"></script>
+    <script src="../../js/common.js"></script>
+    <script>
+        var vlc;// VLC对象
+        var itemId;// 播放列表中播放节目的id
+    $(function(){
+
+          downVlcCab();
+            var vedio_url=  getQueryString("address");
+        //   var vedio_url=  "rtsp://10.0.1.142/77.264";
+           initPlayUrl(vedio_url)  ;
+
+
+
+    });
+
+
+
+    // 初始化 
+    function initPlayUrl(vedio_url){
+        vlc=document.getElementById("vlc");
+        itemId= vlc.playlist.add(vedio_url);
+        vlc.playlist.playItem(itemId);
+
+    }
+
+    function   downVlcCab()
+    {
+
+        var IE_win = window.navigator.platform;
+
+
+        if(IE_win=="Win64")
+        {
+              var caburl=CITYPLAN_config.server.ip+"/DisneySoft/axvlc64.cab";
+             $("#vlc").attr("codebase",caburl)   ;
+        }
+        if(IE_win=="Win32")
+        {
+            var caburl=CITYPLAN_config.server.ip+"/DisneySoft/axvlc32.cab";
+             $("#vlc").attr("codebase",caburl)   ;
+        }
+
+
+
+
+    }
+
+    </script>
+</head>
+<body>
+
+
+
+<div id="vlcobj" style="text-align: center; vertical-align: middle;">
+    <OBJECT id="vlc" classid="clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921"
+            codebase="http://172.26.36.71:8080/DisneySoft/axvlc64.cab"
+            width="800" height="450"  events="True">
+        <!--<param name="AutoLoop" value="0" />-->
+        <!--<param name="AutoPlay" value="-1" />-->
+        <!--<param name="Toolbar" value="0">-->
+        <!--<param name="ExtentWidth" value="21167">-->
+        <!--<param name="ExtentHeight" value="11906">-->
+        <param name="MRL" ref value="">
+        <!--<param name="Visible" value="-1">-->
+        <!--<param name="Volume" value="50">-->
+        <!--<param name="StartTime" value="0">-->
+        <!--<param name="BaseURL" value="unsaved:///new_page_1.htm">-->
+        <!--<param name="BackColor" value="0">-->
+
+
+        </OBJECT>
+</div>
+
+
+</body>
+</html>

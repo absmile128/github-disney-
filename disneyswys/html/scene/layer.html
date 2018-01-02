@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>图层管理</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <link rel="stylesheet" href="../../css/common.css" />
+
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+
+    <!--<script src="../../js/index.js"></script>-->
+    <script src="../../js/layer.js"></script>
+    <script src="../../js/project.js"></script>
+
+</head>
+<body>
+
+            <div class="easyui-tabs" fit="true" border="false">
+                <div title="应用图层">
+                    <ul id="planTree" class="ztree"></ul>
+                </div>
+                <div title="基础图层">
+                    <ul id="layerTree" class="ztree"></ul>
+                </div>
+            </div>
+            <object id="dataProcess" classid="clsid:DDA7E893-8EEE-4A1E-A506-867932BD0FB9" style="display:none;"></object>
+  <script>
+      var earth =null;
+      var layerManager=null;
+      var projManager=null;
+
+
+
+           $(function (){
+                 earth = parent.earth;
+                 layerManager = CITYPLAN.LayerManager(earth);
+                 projManager = CITYPLAN.ProjectManager(earth, document.getElementById("dataProcess"));
+
+                 initProjectTree();        //cy:初始化应用图层树
+                 initLayerTree(); //cy:初始化基础图层树
+
+
+
+
+                });
+
+
+                /**
+                 * cy:初始化应用图层树
+                 */
+                function initProjectTree() {
+
+                    if(parent.currentPrjGuid != ""){
+
+                       initTree(parent.currentPrjGuid);
+
+                    }
+
+//                    var currentProjectGuid;
+//                    SYSTEMPARAMS = parent.getSystemConfig();
+//                    if(SYSTEMPARAMS.project != ""){
+//                        currentProjectGuid = SYSTEMPARAMS.project;
+//                        parent.currentPrjGuid = currentProjectGuid;
+//
+//                        initTree(SYSTEMPARAMS.project);
+//
+//                    }
+                }
+                function initTree(prjGuid){
+                    var setting = {
+                        check: {
+                            enable: true, //是否显示checkbox或radio
+                            chkStyle: "checkbox" //显示类型,可设置(checbox,radio)
+                        },
+                        data: {
+                            simpleData: {
+                                enable: true
+                            }
+                        },
+                        view: {
+                            dblClickExpand: false, //双击节点时，是否自动展开父节点的标识
+                            expandSpeed: "", //节点展开、折叠时的动画速度, 可设置("","slow", "normal", or "fast")
+                            selectedMulti: false //设置是否允许同时选中多个节点
+                        },
+                        callback: {
+                            onDblClick: function (event, treeId, node) {
+                                if (node && node.id) {
+                                    var layer = earth.LayerManager.GetLayerByGUID(node.id);
+                                    if (layer && layer.LayerType) {
+                                        layerManager.flyToLayer(layer); //定位图层
+                                    }
+                                }
+                            },
+                            onCheck: function (event, treeId, node) {
+                                var layer = earth.LayerManager.GetLayerByGUID(node.id);
+                                layer.Visibility = node.checked;
+                            }
+                        }
+                    };
+                    var layer = earth.LayerManager.GetLayerByGUID(prjGuid);
+                    if(layer==null){alert("当前工程下无数据！");return;}
+//                    link2D = layer.ProjectSetting.MapServer;
+//                    //alert(link2D);
+//                    if(link2D){
+//                        $("#ViewScreen2D").removeAttr("disabled");
+//                        $("#ViewScreen2DLink").removeAttr("disabled");
+//                    } else{
+//                        $("#ViewScreen2D").attr("disabled","disabled");
+//                        $("#ViewScreen2DLink").attr("disabled","disabled");
+//                    }
+                    var treeData = [];
+                    treeData.push({id: layer.Guid, pId: 0, name: layer.Name, open: true, nocheck: false, type: "currentproject"});
+
+                    layerManager.getCurrentProjectLayerData(treeData, layer, layer.Guid);
+                    $.fn.zTree.init($("#planTree"), setting, treeData);
+                };
+                /**
+                 * 初始化基础图层树
+                 */
+                function initLayerTree() {
+                    var setting = {
+                        check: {
+                            enable: true, //是否显示checkbox或radio
+                            chkStyle: "checkbox" //显示类型,可设置(checbox,radio)
+                        },
+                        data: {
+                            simpleData: {
+                                enable: true
+                            }
+                        },
+                        view: {
+                            dblClickExpand: false, //双击节点时，是否自动展开父节点的标识
+                            expandSpeed: "", //节点展开、折叠时的动画速度, 可设置("","slow", "normal", or "fast")
+                            selectedMulti: false //设置是否允许同时选中多个节点
+                        },
+                        callback: {
+                            onCheck: onCheckClick,
+                            onDblClick: function (event, treeId, node) {
+                                if (node && node.id) {
+                                    if (node.type.indexOf("BASE") !== -1) {
+                                        var layer = earth.LayerManager.GetLayerByGUID(node.id);
+                                        if (layer && layer.LayerType) {
+                                            layerManager.flyToLayer(layer); //定位图层
+                                        }
+                                    } else if (node.type.indexOf("OLD") !== -1) {
+                                        if (parent.editLayers[node.id]) {
+                                            layerManager.flyToLayer(parent.editLayers[node.id]); //定位图层
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    };
+
+                    var zNodes = [];
+                    zNodes.push({id: 1, pId: 0, name: "基础数据", open: true, nocheck: false, type: "DATA"});
+                    zNodes.push({id: 2, pId: 1, name: "现状数据", open: false, nocheck: false, type: "OLD", checked: true});
+                    zNodes = zNodes.concat(parent.currentLayerDatas);
+                    zNodes.push({id: 3, pId: 1, name: "浏览数据", open: false, nocheck: false, type: "BASE"});
+                    var baseLayerDatas = layerManager.getLayerData(null,"",parent.currentPrjGuid);
+                    zNodes = zNodes.concat(baseLayerDatas);
+
+                    $.fn.zTree.init($("#layerTree"), setting, zNodes);
+
+                    var tree = $.fn.zTree.getZTreeObj("layerTree");
+                    var treeNode = tree.getNodeByParam("id", parent.currentPrjGuid);
+                    tree.checkNode(treeNode, false, true);
+                }
+      /**
+       * 复选框 控制图层的隐藏和显示
+       * @param event
+       * @param treeId
+       * @param node
+       */
+      function onCheckClick(event, treeId, node) {
+
+          if (node.type === "OLD01") {
+             parent.showDatas(node, node.type);
+          } else if (node.type === "OLD") {
+              parent.showDatas(node, node.type);
+          } else if (node.type === "BASEO1") {
+              var layer = earth.LayerManager.GetLayerByGUID(node.id);
+              if (layer) {
+                  layer.Visibility = node.checked;
+              }
+          } else if (node.type === "BASE") {
+              parent.showDatas(node, node.type);
+          } else if (node.type === "DATA") {
+              parent.showDatas(node, "OLD");
+              parent.showDatas(node, "BASE");
+          }
+      }
+  </script>
+
+
+</body>
+</html>

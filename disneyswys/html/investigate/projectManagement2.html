@@ -1,0 +1,982 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>项目管理</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <link rel="stylesheet" href="../../css/common.css"/>
+    <style>
+        div[region=north]>div {
+            margin: 5px;
+        }
+
+        input {
+            width: 120px;
+        }
+        fieldset {
+            width: 200px;
+        }
+
+        select {
+            width: 110px;
+        }
+
+        label {
+            display: inline-block;
+            width: 75px;
+        }
+
+        button {
+            width: 100px;
+            height: 30px;
+        }
+    </style>
+
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/locale/easyui-lang-zh_CN.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+</head>
+<body id="container" class="easyui-layout">
+<div region="north" border="false" split="false" style="height:190px;width:100%;text-align: left;">
+<div>
+    <label style=" font-weight: bold" >已导入项目:</label>
+ </div>
+    <div style="margin-left: 10px;">
+        <label for="txtKeyword">关&nbsp;&nbsp;键&nbsp;&nbsp;字:</label>
+        <input type="text" id="txtKeyword"/>
+    </div>
+    <div  style="margin-left: 10px; margin-top: 10px;">
+    <fieldset  >
+        <legend>导入时间</legend>
+        <div  style="margin-left: 10px;">
+            <label for="startDate">开始时间:</label>
+            <input id="startDate" class="easyui-datebox" style="width: 110px;"/>
+        </div>
+        <div style="margin-left: 10px;  margin-top: 10px;margin-bottom: 10px;">
+            <label for="endDate">结束时间:</label>
+            <input id="endDate" class="easyui-datebox" style="width: 110px;"/>
+        </div>
+    </fieldset>
+   </div>
+
+
+    <div style="text-align:center;">
+        <button id="btnSearch">搜索</button>
+    </div>
+</div>
+<div region="center" border="true" split="true" style="overflow: auto;">
+    <ul id="projTree" class="ztree"></ul>
+</div>
+<div region="south" border="true" split="true" title="审批" style="height: 200px;overflow: auto;">
+    <ul id="appTree" class="ztree"></ul>
+</div>
+
+
+
+<!-- 漫游路径树项目右键菜单 -->
+<div id="contextMenuProject" class="easyui-menu" style="width:100px;">
+    <div id="divApproveProject">审批</div>
+    <div id="divDeleteProject">删除</div>
+</div>
+<div id="contextMenuProject3" class="easyui-menu" style="width:100px;">
+    <div id="divApproveProject3">结束审批</div>
+    <div id="divDeleteProject3">删除</div>
+</div>
+<!-- 漫游路径树项目右键菜单 2-->
+<div id="contextMenuProject2" class="easyui-menu" style="width:100px;">
+    <div id="divApproveProject2">结束审批</div>
+</div>
+
+<script src="../../js/CITYPLAN_config.js"></script>
+<script src="../../js/project.js"></script>
+<script src="../../js/editor.js"></script>
+<script src="../../js/common.js"></script>
+<script>
+var earth = parent.earth;
+var projManager = CITYPLAN.ProjectManager(earth);
+$(function () {
+
+    parent.$("#fixediframe").bind("chkStatusChange",function() {
+        var zTree = $.fn.zTree.getZTreeObj("appTree");
+        zTree.checkAllNodes(false);
+    });
+
+
+
+
+    $("#startDate").datebox({
+        onSelect:function(){
+            var s1=$(this).datebox("getValue").split("-");
+            var s2=$("#endDate").datebox("getValue").split("-");
+            if(s2){
+                $("#endDate").datebox("setValue",year+"-"+month+"-"+day);
+                s2=$("#endDate").datebox("getValue").split("-");
+            }
+            var end=s2[0]+s2[1]+s2[2];
+            var str=s1[0]+s1[1]+s1[2];
+            if(parseFloat(str)>parseFloat(end)){
+                $("#endDate").datebox("setValue",$(this).datebox("getValue"));
+            }
+        }
+    });
+    $("#endDate").datebox({
+        onSelect:function(){
+            var s1=$(this).datebox("getValue").split("-");
+            var s2=$("#startDate").datebox("getValue").split("-");
+            var str=s2[0]+s2[1]+s2[2];
+            var end=s1[0]+s1[1]+s1[2];
+            if(parseFloat(str)>parseFloat(end)){
+                $("#startDate").datebox("setValue",$(this).datebox("getValue"));
+
+            }
+        }
+    });
+    var curr_time = new Date();
+
+    var year = curr_time.getFullYear();
+    var month=(curr_time.getMonth()+1>10?curr_time.getMonth()+1:"0"+(curr_time.getMonth()+1));
+    var day=(curr_time.getDate()>=10?curr_time.getDate():"0"+curr_time.getDate());
+    //$("#startDate").datebox("setValue",year+"-"+month+"-01");
+    $("#startDate").datebox("setValue",year+"-"+"01"+"-01");
+    $("#endDate").datebox("setValue",year+"-"+month+"-"+day);
+
+    jQuery.support.cors = true; //开启jQuery跨域支持
+    var approveProIdList = [];
+    var setting = {
+        check: {
+            enable: true, //是否显示checkbox或radio
+            chkStyle: "checkbox" //显示类型,可设置(checbox,radio)
+        },
+        data: {
+            simpleData: {
+                enable: true
+            }
+        },
+        view: {
+            //dblClickExpand:false, //双击节点时，是否自动展开父节点的标识
+            expandSpeed: "", //节点展开、折叠时的动画速度, 可设置("","slow", "normal", or "fast")
+            selectedMulti: false //设置是否允许同时选中多个节点
+        },
+        callback: {
+            beforeClick: null,
+            beforeCollapse: null,
+            beforeExpand: beforeExpand,
+            onCollapse: null,
+            onExpand: onExpand,
+            onCheck: onCheckedEvent,
+            onRightClick: onRightClick,
+            onClick: function(event,treeId,node){
+                if (!node) return;
+                var bShow=true;
+
+                //判断是审批树的节点才进入
+                var zTree = $.fn.zTree.getZTreeObj("appTree");
+
+                projManager.checkButtonStatus(zTree, node);
+                if (node.loadApprove) {//审批树
+                    parent.currentSelectedNode=node;
+
+                    if(node.type){
+                        indexInvestigateIsOnClick();
+                        SchemeindexInfoDIVIsOnClick();//方案指标查看按钮
+                        planCheckTagIsOnClick();//总平图查看按钮
+                        heightControlIsOnClick();//控高分析按钮控制
+                        roadDistanceIsOnClick();//红线分析按钮控制
+                        if(node.type=="PLAN"||node.type=="PARCEL"||node.type=="ROADLINE"){
+                            bShow=false;
+                        }
+                    }
+                    if(node && node.id && parent.planLayerIDs[node.id]){
+                        var layers = parent.planLayerIDs[node.id];
+                        var layerEdit;
+                        if(layers && layers[0]){
+                            layerEdit = parent.editLayers[layers[0]].Editable;
+                            if(layerEdit){
+                                parent.$("#selectDIV").attr("disabled", false);
+                                parent.$("#moveDIV").attr("disabled", false);
+                                parent.$("#rotateDIV").attr("disabled", false);
+                                parent.$("#scaleDIV").attr("disabled", false);
+                                parent.$("#alignGoruntDIV").attr("disabled", false);
+                                parent.$("#removeDIV").attr("disabled", false);
+                                parent.$("#textureDIV").attr("disabled", false);
+                            }else{
+                                parent.$("#selectDIV").attr("disabled", "disabled");
+                                parent.$("#moveDIV").attr("disabled", "disabled");
+                                parent.$("#rotateDIV").attr("disabled", "disabled");
+                                parent.$("#scaleDIV").attr("disabled", "disabled");
+                                parent.$("#alignGoruntDIV").attr("disabled", "disabled");
+                                parent.$("#removeDIV").attr("disabled", "disabled");
+                                parent.$("#textureDIV").attr("disabled", "disabled");
+                            }
+                        }
+                    }
+                }
+              //   parent.setBtnDisabled(bShow,"#SchemeindexInfoDIV");
+            },
+            onDblClick: function (event, treeId, treeNode) {
+                if (treeNode) {
+                    if (treeNode.children) {
+                        //$.fn.zTree.getZTreeObj(treeId).expandNode(treeNode);
+                    } else {
+                        projManager.locateToLayer(treeNode);
+                    }
+                }
+            }
+        }
+    };
+    /**
+     * Checked事件
+     * @param event
+     * @param treeId
+     * @param treeNode
+     */
+    function onCheckedEvent(event, treeId, treeNode) {
+        var zTree = $.fn.zTree.getZTreeObj("appTree");
+
+        projManager.checkButtonStatus(zTree, treeNode);
+        if (treeNode.type == "PLAN") {
+            // alert(treeNode.id);
+            projManager.showAll(treeNode.projectId, treeNode.id, treeNode.checked, true, false, false,true);
+        }else if (treeNode.type == "PARCEL") {
+            // var layer = parent.editLayers["a7890efb-24ef-4057-b83c-f50d9fca5ff7"];
+            // layer.LonLatRect;
+            projManager.showAll(treeNode.projectId, null, treeNode.checked, false, true, false,true);
+        }else if (treeNode.type == "ROADLINE") {
+            projManager.showAll(treeNode.projectId, null, treeNode.checked, false, false, true,true);
+        }else if (treeNode.type == "STAGE"||treeNode.type == "SUBJECT") {
+            for (var i = 0; i < treeNode.children.length; i++) {
+                var node = treeNode.children[i];
+                if (node.type == "PARCEL") {//规划用地
+                    projManager.showAll(node.projectId, null, node.checked, false, true, false,true)
+                } else if (node.type == "ROADLINE") {//道路红线
+                    projManager.showAll(node.projectId, null, node.checked, false, false, true,true)
+                }else if (node.type == "PLAN") {
+                    projManager.showAll(node.projectId, node.id, node.checked, true, false, false,true);
+                }
+            }
+        }else if (treeNode.type == "PROJECT") {//项目节点
+            projManager.showAll(treeNode.id, "all", treeNode.checked, true, true, true,true);
+            if(treeNode.loadApprove){
+                projManager.showCurrentLayers(treeNode.checked,treeNode.id,treeNode.parcelId);
+            }
+        }else if(treeNode.type == "OLD"){//现状节点
+
+            var isTimeout=false;//延迟加载
+            if(!parent.editLayers[treeNode.parcelId]){//if规划用地图层没加载则加载
+                parent.applyDataBaseRecords(false,treeNode.parcelId);
+                isTimeout=true;
+            }
+            if(isTimeout){
+                setTimeout(function(){
+                    setTimeoutLoadLayers(treeNode);
+                },300);
+            }else{
+                setTimeoutLoadLayers(treeNode);
+            }
+        }
+        indexInvestigateIsOnClick();  //指标比对
+        SchemeindexInfoDIVIsOnClick();//方案指标查看按钮
+        planCheckTagIsOnClick();//总平图查看按钮
+        heightControlIsOnClick();//控高分析按钮控制
+        roadDistanceIsOnClick();//红线分析按钮控制
+        baseEditPlanIsOnClick();//基础编辑按钮
+    }
+    function setTimeoutLoadLayers(treeNode){
+        projManager.showCurrentLayers(treeNode.checked,treeNode.id,treeNode.parcelId);
+    }
+ //已看cy:审批树,如果是项目结点,则右键为审批,如果是方案结点,右键为编辑    ;管理树中的项目结点右键为审批 编辑
+
+    function onRightClick(event, treeId, treeNode) {
+        if (!treeNode) return;
+        if (treeNode.loadApprove) {//审批树
+            if (treeNode.type == "PROJECT") {   // 项目节点
+                $.fn.zTree.getZTreeObj(treeId).selectNode(treeNode);
+
+                $('#contextMenuProject2').menu('show', {
+                    left: event.pageX,
+                    top: event.pageY
+                });
+            }else if (treeNode.type == "PLAN") {    //方案节点
+                $.fn.zTree.getZTreeObj(treeId).selectNode(treeNode);
+
+                $('#contextMenuPlan').menu('show', {
+                    left: event.pageX,
+                    top: event.pageY
+                });
+            }
+        } else {//管理树
+            if (treeNode.type == "PROJECT") {   // 项目节点
+                $.fn.zTree.getZTreeObj(treeId).selectNode(treeNode);
+
+     if(treeNode.approve){//已经审批
+                    $('#contextMenuProject3').menu('show', {
+                        left: event.pageX,
+                        top: event.pageY
+                    });
+                }else{//待审批
+                    $('#contextMenuProject').menu('show', {
+                        left: event.pageX,
+                        top: event.pageY
+                    });
+                }
+
+            }
+        }
+    }
+
+    function beforeExpand(treeId, treeNode) {
+        return (treeNode.expand !== false);
+    }
+
+    function onExpand(event, treeId, treeNode) {
+    }
+    //指标按比对钮是否可点击
+    function indexInvestigateIsOnClick(){
+        var selectedNode=parent.currentSelectedNode;
+        if(selectedNode){
+            if(selectedNode.type=="PLAN"&&selectedNode.checked){
+                parent.setBtnDisabled(false,"#indexInvestigateDIV");
+            }else{
+                parent.setBtnDisabled(true,"#indexInvestigateDIV");
+            }
+        }
+    }
+    //方案指标查看按钮是否可点击
+    function SchemeindexInfoDIVIsOnClick(){
+        var selectedNode=parent.currentSelectedNode;
+        if(selectedNode){
+            if(selectedNode.type=="PLAN"&&selectedNode.checked){
+                parent.setBtnDisabled(false,"#SchemeindexInfoDIV");
+            }else{
+                parent.setBtnDisabled(true,"#SchemeindexInfoDIV");
+            }
+        }
+    }
+
+
+
+    //总平图查看按钮是否可点击
+    function planCheckTagIsOnClick(){
+
+        var selectedNode=parent.currentSelectedNode;
+        if(selectedNode){
+            if(selectedNode.type=="PLAN"&&selectedNode.checked){
+                parent.setBtnDisabled(false,"#planCheckTag");
+            }else{
+                parent.setBtnDisabled(true,"#planCheckTag");
+            }
+        }
+    }
+    //控高分析按钮是否可点击
+    function heightControlIsOnClick() {
+
+        var bShow = true;
+        var selectedNode = parent.currentSelectedNode;
+        if (selectedNode) {
+            var zTree = $.fn.zTree.getZTreeObj("appTree");
+            if(zTree){
+                var checkCount = zTree.getCheckedNodes(true);
+                if (checkCount) {
+                    for (var i = 0; i < checkCount.length; i++) {
+                        var node = checkCount[i];
+                        if (node && node.type == "PARCEL" && node.checked && selectedNode.type == "PLAN" && selectedNode.checked) {
+                            bShow = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        parent.setBtnDisabled(bShow, "#heightControlDIV");
+    }
+    //控高分析按钮是否可点击
+    function roadDistanceIsOnClick() {
+        var bShow = true;
+        var selectedNode = parent.currentSelectedNode;
+        if (selectedNode) {
+            var zTree = $.fn.zTree.getZTreeObj("appTree");
+            if(!zTree) return;
+            var checkCount = zTree.getCheckedNodes(true);
+            if (checkCount) {
+                for (var i = 0; i < checkCount.length; i++) {
+                    var node = checkCount[i];
+                    if (node && node.type == "ROADLINE" && node.checked && selectedNode.type == "PLAN" && selectedNode.checked) {
+                        bShow = false;
+                        break;
+                    }
+                }
+            }
+        }
+        parent.setBtnDisabled(bShow, "#roadDistanceDIV");
+    }
+    //基础编辑按钮控制
+    function baseEditPlanIsOnClick(){
+        var bShow = true;
+        var zTree = $.fn.zTree.getZTreeObj("appTree");
+        if(!zTree) return;
+        var checkCount = zTree.getCheckedNodes(true);
+        if (checkCount) {
+            for (var i = 0; i < checkCount.length; i++) {
+                var node = checkCount[i];
+                if (node && node.type == "PLAN" && node.checked) {
+                    bShow = false;
+                    break;
+                }
+            }
+        }
+        var edittable=true;
+        var projectLayerIdList=parent.projectLayerIdList;
+        if(projectLayerIdList.length){
+            for(var i=0;i<projectLayerIdList.length;i++){
+                var id=projectLayerIdList[i];
+                var editLayers=parent.editLayers[id];
+                if(editLayers){
+                    if(parent.editLayers[id].Editable){
+                        edittable=false;
+                        break;
+                    }
+                }
+            }
+        }
+        var b=true;
+        if(!edittable&&!bShow){
+            b=false;
+        }
+        parent.setBtnDisabled(b,"#selectDIV");//选择不可见
+        parent.setBtnDisabled(b,"#moveDIV");//移动不可见
+        parent.setBtnDisabled(b,"#rotateDIV");//旋转不可见
+        parent.setBtnDisabled(b,"#scaleDIV");//缩放不可见
+        parent.setBtnDisabled(b,"#alignGoruntDIV");//贴地不可见
+        parent.setBtnDisabled(b,"#removeDIV");//删除不可见
+        parent.setBtnDisabled(b,"#textureDIV");//纹理替换不可见
+    }
+
+    function loadProjectTree(status, start,end, projName,projProperty) {
+        $("#projTree").empty();
+        var treeData = [];
+        var projData = projManager.getProjectData({status: status, startDate: start,endDate:end, projName: projName,projProperty:projProperty});
+        if(projData && projData.length == 0){
+            alert('没有查询结果');
+        }
+        if (projData) {
+
+            bExist(projData, treeData,false);//cy:定义根结点文字
+            $.each(projData, function (i, pData) {
+                projManager.appendProjectData(treeData, pData, approveProIdList, false);//cy:最后一个参数标记是审批树（IsBasic=true），还是项目树   （IsBasic=false）
+            });
+        }
+        $.fn.zTree.init($("#projTree"), setting, treeData);
+    }
+
+    function loadApproveProTree() {
+        $("#appTree").empty();
+        approveProIdList = [];
+        var treeData = [];
+        var projectIds = projManager.loadApproveXML();
+        if (!projectIds) {
+            parent.currentApproveProjectGuid =null;//cy:加
+            return;
+        }
+        if (typeof(projectIds) == "string") {
+            approveProIdList.push(projectIds);
+            parent.currentApproveProjectGuid = projectIds;
+            var projData = projManager.getProjectData({id: projectIds});
+            if(projData && projData[0] && projData[0]["CPPROJECT.PARCELLAYERID"]){
+                //parent.parcelLayerGuid = projData[0]["CPPROJECT.PARCELLAYERID"];
+                parent.parcelLayerGuid2 = projData[0]["CPPROJECT.PARCELLAYERID"];
+            }
+            if (projData) {
+                bExist(projData, treeData,true);
+                $.each(projData, function (i, pData) {
+                    //projManager.checkedPlan(projData);
+                    projManager.appendProjectData(treeData, pData, null, true);//cy:最后一个参数标记是审批树（IsBasic=true），还是管理树   （IsBasic=false）最后第二个参数为approveProIdList（审批树为ｎｕｌｌ，管理树有值）
+                });
+            }
+            //已经有审批项目的话 程序启动后要隐藏现状图层
+         //   if(parent.parcelLayerGuid2){//现状图层
+           //       if(!parent.editLayers[parent.parcelLayerGuid2]){
+             //         parent.applyDataBaseRecords(false,parent.parcelLayerGuid2, true);
+             //     }
+           //   }
+        }
+        $.fn.zTree.init($("#appTree"), setting, treeData);
+
+        parent.setBtnDisabled(false,"#heightChangeDIV");//设置高度调整按钮可见性
+        parent.setBtnDisabled(false,"#attachmentTag");//设置高度调整按钮可见性
+        parent.setBtnDisabled(false,"#buildingAttributeDIV");    //cy:建筑属性按钮
+        parent.setBtnDisabled(false,"#fillAlt");
+        parent.setBtnDisabled(false,"#approveTag");
+        parent.setBtnDisabled(false,"#planCompare");
+      //  parent.setBtnDisabled(false,"#buildingAttribute");
+    //已经有审批项目的话 程序启动后默认加载现状图层与道路红线图层
+        var tree = $.fn.zTree.getZTreeObj("appTree");
+        var parcelNode = tree.getNodeByParam("type", "PARCEL");
+        var roadlineNode = tree.getNodeByParam("type", "ROADLINE");
+        var prjId = roadlineNode.projectId;
+        tree.checkNode(parcelNode, true, true);
+        tree.checkNode(roadlineNode, true, true);
+
+        setTimeout(function(){
+            if(parcelNode.cId){
+                if(!parent.editLayers[parcelNode.cId]){
+
+                    parent.applyDataBaseRecords(true,parcelNode.cId);
+                }else{
+                    parent.editLayers[parcelNode.cId].Visibility = true;
+                }
+            }
+            if(roadlineNode.cId){
+                if(!parent.editLayers[roadlineNode.cId]){
+                    parent.applyDataBaseRecords(true,roadlineNode.cId);
+                }else{
+                    parent.editLayers[roadlineNode.cId].Visibility = true;
+                }
+            }
+        },300);
+        
+        //已经有审批项目的话 程序启动后要隐藏现状图层 怎么保证数据库图层加载完毕后再抠现状呢 这里的逻辑不完美！
+        if(parent.parcelLayerGuid2){//现状图层
+
+
+            if(!parent.editLayers[parent.parcelLayerGuid2]){
+                parent.applyDataBaseRecords(false,parent.parcelLayerGuid2);
+            }
+        }
+
+
+        parent.setBtnDisabled(false,"#PlanindexInfoDIV");   //规划指标查看 可见
+    }
+    //已看cy:添加根结点
+    function bExist(res, treeData,isappTree) {
+        var bExist1 = false;
+        var bExist2 = false;
+        $.each(res, function (i, pData) {
+            var status = pData["CPPROJECT.STATUS"];
+            if (status == 0 && !bExist1) {
+                var parentnodename="";
+                if(!isappTree)
+                {
+                    parentnodename="已导入项目" ;
+
+                }
+                else
+                {   parentnodename="审批项目" ;
+
+                }
+                treeData.push({ id: -1, pId: 0, name: parentnodename, open: true, nocheck: true,type:0});  // cy:writer项目树根节点
+                bExist1 = true;
+            }
+//            if (status == 1 && !bExist2) {
+//                treeData.push({ id: -2, pId: 0, name: "已审批项目", open: true, nocheck: true,type:1});  // 项目树根节点
+//                bExist2 = true;
+//            }
+
+        });
+    }
+
+
+
+//    loadApproveProTree();//初始化审批树
+    $("#btnSearch").click(function () {
+        var layerIds= approveCheckedStatus();
+        parent.showHideEditLayer(false,layerIds); //cy:审批树里面的打钩的guid之外的所有图层都hide
+        var start=$("#startDate").datebox("getValue").split("-");
+        start=start[0]+start[1]+start[2];
+        var end=$("#endDate").datebox("getValue").split("-");
+        end=end[0]+end[1]+end[2];
+        //默认搜索待审批项目、全部用地性质
+        var status=0;
+        var projProperty="";
+        loadProjectTree(status,start,end,$("#txtKeyword").val(),projProperty);
+    });
+
+    // 页面卸载（即窗口关闭）时
+    $(window).unload(function () {
+        approveCheckedStatus();
+        //窗口关闭时 处理按钮的状态 这里把方案视点与总评审核设置为不可用状态
+//        var eventObj = parent.$("div.toolbar-item[tag='planCheckTag']");//总评审核
+        var planViewPointObj = parent.$("div.toolbar-item[tag='planViewPoint']");//方案视点
+//        eventObj.attr("disabled", "disabled");
+        parent.setBtnDisabled(true,"#planCheckTag");//cy:加 总平图查看 不可见
+        planViewPointObj.attr("disabled", "disabled");
+        
+    });
+    //记录审批树的选中状态
+    var approveCheckedStatus=function(){
+        var checkedArr=[];
+        var zTree = $.fn.zTree.getZTreeObj("appTree");
+        if(zTree){
+            parent.checkedStatusList.splice(0,parent.checkedStatusList.length);//清空数组
+            var checkCount = zTree.getCheckedNodes(true);
+            if(checkCount ){
+                for (var i=0;i<checkCount.length;i++) {
+                    var node=checkCount[i];
+                    if (node.type == "PARCEL"||node.type == "ROADLINE") {//规划用地
+                        parent.checkedStatusList.push(node.id);
+                        checkedArr.push(node.cId);
+                    }else if(node.type == "PLAN"){
+                        parent.checkedStatusList.push(node.id);
+                        checkedArr=checkedArr.concat(node.cId);
+                    }
+                }
+            }
+        }
+        return checkedArr;
+    }
+    // region 项目树右键
+    $("#divDeleteProject").click(function () {
+divDeleteProjectHandler();
+    });
+
+    $("#divDeleteProject3").click(function () {
+        divDeleteProjectHandler();
+    });
+
+    function divDeleteProjectHandler(){
+        var tree = $.fn.zTree.getZTreeObj("projTree");
+        var selNode = tree.getSelectedNodes()[0];
+        if (selNode) {
+            if (confirm("是否确定要删除该项目？")) {
+                if($.fn.zTree.getZTreeObj("appTree")){ //如果当前项目正在审批中 则设置"附件查看"按钮为不可用状态
+//                    top.$("#attachmentTag").attr("disabled", "disabled");
+                    top.$("#fillAlt").attr("disabled", "disabled");
+                    top.$("#approveTag").attr("disabled", "disabled");
+                    top.$("#planCompare").attr("disabled", "disabled");
+
+                    parent.setBtnDisabled(true,"#PlanindexInfoDIV");   //cy:加 规划指标查看 不可见
+                    parent.setBtnDisabled(true,"#PlanindexInfoDIV");   //cy:加 附件查看 不可见
+                  //  top.$("#buildingAttribute").attr("disabled", "disabled");
+                }
+                projManager.showAll(selNode.id, "all", false, true, true, true,true);//
+                parent.currentLayerObjList={};//清空现状图层obj列表
+                parent.currentLayerChecked=false;//清空现状的选中状态
+                if(approveProIdList&&approveProIdList.length>0){//删除正在审批的项目
+                    if(selNode.id==approveProIdList[0]){
+                        var xmlData = {id: ""};
+                        projManager.saveApproveXML(xmlData);
+                        loadApproveProTree();
+                    }
+                }
+                projManager.deleteProject(selNode.id);
+                tree.removeNode(selNode);
+                if (selNode.getParentNode().id === -1 || selNode.getParentNode().id === -2) {
+                    //默认搜索待审批项目、全部用地性质
+                    var status=0;
+                    var projProperty="";
+                    var start=$("#startDate").datebox("getValue").split("-");
+                    start=start[0]+start[1]+start[2];
+                    var end=$("#endDate").datebox("getValue").split("-");
+                    end=end[0]+end[1]+end[2];
+
+                    loadProjectTree(status,start,end,$("#txtKeyword").val(),projProperty);
+//                    loadProjectTree($("#selState").val(), $("#selProjDate").val(), $("#txtKeyword").val());
+
+                }
+                //删除项目后 对应地球上的editlayer并没有从地球上移除
+                
+                //置空项目的图层（在项目删除后）
+                // parent.editLayers = {};
+                // projManager.clearEditLayers();
+            }
+        }
+    };
+    /**上面的项目管理树的右键审批功能
+     * [ description]
+     * @return {[type]} [description]
+     */
+    $("#divApproveProject").click(function () {
+         divApproveProjectHanlder();
+    });
+
+    $("#divApproveProject3").click(function () {
+        divApproveProjectHanlder();
+    });
+
+    function divApproveProjectHanlder(){
+
+        var tree = $.fn.zTree.getZTreeObj("projTree");
+        var selNode = tree.getSelectedNodes()[0];
+        var xmlData={};
+        if (!selNode.approve) {//审批
+            xmlData= {id: selNode.id};
+            parent.currentApproveProjectGuid = selNode.id;
+//            parent.setBtnDisabled(false,"#heightControlDIV");//设置高度调整按钮可见性
+//            parent.setBtnDisabled(false, "#roadDistanceDIV");
+            parent.setBtnDisabled(false,"#attachmentTag");
+            parent.setBtnDisabled(false,"#fillAlt");
+            parent.setBtnDisabled(false,"#approveTag");
+//            parent.setBtnDisabled(false,"#planCompare");
+       //     parent.setBtnDisabled(false,"#buildingAttribute");
+
+//            parent.setBtnDisabled(false,"#selectDIV");
+//            parent.setBtnDisabled(false,"#moveDIV");
+//            parent.setBtnDisabled(false,"#rotateDIV");
+//            parent.setBtnDisabled(false,"#scaleDIV");
+//            parent.setBtnDisabled(false,"#alignGoruntDIV");
+//            parent.setBtnDisabled(false,"#removeDIV");
+
+            parent.setBtnDisabled(false,"#PlanindexInfoDIV");   //cy:加 规划指标查看 可见
+            //关闭现状图层
+            //alert(parent.parcelLayerGuid);
+        } else {//取消审批
+            xmlData = {id: ""};
+            parent.currentApproveProjectGuid = null;        //cy:加
+
+//            parent.setBtnDisabled(true,"#heightControlDIV");//设置高度调整按钮可见性
+//            parent.setBtnDisabled(true, "#roadDistanceDIV");
+            parent.setBtnDisabled(true,"#attachmentTag");
+            parent.setBtnDisabled(true,"#fillAlt");
+            parent.setBtnDisabled(true,"#approveTag");
+//            parent.setBtnDisabled(true,"#planCompare");
+         //   parent.setBtnDisabled(true,"#buildingAttribute");
+
+//            parent.setBtnDisabled(true,"#selectDIV");
+//            parent.setBtnDisabled(true,"#moveDIV");
+//            parent.setBtnDisabled(true,"#rotateDIV");
+//            parent.setBtnDisabled(true,"#scaleDIV");
+//            parent.setBtnDisabled(true,"#alignGoruntDIV");
+//            parent.setBtnDisabled(true,"#removeDIV");
+
+
+            parent.setBtnDisabled(true,"#SchemeindexInfoDIV");   //cy:加 方案指标查看 不可见
+            parent.setBtnDisabled(true,"#indexInvestigateDIV");   //cy:加 指标比对 不可见
+            parent.setBtnDisabled(true,"#PlanindexInfoDIV");   //cy:加 规划指标查看 不可见
+        }
+        projManager.saveApproveXML(xmlData);
+        parent.currentLayerObjList={};//清空现状图层obj列表
+        parent.currentLayerChecked=false;//清空现状的选中状态
+        parent.checkedStatusList.splice(0,parent.checkedStatusList.length);//清空方案，规划用地，道路红线选中状态
+        //把editlayer里的图层设置为false
+        parent.initEditLayerEditable(false);
+        parent.showHideEditLayer(false,null);
+        loadApproveProTree();
+        var start=$("#startDate").datebox("getValue").split("-");
+        start=start[0]+start[1]+start[2];
+        var end=$("#endDate").datebox("getValue").split("-");
+        end=end[0]+end[1]+end[2];
+        var status=0;
+        var projProperty="";
+        loadProjectTree(status,start,end,$("#txtKeyword").val(),projProperty);
+      //  loadProjectTree($("#selState").val(), $("#selProjDate").val(), $("#txtKeyword").val());
+        //如果是审批 则隐藏现状图层(开启审批)
+
+        if(!parent.editLayers[parent.parcelLayerGuid2]){
+            //parent.applyDataBaseRecords(false,parent.parcelLayerGuid2);
+        }
+        if(!selNode.approve){
+            setTimeout(function(){
+                setTimeoutLoadLayers2(false, selNode.id, parent.parcelLayerGuid2);
+            },500);
+            
+        }else{
+            //否则显示(取消审批)
+            setTimeout(function(){
+                setTimeoutLoadLayers2(true, selNode.id, parent.parcelLayerGuid2);
+            },500);
+        }
+        //alert(parent.currentApproveProjectGuid);
+    };
+    function setTimeoutLoadLayers2(isShow, projectID, parcelID){
+        projManager.showCurrentLayers(isShow,projectID,parcelID);
+    }
+
+    /**
+     * 下面的审批树的右键审批事件回调
+     * @return {[type]} [description]
+     */
+    $("#divApproveProject2").click(function () {
+        var tree = $.fn.zTree.getZTreeObj("appTree");
+        var selNode = tree.getSelectedNodes()[0];
+        //取消审批
+        var xmlData = {id: ""};
+        projManager.saveApproveXML(xmlData);
+        parent.currentApproveProjectGuid = null;        //cy:加
+        parent.setBtnDisabled(true,"#heightChangeDIV");//把高度调整按钮置灰
+        parent.currentLayerObjList={};//清空现状图层obj列表
+        parent.currentLayerChecked=false;//清空现状的选中状态
+        parent.checkedStatusList.splice(0,parent.checkedStatusList.length);//清空数组
+        parent.showHideEditLayer(false,null);
+        parent.initEditLayerEditable(false);
+        loadApproveProTree();
+        var status=0;
+        var projProperty="";
+        var start=$("#startDate").datebox("getValue").split("-");
+        start=start[0]+start[1]+start[2];
+        var end=$("#endDate").datebox("getValue").split("-");
+        end=end[0]+end[1]+end[2];
+        loadProjectTree(status,start,end,$("#txtKeyword").val(),projProperty);
+       // loadProjectTree($("#selState").val(), $("#selProjDate").val(), $("#txtKeyword").val());
+        //按钮状态
+//        top.$("#attachmentTag").attr("disabled", true);//fillAlt
+        parent.setBtnDisabled(true,"#fillAlt");   //cy:加 方案指标查看 不可见
+        parent.setBtnDisabled(true,"#approveTag");   //cy:加 方案指标查看 不可见
+        parent.setBtnDisabled(true,"#planCompare");   //cy:加 方案指标查看 不可见
+
+//        top.$("#fillAlt").attr("disabled", true);
+//        top.$("#approveTag").attr("disabled", true);
+//        top.$("#planCompare").attr("disabled", true);
+       // top.$("#buildingAttribute").attr("disabled", true);
+
+//        top.$("#selectDIV").attr("disabled", true);
+//        top.$("#moveDIV").attr("disabled", true);
+//        top.$("#rotateDIV").attr("disabled", true);
+//        top.$("#scaleDIV").attr("disabled", true);
+//        top.$("#alignGoruntDIV").attr("disabled", true);
+//        top.$("#removeDIV").attr("disabled", true);
+
+
+        parent.setBtnDisabled(true,"#heightControlDIV");   //cy:加 方案指标查看 不可见
+        parent.setBtnDisabled(true,"#roadDistanceDIV");   //cy:加 指标比对 可见
+        parent.setBtnDisabled(true,"#SchemeindexInfoDIV");   //cy:加 方案指标查看 不可见
+        parent.setBtnDisabled(true,"#indexInvestigateDIV");   //cy:加 指标比对 可见
+        parent.setBtnDisabled(true,"#PlanindexInfoDIV");   //cy:加 规划指标查看 不可见
+        parent.setBtnDisabled(true,"#planCheckTag");   //cy:加 总平图查看 可见
+        parent.setBtnDisabled(true,"#attachmentTag");   //cy:加 附件查看 不可见
+
+        //否则显示(取消审批)
+        if(parent.parcelLayerGuid2){
+            // parent.applyDataBaseRecords(true,parent.parcelLayerGuid, true);
+            setTimeout(function(){
+             var tree = $.fn.zTree.getZTreeObj("appTree");
+                var parcelNode = tree.getNodeByParam("type", "PARCEL");
+                var roadlineNode = tree.getNodeByParam("type", "ROADLINE");
+                if(parcelNode.cId){
+                    if(parent.editLayers[parcelNode.cId]){
+                        parent.editLayers[parcelNode.cId].Visibility = false;
+                    }
+                }
+                if(roadlineNode.cId){
+                    if(parent.editLayers[roadlineNode.cId]){
+                        parent.editLayers[roadlineNode.cId].Visibility = false;
+                    }
+                }
+                if(parent.passedPlanObj[selNode.id]){//如果是已经审批项目
+                    setTimeoutLoadLayers2(false, selNode.id, parent.parcelLayerGuid2);
+                }else{
+                    setTimeoutLoadLayers2(true, selNode.id, parent.parcelLayerGuid2);
+                }
+            },300);
+        }
+    });
+
+    $('#contextMenuProject').menu({
+        onShow: function () {       // 控制右键菜单中显示菜单前面的勾选状态
+            var tree = $.fn.zTree.getZTreeObj("projTree");
+            var selNode = tree.getSelectedNodes()[0];
+            if (selNode) {
+                if (selNode.approve) {
+                    $(this).menu("setIcon", {target: $("#divApproveProject"), iconCls: 'icon-ok'});
+                } else {
+                    $(this).menu("setIcon", {target: $("#divApproveProject"), iconCls: 'icon-blank'});
+                }
+            }
+        }
+    });
+  $('#contextMenuProject3').menu({
+        onShow: function () {       // 控制右键菜单中显示菜单前面的勾选状态
+            var tree = $.fn.zTree.getZTreeObj("projTree");
+            var selNode = tree.getSelectedNodes()[0];
+            if (selNode) {
+                if (selNode.approve) {
+                    //$("#divApproveProject").html("结束审批");
+                    $(this).menu("setIcon", {target: $("#divApproveProject3"), iconCls: 'icon-ok'});
+                } else {
+                    //$("#divApproveProject").html("审批");
+                    $(this).menu("setIcon", {target: $("#divApproveProject3"), iconCls: 'icon-blank'});
+                }
+            }
+        }
+    });
+    $('#contextMenuProject2').menu({
+        onShow: function () {       // 控制右键菜单中显示菜单前面的勾选状态
+            var tree = $.fn.zTree.getZTreeObj("appTree");
+            var selNode = tree.getSelectedNodes()[0];
+            if (selNode) {
+                $(this).menu("setIcon", {target: $("#divApproveProject2"), iconCls: 'icon-ok'});
+            }
+        }
+    });
+    //方案编辑菜单
+    $('#contextMenuPlan').menu({
+        onShow: function () {       // 控制右键菜单中显示菜单前面的勾选状态
+            var tree = $.fn.zTree.getZTreeObj("appTree");
+            var selNode = tree.getSelectedNodes()[0];
+            var editLayer=parent.editLayers[selNode.cId[0]];
+            if(editLayer && editLayer.Visibility){//如果图层加载 并且可见 则可设置可编辑状态
+                if (editLayer.Editable) {
+                    $(this).menu("setIcon", {target: $("#divEditPlan"), iconCls: 'icon-ok'});
+                }else {
+                    $(this).menu("setIcon", {target: $("#divEditPlan"), iconCls: 'icon-blank'});
+                }
+            }else{
+                $(this).menu("setIcon", {target: $("#divEditPlan"), iconCls: 'icon-blank'});
+            }
+        }
+    });
+    $("#divEditPlan").click(function () {
+        //当前应该只有一个方案处于编辑状态
+        var isEdit = false;
+        var tree = $.fn.zTree.getZTreeObj("appTree");
+        var selNode = tree.getSelectedNodes()[0];
+        var layerIds=selNode.cId;
+        var planLayers = parent.planLayerIDs[selNode.id];
+        //当前选中方案对应的图层id
+        var plans = [];
+        for(var planID in parent.planLayerIDs){
+            plans.push(planID);
+        }
+        for (var i = plans.length - 1; i >= 0; i--) {
+           var currentPlanId = plans[i];
+           if(currentPlanId == selNode.id){
+                if(planLayers && planLayers.length){
+                    //开启编辑功能
+                    top.currentPlanLayers = layerIds;
+                    for(var k=0;k<layerIds.length;k++){
+                        var layerId=layerIds[k];
+                        var layer = parent.editLayers[layerId];
+                        if(layer.Editable){
+                            layer.Editable=false;
+                        }else{
+                            if(layer.Visibility){
+                                layer.Editable=true;
+                            }
+                        }
+                        isEdit = layer.Editable;
+                    }
+                    baseEditPlanIsOnClick();
+                }
+            }
+        }
+        if(isEdit){
+            //如果有一个开启 则关闭其他的方案编辑状态 
+            for (var i = plans.length - 1; i >= 0; i--) {
+                var currentPlanId = plans[i];
+                if(currentPlanId != selNode.id){
+                    var pLayers = parent.planLayerIDs[currentPlanId];
+                    for(var j=0;j<pLayers.length;j++){
+                        var layerId=pLayers[j];
+                        if(parent.parcelLayerGuid2 != pLayers){//这里要过滤掉现状图层 因为在方案必选中用到了parent.planLayerIDs，该变量为了方便就保留了现状图层的guid 这里处理方案图层的时候 需要过滤一下
+                            var layer = parent.editLayers[layerId];
+                            var isShow = !isEdit;
+                            if(isShow){
+                                  if(layer && layer.Visibility){
+                                    layer.Editable=true;
+                                }
+                            }else{
+                                if(layer) layer.Editable=isShow;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+    });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>园区市政设施简介</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <link rel="stylesheet" href="../../css/common.css"/>
+
+
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/locale/easyui-lang-zh_CN.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+    <script src="../../js/searchAnalysis.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>
+    <script src="../../js/common.js"></script>
+    <script src="../../js/lib/jquery.jqpagination.js"></script>
+    <script src="../../js/search.js"></script>
+    <script src="../../js/moment.min.js"></script>
+    <script src="../../js/md5.js"></script>
+
+    <script>
+        var earth=null;
+		var app_id = '310100';
+		var time = new Date;
+        function getEarth(earthObj) {
+			earth = earthObj;
+            getxfsdata();
+
+            window.onunload = function(){
+                showorclosedata(false) ;
+            };
+        }	
+		
+		
+
+		/***
+		 * 计算MD5
+		 ***/
+		function return_md5(time) {
+			var src = 'app_key=eba8cf67ff587fff&app_id=310100&time=' + time;
+			return hex_md5(src);
+		}
+		//返回时间字符串
+		function return_time() {
+			return moment().format('YYYY-MM-DD HH');
+		}
+
+
+		//======================初次链接数据，获取所有传感器最新信号，并筛选异常信号
+        function getxfsdata(){
+			var ajax = {};
+			ajax.data = {};
+			var time = return_time();
+			ajax.url = 'http://disney.fubangyun.cn:9999/sh_disney/getData';
+			ajax.data = {
+				"app_id": app_id,
+				"time": time,
+				"sign": return_md5(time),
+			}
+			ajax.success_fn = function (data) {
+				$("#state").html("已连接");
+			}
+			ajax.failed_fn = function (msg) {
+				$("#state").html("断开");
+			}
+			get_ajax_getall(ajax);
+        }
+		/***
+		 * 封装ajax请求
+		 * ajax 请求数据
+		 **/
+
+		function get_ajax_getall(ajax) {	
+			var xmlhttp = null;
+			if (window.XMLHttpRequest) { // code for IE7, Firefox, Opera, etc.
+				xmlhttp = new XMLHttpRequest();
+			} else if (window.ActiveXObject) { // code for IE6, IE5
+				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			if (xmlhttp != null) {
+				xmlhttp.onreadystatechange = function () {
+					if (xmlhttp.readyState == 4) { // 4 = "loaded"
+						if (xmlhttp.status == 200) { // 200 = "OK"
+							var result = JSON.parse(xmlhttp.responseText);
+							if (result.code == '1') {
+								if (ajax.success_fn) {
+									ajax.success_fn(result.data);
+									var temp = getJsonLength(result.data); 
+									$("#covertotalcount").html(temp); 
+								}
+							} else {
+								if (ajax.failed_fn) {
+									ajax.failed_fn(result.msg);
+						
+								}
+							}
+						} else {
+							//alert("ajxa请求错误:" + xmlhttp.statusText);
+							
+						}
+					}
+				};
+				xmlhttp.open("POST", ajax.url, true);
+				xmlhttp.send(JSON.stringify(ajax.data));
+			}else{
+				alert("你的浏览器不支持ajax.");
+			}			
+		}	
+		
+		function getJsonLength(jsonData) {  
+			var length=0;  
+			for(var ever in jsonData) {  
+			    length++;  
+			}  
+			return length;  
+		}  			
+		
+		
+		
+		
+		
+        function showorclosedata(isshow) {
+            var xfs_layer=null;
+            var xfs_layerid= CITYPLAN_config.disney.xfs_layerid;
+            if(xfs_layerid!=""){
+                xfs_layer  =earth.LayerManager.GetLayerByGUID(xfs_layerid);
+            }
+            if( xfs_layer!=null){
+
+                if(xfs_layer.Visibility!=isshow) {
+
+                    xfs_layer.Visibility = isshow;  //井盖矢量图层可见
+                }
+
+
+            }
+
+        }
+
+        function chk_change()
+        {
+            var txt=$("#chk").html();
+            if(txt=="开启点位图")
+            {
+                showorclosedata(true);
+                $("#chk").html("关闭点位图");
+
+            }
+            else
+
+            {
+                showorclosedata(false);
+                $("#chk").html("开启点位图");
+            }
+
+
+
+
+        }
+       function showpdf() {
+           window.open("pdfbrowse.html",'分布图浏览','width=900,height=600,resizable=yes');
+       }
+
+    </script>
+    <style>
+        body{font-size: 15px;}
+        .table-b table td{border: 1px solid #4c4c4c;}
+    </style>
+</head>
+
+<body>
+
+
+
+<div style="margin-top:20px;"><label>上海国际旅游度假区现安装［</label><label style="color: #0464bb;font-weight: bold" id="covertotalcount"> 0个</label>］消防栓安装传感器。</label></div>
+<div class="table-b"  style="width: 100%;"   >
+<table width="300px" style="margin: auto;background: #fffffe;border: groove">
+  　 <tr><td>市政道路</td><td>79个</td></tr>　
+     <tr><td>园区单位</td><td>21个</td></tr>
+
+</table>
+</div>
+<!--分布图-->
+<!--<div style="height: 100px;font-size: 15px;margin-top: 10px;float: right;margin-right: 10px"><a id="chk" href="#"  onclick="chk_change()">开启点位图</a>  </div>-->
+<!--图-->
+<!--<div style="height: 100px;font-size: 15px;margin-top: 10px;float: right;margin-right: 50px"><a href="#"  onclick="showpdf()">分布图</a>  </div>-->
+<div style="width: 100%;height: 30px;font-size: 15px;margin-top: 10px;" align="center">
+    <button style="width: 90px ;margin-right: 25px" type="button" id="chk"  onclick="chk_change()">开启点位图</button>
+    <button style="width: 70px" type="button" onclick="showpdf()">分布图</button>
+</div>
+</body>
+</html>

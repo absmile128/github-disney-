@@ -1,0 +1,111 @@
+@CHARSET "UTF-8";
+body{
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+	overflow:hidden;
+}
+table{
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+}
+tr{
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+}
+td{
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+}
+div{
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+	word-break:break-all;
+}
+
+button.normalBtn{
+	background:url(../../image/normalBtn.gif);
+	border-style:none;
+	width: 75px;
+	height: 23px; 
+}
+
+button.normal2Btn{
+	background:url(../image/normal2Btn.gif);
+	border-style:none;
+	width: 70px;
+	height: 23px; 
+}
+
+button.smallBtn{
+	background:url(../../css/images/select_bt.png);
+	border-style:none;
+	width: 59px;
+	height: 23px; 
+}
+
+button.largeBtn{
+	background:url(../image/largeBtn.gif);
+	border-style:none;
+	width: 85px;
+	height: 23px; 
+}
+
+body.dialogBG{
+	background-color: #eef5fd;
+	text-align: center;
+	font-size: 12px;
+}
+
+.textFieldNor{
+	width:120px;
+}
+
+.textFieldLong{
+	width:200px;
+}
+
+.buttonPanel{
+	text-align:center;
+	height: 40px;
+}
+
+td.rightMouseImgBg{
+	background-color:#B0C4DE; 
+	width:30px;
+	height:20px;
+}
+
+td.rightMouseTextBg{
+	background-color:#D0D0CE; 
+	width:60px;
+	font-size: 12px;	
+}
+
+.borderSty{	
+	border: 1px double #ACA899;
+}
+
+.seperatorLine{
+	border-right: 1px double #ACA899;
+}
+
+.littleDialogBody{
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	font-size: 13px;
+}
+.largeDialogBody{
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	font-size: 13px;
+}
+.trbg {
+    background-color: cornflowerblue;
+    color: white;
+}
+.trbg2 {
+    background-color: cornflowerblue;
+    color: white;
+}

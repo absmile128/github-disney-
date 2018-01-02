@@ -1,0 +1,374 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+	<meta http-equiv="Content-Type" content="textml; charset=UTF-8" />
+	<title>数据导入</title>    
+    <link rel="stylesheet" type="text/css" href="../../css/common.css"/>
+    <link rel="stylesheet" type="text/css" href="../../util/zTreeStyle/zTreeStyle.css"/>
+	<style type="text/css">
+		.borderSty select{			
+			width: 160px;
+			margin: 2px 0px;
+		}
+		
+		#treeDiv{
+			width: 99%;
+			text-align: left;
+			overflow: auto;
+		}	
+	</style>
+</head>  
+<body class="largeDialogBody" oncontextmenu="return false;" >
+	<table style="width:100%;height:100%;" cellspacing="0" cellpadding="0">
+		<tr>
+			<td class="borderSty" height="135px" align="center">
+				<table>
+					<tr>
+						<td align="left" colspan="2">
+							工程:&nbsp;<select id="projectList" name="projectList">
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td align="left" colspan="2">
+							图层:&nbsp;<select id="pipeListDiv" name="roadList"></select>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+		<tr>
+			<td align="right" height="35px">
+				<button id="importXmlBtn" >导入数据</button>
+			</td>
+		</tr>
+		<tr>
+			<td class="borderSty">
+				<div id="treeDiv">
+					<ul id="pipeDataTree" class="ztree"></ul>
+				</div>
+			</td>
+		</tr>
+	</table>
+
+	<div id="rigMouMenuDiv" style="position:absolute; display:none;">
+		<table cellspacing="0" cellpadding="0" style="cursor:hand;">
+			<tr align="center">
+				<td class="rightMouseImgBg"><img src="../../image/rightclick/delete.gif" width="16px" height="16px"/></td>
+				<td class="rightMouseTextBg" onMouseOver="this.style.background='#6699CC'" onMouseOut="this.style.background='#d0d0ce'" onclick="deletePipeDataClick()">???</td>
+			</tr>
+		</table>
+	</div>
+
+<script type="text/javascript" src="../../util/jquery.js"></script> 
+<script type="text/javascript" src="../../js/common.js"></script>  
+<script type="text/javascript" src="../../js/statistics.js"></script> 
+<script type="text/javascript" src="../../js/approvalMgr.js"></script> 
+<script type="text/javascript" src="../../util/zTreeStyle/jquery.ztree.js"></script>
+<script type="text/javascript">
+	var earth = null;
+	var pipeDataTree = null;
+	var bufPolygon = null;
+    var bufGeoPoints = null;
+	$(function(){	
+		earth = parent.earth;	
+		var divHeight = $("#dlgResult",parent.document).height() - 50;
+		StatisticsMgr.initPipelineListimport($("select#projectList"));// ????????????????????
+        parent.SYSTEMPARAMS.project = $("select#projectList").val();
+        parent.SystemSetting.initSystemParam();
+		/**
+		 * 功能："项目"下拉列表的onchange事件
+		 */
+		$("select#projectList").change(function(){
+			 var projectId = $("select#projectList").val();
+			 StatisticsMgr.initPipelineSelectList(projectId, $("#pipeListDiv"));//初始化管线图层列表
+			 var pipelineId=$("#pipeListDiv").val();
+			 parent.projectListVal=projectId;
+		     if(parent.pipeListVal!=""){
+				$("select#pipeListDiv").val(parent.pipeListVal);
+		    }
+		});
+        $("select#projectList").trigger("change");
+		if(parent.projectListVal!=""){
+			$("select#projectList").val(parent.projectListVal);
+		}
+		/**
+		 * ?????"???????"?????????onchange???
+		 */
+		var flag=false;
+		$("select#pipeListDiv").change(function(){
+			if(pipeLIneIdNode == null || pipeLIneIdNode.length == 0){
+				flag=true;
+			}else{
+				flag=false;
+			}
+			if(!flag){
+				var flag=confirm("所选管线改变，是否从新导入数据？");
+				if(flag){
+					deleteimportPipeData();
+				}
+			}
+			var pipelineId=$("#pipeListDiv").val();
+            if(!pipelineId){
+                return;
+            }
+			var layer = earth.LayerManager.GetLayerByGUID(pipelineId);				
+			if(layer.PipeLineType>4000 && layer.PipeLineType<5000){
+				StatisticsMgr.buttonChange();
+			}else{
+				StatisticsMgr.buttonChangeReturn();
+			}
+			 parent.pipeListVal=pipelineId;  
+		});
+        $("select#pipeListDiv").trigger("change")
+		/**
+		  * 功能：判断导入数据是否存在
+
+		 */
+		var loadPath = earth.Environment.RootPath + "temp\\PipeData.xml";
+		var PipeDataXml = earth.UserDocument.LoadXmlFile(loadPath);
+		var PipeLineDataDoc =loadXMLStr(PipeDataXml);
+		var ProjectNodes = PipeLineDataDoc.getElementsByTagName("ProjectId");
+		var pipeLIneIdNode=PipeLineDataDoc.getElementsByTagName("PipeLineId");
+		if(pipeLIneIdNode == null || pipeLIneIdNode.length == 0){
+			$("#importXmlBtn").click(function(){
+				parent.ApprovalMgr.importXmlFile();
+			});
+		}else{
+			var projectGuid=ProjectNodes[0].text;
+			var pipeLineGuid=pipeLIneIdNode[0].text;
+			parent.pipeListVal=pipeLineGuid;
+			$("select#pipeListDiv").val(pipeLineGuid);
+			$("select#projectList").val(projectGuid);
+			$("#importXmlBtn").click(function(){
+				deleteimportPipeData();
+				parent.ApprovalMgr.importXmlFile();
+			});
+		}
+		
+		var guid=$("#projectList").val();
+		StatisticsMgr.approveOrAccept(guid);
+		$("#treeDiv").height(divHeight);
+		parent.ApprovalMgr.initApprovalEnvir();
+		pipeDataTree = initPipeDataTree(parent.pipeDataDoc);
+		$("body").click(function(){
+			$("#rigMouMenuDiv").css({"display":"none"});
+		});
+	});
+	
+	/**
+	 * 功能：导入数据生成树
+	 */	
+	function getPipeDataForTree(root){
+	    var dataArr = [];
+		for(var i=0; i<root.childNodes.length; i++){
+			var childNode = root.childNodes[i];
+			var id = childNode.getAttribute("id");
+			var name = childNode.getAttribute("name");
+			var checked = childNode.getAttribute("checked");
+			if((id != null)&&(name != null)){
+				var data = {
+				    id: id,
+				    name: name,
+				    checked : checked
+				};
+				dataArr.push(data);
+				if(childNode.tagName == "PipeDataDocument" || childNode.tagName == "Pipeline"){
+					data.isParent = true;
+					data.open = true;
+					data.children = getPipeDataForTree(childNode);
+				}
+			}
+		}
+		return dataArr;
+	}
+	
+	function initPipeDataTree(pipeDataDoc){		
+		var setting = {
+			check: {
+				enable: true, //是否显示checkbox或radio
+				chkStyle: "checkbox" //显示类型,可设置(checbox,radio)
+			},
+			view: {
+				dblClickExpand: false, //双击节点时，是否自动展开父节点的标识
+				expandSpeed: "", //节点展开、折叠时的动画速度, 可设置("","slow", "normal", or "fast")
+				selectedMulti: false //设置是否允许同时选中多个节点
+			},
+			callback: {
+				onClick: pipeDataTreeClick,
+				onDblClick: pipeDataTreeDblClick,
+				onCheck: pipeDataTreeCheck,
+				onRightClick: pipeDataTreeRightClick
+			}
+		};
+		var root = pipeDataDoc.documentElement;
+		var zNodes = getPipeDataForTree(root);
+		var tree = $.fn.zTree.init($("#pipeDataTree"), setting, zNodes);
+		return tree;
+	}
+	/**图层显示
+	 * 参数：event-JS事件
+	 * 返回：无
+	 */
+	function setLayerVisibility(event,id){
+        var checked = event.currentTarget.checked;
+        var layer = seearth.LayerManager.GetLayerByGUID(id);
+        layer.Visibility = checked;
+    }
+	/**
+	 * 功能：树节点的鼠左键键单击事件
+	 * 参数：event-JS事件；treeId-树的ID；treeNode-选中的标注树节点
+	 * 返回：无
+	 */
+	var pipeDataTreeClick = function(event,treeId,treeNode){
+	};	
+	
+	/**
+	 * 功能：树节点的鼠左键键双击事件
+	 * 参数：event-JS事件；treeId-树的ID；treeNode-选中的标注树节点
+	 * 返回：无
+	 */
+	var pipeDataTreeDblClick = function(event,treeId,treeNode){
+		if(treeNode == null){
+			return;
+		}
+		var id = treeNode.id;
+		if(treeNode.isParent == true){
+			return;
+		}
+		var selectedPipeDataObj = parent.ApprovalMgr.getPipeDataById(id);
+		if(selectedPipeDataObj == null){
+			return;
+		}
+		var pipeDataNode = lookupNodeById(parent.pipeDataDoc,id);
+        //selectedPipeDataObj.StopHighLight();
+		if("ShowHighLight" in selectedPipeDataObj){
+			selectedPipeDataObj.ShowHighLight();
+		}		
+		flyToPipeline(pipeDataNode);
+	};	
+	
+	
+	var flyToPipeline = function(pipelineNode){
+		var lineCoordinate = pipelineNode.selectSingleNode("Coordinates").text;
+		var lineCoordArr = lineCoordinate.split(",");
+		var lon = (parseFloat(lineCoordArr[0]) + parseFloat(lineCoordArr[3])) * 0.5;
+		var lat = (parseFloat(lineCoordArr[1]) + parseFloat(lineCoordArr[4])) * 0.5;
+		var alt = (parseFloat(lineCoordArr[2]) + parseFloat(lineCoordArr[5])) * 0.5;
+		earth.GlobeObserver.FlytoLookat(lon, lat, alt, 0, 60, 0, 100, 2);
+	};
+	
+	/**
+	 * 功能：树的checkbox点击事件
+	 * 参数：event-JS事件；treeId-树的ID；treeNode-选中的标注树节点
+	 * 返回：无
+	 */
+	var pipeDataTreeCheck = function(event,treeId,treeNode){
+		if(treeNode == null){
+			return;
+		}
+		var id = treeNode.id;
+		var pipeDataNode = lookupNodeById(parent.pipeDataDoc,id);
+		if(pipeDataNode == null){
+			return;
+		}
+		if(treeNode.isParent == true){
+			checkedPipeDataByNode(pipeDataNode,treeNode.checked);
+		}else{
+			var selectedPipeDataObj = parent.ApprovalMgr.getPipeDataById(id);
+			selectedPipeDataObj.Visibility = treeNode.checked;
+			pipeDataNode.setAttribute("checked", treeNode.checked);
+		}
+		parent.ApprovalMgr.savePipeDataFile(parent.pipeDataDoc.xml);
+	};
+	
+	var checkedPipeDataByNode = function(pipeNode, checked){
+		var pipelineNodes = pipeNode.getElementsByTagName("PipelineElement");
+		for(var i = 0; i < pipelineNodes.length; i++){
+			var pipelineNode = pipelineNodes[i];
+			var id = pipelineNode.getAttribute("id");
+			var selectedPipeDataObj = parent.ApprovalMgr.getPipeDataById(id);
+			selectedPipeDataObj.Visibility = checked;
+			pipelineNode.setAttribute("checked", checked);
+		}
+		var pipePolyNodes = pipeNode.getElementsByTagName("PipePolygonElement");
+		for(var i = 0; i < pipePolyNodes.length; i++){
+			var pipePolyNode = pipePolyNodes[i];
+			var id = pipePolyNode.getAttribute("id");
+			var selectedPipeDataObj = parent.ApprovalMgr.getPipeDataById(id);
+			selectedPipeDataObj.Visibility = checked;
+			pipePolyNode.setAttribute("checked", checked);
+		}
+	};
+	
+	/**
+	 * 功能：树的鼠标右键单击事件
+	 * 参数：event-JS事件；treeId-树的ID；treeNode-选中的标注树节点
+	 * 返回：无
+	 */
+	var pipeDataTreeRightClick = function(event,treeId,treeNode){
+		$("#rigMouMenuDiv").css({"display":"none"});
+		pipeDataTree.selectNode(treeNode);
+		var id = treeNode.id;
+		var rootId = parent.pipeDataDoc.documentElement.firstChild.getAttribute("id");
+		if(id === rootId){ //根节点没有右键菜单
+			return;
+		}
+		$("#rigMouMenuDiv").css({"display":"","left":event.clientX,"top": event.clientY});
+		
+		
+		
+	};
+	
+	function deletePipeDataClick(){
+		var selectTreeNodes = pipeDataTree.getSelectedNodes();
+		if(selectTreeNodes == null || selectTreeNodes.length == 0){
+			return;
+		}
+		var selectTreeNode = selectTreeNodes[0];
+		var selectTreeId = selectTreeNode.id;		
+		var pipeDataNode = lookupNodeById(parent.pipeDataDoc,selectTreeId);
+		if(selectTreeNode.isParent == true){
+			deletePipeDataObjectByTreeNode(selectTreeNode);
+		}else{
+			parent.ApprovalMgr.deletePipeDataById(selectTreeId);	
+		}	
+		if(pipeDataNode != null){
+			pipeDataNode.parentNode.removeChild(pipeDataNode);
+		}	
+		parent.ApprovalMgr.savePipeDataFile(parent.pipeDataDoc.xml);
+		pipeDataTree = initPipeDataTree(parent.pipeDataDoc);
+	}
+	function deleteimportPipeData(){
+		var selectTreeNodes = parent.pipeDataDoc.getElementsByTagName("Pipeline");
+		if(selectTreeNodes == null || selectTreeNodes.length == 0){
+			return;
+		}
+		var selectTreeNode = selectTreeNodes[0];
+		var selectTreeId = selectTreeNode.getAttribute("id");		
+		var pipeDataNode = lookupNodeById(parent.pipeDataDoc,selectTreeId);
+		if(selectTreeNode.isParent == true){
+			deletePipeDataObjectByTreeNode(selectTreeNode);
+		}else{
+			parent.ApprovalMgr.deletePipeDataById(selectTreeId);	
+		}	
+		if(pipeDataNode != null){
+			pipeDataNode.parentNode.removeChild(pipeDataNode);
+		}	
+		parent.ApprovalMgr.savePipeDataFile(parent.pipeDataDoc.xml);
+		pipeDataTree = initPipeDataTree(parent.pipeDataDoc);
+	}
+	function deletePipeDataObjectByTreeNode(treeNode){
+		var children = treeNode.children;
+		if(children == null || children.length == 0){
+			return;
+		}
+		for(var i = 0; i < children.length; i++){
+			var childrenId = children[i].id;
+			parent.ApprovalMgr.deletePipeDataById(childrenId);
+		}
+	}
+		
+</script>
+</body>
+</html>

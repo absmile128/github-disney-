@@ -1,0 +1,729 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>红线分析</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/common.css"/>
+    <style>
+        div[region=north]>div {
+            margin: 5px;
+        }
+
+        button {
+            width: 100px;
+            height: 30px;
+        }
+    </style>
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+</head>
+<body >
+
+<div id="div_condition">
+<div  style="width:100%; text-align: center">
+
+<!--<body id="container" class="easyui-layout" oncontextmenu="return false;">-->
+<!--<div region="north" border="false" split="false" style="width:100%;text-align: center;">-->
+
+    <div  style=" text-align: left; margin-top: 20px">
+        <span>退线距离:</span>
+        <input  type="text" id="txtDist" value="60" width="80px"/>米
+    </div>
+
+    <div id="plan_div2"  style="margin-top: 20px;overflow: auto;text-align: left; display:none">
+
+        <table  id="plan_div" class="easyui-datagrid" data-options=" fitColumns:true,singleSelect:true,title:'红线退界规划值',collapsible:true " >
+            <thead>
+            <tr style="text-align: center">
+
+                <th  data-options="field:'plan_hxmc',width:100">红线名称</th>
+                <th  data-options="field:'plan_hxjl',width:100">红线距离(米)</th>
+                <!--<th field="txjl">退线距离</th>-->
+            </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+    <div style="  margin-top:20px">
+        <label style="margin-right: 5px;"><input type="radio" name="road" id="rdoSelectRoad" value="0" >选择红线</label>
+        <label style="margin-left: 5px;"><input type="radio" name="road" id="rdoAllRoad" value="1"checked>全部红线</label>
+    </div>
+    <div style=" margin-top: 20px;border-bottom:1px dashed #000000;"></div>        <!--虚线-->
+    <div  style=" margin-top: 20px;">
+        <!--<button id="btnSelectRoad" class="largeBtn"disabled style="margin-right: 5px;">选择红线</button>-->
+        <!--<button id="btnAnalysis" class="largeBtn"  style="margin-right: 5px;">开始分析</button>-->
+
+        <button id="btnSelectRoad" class="normal2Btn"disabled style="margin-right: 5px;"  disabled="disabled">选择红线</button>
+        <button id="btnAnalysis" class="normal2Btn"  style="margin-right: 5px;" >开始分析</button>
+
+    </div>
+</div>
+
+
+</div>
+
+<!--<div region="center" border="false" split="true" style="overflow: auto;  margin-top: 20px;">-->
+<div  id="div_tblResult" style="margin-top: 20px;overflow: auto;display: none" >
+
+    <table  id="tblResult" class="easyui-datagrid" style="height: 400px;" data-options="   rownumbers:true,
+     autoRowHeight:false,
+      fitColumns:true,
+      singleSelect:true,
+        pagination:false,
+       rowStyler: funcrowStyler ,
+       title:'分析结果'" >
+        <thead>
+        <tr style="text-align: center">
+        <th field="jzmc" >建筑名称</th>
+        <th field="hxmc" >红线名称</th>
+        <th field="hxjl" data-options="styler:cellStyler">红线距离(米)</th>
+        <!--<th field="txjl">退线距离</th>-->
+        </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+</div>
+
+
+<script src="../../js/CITYPLAN_config.js"></script>
+<script src="../../js/project.js"></script>
+<script src="../../js/common.js"></script>
+<script>
+$(function () {
+    setsize()  ;   //设置高度，以适合不同的屏幕分辨率
+    var earth = parent.earth;
+    var projManager = CITYPLAN.ProjectManager(earth);
+    var node = parent.currentSelectedNode;
+    var roadlineLayerId = null;
+    var highLightObjArr = [];
+    var lineBufferInEarth = [];
+    var init=function(){
+        if(node&&node.type=="PLAN"){
+            roadlineLayerId=node.roadLine;
+//            setbttonstate();
+//            $("#btnSelectRoad").removeAttr("disabled");
+            $("#rdoSelectRoad").attr("disabled",false);
+            $("#rdoAllRoad").attr("disabled",false);
+        }else{
+            $("#btnSelectRoad").attr("disabled",true);
+            $("#btnAnalysis").attr("disabled",true);
+            $("#rdoSelectRoad").attr("disabled",true);
+            $("#rdoAllRoad").attr("disabled",true);
+        }
+        var projId = node.projectId;
+       getAlllineDistance(projId) ;
+    }
+    init();
+    //已看
+    var getGeoPointsFromSEVector3s = function (vec3s) {
+        var geoPoints = earth.Factory.CreateGeoPoints();
+        for (var i = 0; i < vec3s.Count; ++i) {
+            geoPoints.Add(vec3s.Items(i).X, vec3s.Items(i).Y, vec3s.Items(i).Z);
+        }
+        return geoPoints;
+    };
+    var getSEVector3sFromGeoPoints = function (points) {
+        var vPoints = earth.Factory.CreateVector3s();
+        for (var i = 0; i < points.Count; ++i) {
+            var point = points.GetPointAt(i);
+            vPoints.Add(point.Longitude, point.Latitude, point.Altitude);
+        }
+        return vPoints;
+    };
+    /**已看
+     * 获取沿线一定距离的缓冲区多边形范围
+     * @param lineObj  SEElementLine
+     * @param distance 缓冲距离
+     * @return {*} 缓冲多边形
+     */
+    var getBufferOfLine = function (lineObj, distance) {
+        var polygon = null;
+        if (lineObj && distance) {
+            var tmpVecs = lineObj.GetPointArray();    //获取折线的顶点坐标
+            var tmpPoints = getGeoPointsFromSEVector3s(tmpVecs);
+            var points = earth.GeometryAlgorithm.CreatePolygonFromPolylineAndWidth(tmpPoints, distance, distance);//给定折线和宽度生成Buffer多边形
+
+            if (points.Count > 0) {
+                polygon = earth.Factory.CreatePolygon();
+                polygon.AddRing(getSEVector3sFromGeoPoints(points));    //生成polygon
+            }
+        }
+
+        return polygon;
+    };
+    /**已看
+     * 获取模型的投影面集合
+     * @param obj ISEObject,ISEEditModel
+     * @return {*} 面数组
+     */
+    var getPolygonListOfModelContour = function (obj) {
+        var polygonList = [];
+
+        if (obj) {
+            var pCollection = earth.GeometryAlgorithm.CalculateModelContour(obj.Guid);
+
+            if (pCollection) {
+                for (var i = 0; i < pCollection.Count; i++) {
+                    var points = pCollection.Items(i);
+                    if (points && points.Count > 2) {
+                        var polygon = earth.Factory.CreatePolygon();
+                        polygon.BeginUpdate();
+                        polygon.AddRing(getSEVector3sFromGeoPoints(points));
+                        polygon.EndUpdate();
+                        polygonList.push(polygon);
+                    }
+                }
+            }
+        }
+
+        return polygonList;
+    };
+
+    $("input:radio").change(function () {
+
+        if ($(this).val() == 0) {
+            $("#rdoAllRoad").removeAttr("checked");
+            $("#btnSelectRoad").removeAttr("disabled");
+            $("#btnAnalysis").attr("disabled",true);
+        } else {
+            $("#rdoSelectRoad").removeAttr("checked");
+            $("#btnSelectRoad").attr("disabled", "disabled");
+            $("#btnAnalysis").removeAttr("disabled");
+        }
+//        init();
+    });
+
+
+//    function  setbttonstate()
+//    {
+//        debugger;
+//        if ( $("input:radio").val() == 0) {
+//            $("#rdoAllRoad").removeAttr("checked");
+//            $("#btnSelectRoad").removeAttr("disabled");
+//            $("#btnAnalysis").attr("disabled",true);
+//        } else {
+//            $("#rdoSelectRoad").removeAttr("checked");
+//            $("#btnSelectRoad").attr("disabled", "disabled");
+//            $("#btnAnalysis").removeAttr("disabled");
+//        }
+//
+//    }
+    //清除高亮
+    var stopHightLight = function () {
+        if (highLightObjArr.length) {
+            for (var i = 0; i < highLightObjArr.length; i++) {
+                var obj = highLightObjArr[i];
+                try {
+                    if (obj) {
+                        obj.StopHighLight();
+                    }
+                } catch (e) {
+
+                }
+            }
+            highLightObjArr = [];
+        }
+    }
+    //清除缓冲区
+    var clearBoxes = function () {
+        $.each(lineBufferInEarth, function (i, line) {
+            earth.DetachObject(line);
+        });
+        lineBufferInEarth = [];
+    };
+    //已看
+    $("#btnSelectRoad").click(function () {
+
+        clearBoxes();
+        earth.Event.OnSelectChanged = onSelectChanged;
+        earth.ShapeCreator.Clear();
+        earth.ToolManager.SphericalObjectEditTool.Select();
+    });
+    var selectedRoadLineGuid=null;
+
+
+    var onSelectChanged = function (sender, e) {
+
+        var projId = node.projectId;
+        var lineObjList=lineDistanceObj(projId);
+        var dists = projManager.getRoadLineData(node.id);
+        if(earth.SelectSet.GetCount() == 1){
+            var roadline = earth.SelectSet.GetObject(0);
+            var guid = roadline.Guid;
+            var dist = lineObjList[guid];
+
+            if(dist){
+                var distance = dist["CPROADLINE.DISTANCE"];
+                $("#txtDist").val(distance);
+            }
+        }
+
+        var nSelectCount = earth.SelectSet.GetCount();
+        var roadLineLayer = parent.editLayers[roadlineLayerId];
+        if (!roadLineLayer)return;
+//        roadLineLayer.Editable = true;
+        if (nSelectCount == 1) {
+            var lineobj = earth.SelectSet.GetObject(0);
+            var eObj = roadLineLayer.GetObjByGuid(lineobj.Guid);
+            if (eObj&&lineobj.Rtti==220) {
+                $("#btnAnalysis").removeAttr("disabled");
+                selectedRoadLineGuid=lineobj.Guid;
+            }else {
+                alert("选中的对象不是道路红线，请重新选择.");
+                earth.SelectSet.Clear();
+                $("#btnAnalysis").attr("disabled",true);
+            }
+            //这里要获取服务端返回的数值 todo
+            //
+            
+        }else if (nSelectCount > 1) {
+            var i = 0;
+            for (i = 0; i < nSelectCount; i++) {
+                var lineobj = earth.SelectSet.GetObject(i);
+                var eObj = roadLineLayer.GetObjByGuid(lineobj.Guid);
+
+                if (eObj&&lineobj.Rtti==220){
+                    $("#btnAnalysis").removeAttr("disabled");
+                    selectedRoadLineGuid=lineobj.Guid;
+                }
+//                else {
+//                    alert("选中的对象不是道路红线，请重新选择.");
+//                    earth.SelectSet.Clear();
+//                    break;
+//                    $("#btnAnalysis").attr("disabled",true);
+//                }
+
+            }
+
+            if(selectedRoadLineGuid==null)
+            {
+
+                alert("没有选中道路红线，没有请重新选择.");
+                    earth.SelectSet.Clear();
+
+
+
+            }
+            /*if (i >= nSelectCount) {
+                alert("选中的对象不是道路红线，请重新选择.");
+                earth.SelectSet.Clear();
+                $("#btnAnalysis").attr("disabled",true);
+            }*/
+        }
+        earth.Event.OnSelectChanged=function(x){};
+    }
+    $("#btnAnalysis").click(function () {
+//        alert(selectedRoadLineGuid);
+
+
+        if(!check()){return;}
+
+            var dist = $("#txtDist").val();
+        if (parseFloat(dist) >= 0) {
+
+            $("#tblResult>tbody").empty();
+            var projId = node.projectId;
+            var planId = node.id;
+            var planType = 4;
+            var planLayerId = projManager.getLayerIdsByPlanId(planId);
+                //cy:选取所有道路分析
+            if ($("#rdoAllRoad").attr("checked") == "checked") {
+                analyzeRoads(1, projId, planId, roadlineLayerId, planLayerId);
+            } else if ($("#rdoSelectRoad").attr("checked") == "checked") {
+
+
+                     if(selectedRoadLineGuid==null)
+                     {
+                    alert("请选择进行退线分析的道路线！");
+                    return;
+                }
+
+
+
+
+
+//                if (earth.SelectSet.GetCount() <= 0) {
+//                    alert("请选择进行退线分析的道路线！");
+//                    return;
+//                }
+                analyzeRoads(0, projId, planId, roadlineLayerId, planLayerId);
+                selectedRoadLineGuid=null;
+            }
+        }
+
+
+        earth.ToolManager.SphericalObjectEditTool.Browse() ;//cy
+
+
+    });
+    /**已看
+     * 根据选中的道路创建缓冲区
+     * @param projId 项目ID
+     * @param dist 缓冲距离
+     * @return {Array} 返回缓冲区数组
+     */
+    var getBuffersFromSelectSet = function (projId, dist,name) {
+//        var dists = projManager.getRoadLineData(projId);
+//        var buffers = [];
+//        var buffer = null;
+//        for (var i = 0; i < earth.SelectSet.GetCount(); i++) {
+//            var roadline = earth.SelectSet.GetObject(i);
+//            if (roadline) {
+//                dist = dist || dists[roadline.Guid];
+//                buffer = getBufferOfLine(roadline, dist);
+//                if(buffer){
+//                    CreateLineBufferInEarth(buffer);
+//                }
+//                buffers.push({line: roadline, polygon: buffer,name:name});
+//            }
+//        }
+//        return buffers;
+
+
+
+
+        //cy改
+
+        var buffers = [];
+        var buffer = null;
+
+            if (selectedRoadLineGuid) {
+
+                var  roadlineLayerId2=node.roadLine;
+                var roadLineObjList = getRoadLineObj(roadlineLayerId2);
+                if (!roadLineObjList) return;
+                var lineObj =null;
+
+                for (var l = 0; l < roadLineObjList.length; l++) {
+
+                    if(roadLineObjList[l].Guid==selectedRoadLineGuid)
+                    {
+                         lineObj = roadLineObjList[l];  //当前双击的红线
+                    }
+                }
+
+                buffer = getBufferOfLine(lineObj, dist);
+                if(buffer){
+                    CreateLineBufferInEarth(buffer);
+                }
+                buffers.push({line: lineObj, polygon: buffer,name:name});
+            }
+
+        return buffers;
+    };
+    //cy:polygon 放到地球上
+    var CreateLineBufferInEarth = function (polygon,guid) {
+        var plg = earth.Factory.CreateElementPolygon(guid, "");
+        plg.BeginUpdate();
+        plg.SetPolygon(polygon);
+        plg.AltitudeType = 1;
+        plg.FillStyle.FillColor = 0x320000ff;// 半透红色
+        plg.LineStyle.LineColor = 0xcc0000ff;// 红色
+        plg.EndUpdate();
+        earth.AttachObject(plg);
+        lineBufferInEarth.push(plg);
+    }
+
+    //已看
+    var getRoadLineObj = function (roadlineLayerId) {
+        var tempList = [];
+        var roadLineLayers = parent.editLayers[roadlineLayerId];
+        if (roadLineLayers) {
+            var objCount = roadLineLayers.GetObjCount(); //cy:图层添加的对象总数
+            if (objCount) {
+                for (var i = 0; i < objCount; i++) {
+                    var line = roadLineLayers.GetObjAt(i)
+                    tempList.push(line);
+                }
+            }
+        }
+        return tempList;
+    }
+
+    //已看
+    var calculateLinePolygonDistance = function (polygonList, line) {
+        var result = 0;
+        var buildingVects = earth.Factory.CreateVector3s();
+        for (var j = 0; j < polygonList.length; j++) {
+            var polygon = polygonList[j];
+            for (var k = 0; k < polygon.GetRingCount(); k++) {
+                var pt = polygon.GetRingAt(k);
+                for (var n = 0; n < pt.Count; n++) {
+                    buildingVects.AddVector(pt.Items(n));
+                }
+            }
+        }
+        var lineVect3s = line.GetPointArray();
+        var vect3s = earth.GeometryAlgorithm.CalculateLinePolygonDistance(lineVect3s, buildingVects);
+        if (vect3s != null) {
+            result = vect3s.Length;
+        }
+        return result;
+    }
+
+    //cy:writer
+    function getAlllineDistance(projId){
+        $("#plan_div2").css("display","none");
+        var lineObj={};
+
+        var roadLineData = projManager.getRoadLineData(projId);    //查询项目ID对应的所有道路红线
+         var plan_dataArr=[];
+        $.each(roadLineData, function (i, line) {
+
+            var linename=line["CPROADLINE.CODE"];
+            var linedis=line["CPROADLINE.DISTANCE"];
+
+            if(linedis){
+                $("#txtDist").val(linedis); //填写红线退界距离，值为任意某条红线规划的退界距离
+            }
+
+
+
+             lineObj =line;
+            plan_dataArr.push({ "plan_hxmc": linename, "plan_hxjl": linedis, obj: lineObj});
+        });
+        if(plan_dataArr.length>0){
+        $("#plan_div2").css("display","block");
+        $("#plan_div").datagrid("loadData", plan_dataArr);
+        }
+    }
+
+    /**已看
+     * 获取红线的距离
+     * @param  {[type]} projId [description]
+     * @return {[type]}        [description]
+     */
+    function lineDistanceObj(projId){
+        var lineObj={};
+        var roadLineData = projManager.getRoadLineData(projId);    //查询项目ID对应的所有道路红线
+        $.each(roadLineData, function (i, line) {
+            var lineId=line["CPROADLINE.ID"];
+            lineObj[lineId]=line;
+        });
+
+        return lineObj;
+    }
+
+    function analyzeRoads(type, projId, planId, roadlineLayerId, planLayers) {
+        var dataArr = [];
+        var buffers = [];
+        var dist = $("#txtDist").val();
+        stopHightLight();
+        clearBoxes();
+        var lineObjList=lineDistanceObj(projId);
+        if (type === 1) {
+            var roadLineObj = getRoadLineObj(roadlineLayerId);
+            if (!roadLineObj) return;
+            for (var l = 0; l < roadLineObj.length; l++) {
+                var lineObj = roadLineObj[l];
+                var name;
+                if(lineObjList[lineObj.Guid]){
+                    if(dist<=0){
+                        dist=lineObjList[lineObj.Guid]["CPROADLINE.DISTANCE"];
+                    }
+                    name=lineObjList[lineObj.Guid]["CPROADLINE.CODE"];
+                }
+                var polygon = getBufferOfLine(lineObj, dist);
+                if (!polygon) {
+                    continue;
+                }
+                CreateLineBufferInEarth(polygon,lineObj.Guid);
+                buffers.push({line: lineObj, polygon: polygon,name:name});
+            }
+        } else {
+            if(selectedRoadLineGuid!=null){
+                var name;
+                if(lineObjList[selectedRoadLineGuid]){
+                    if(dist<=0){
+                        dist=lineObjList[selectedRoadLineGuid]["CPROADLINE.DISTANCE"];
+                    }
+                    name=lineObjList[selectedRoadLineGuid]["CPROADLINE.CODE"];
+                }
+                buffers = getBuffersFromSelectSet(projId, dist,name);
+            }
+        }
+
+        var buildingData = projManager.getBuildingDataByPlanId(planId);
+        $.each(buildingData, function (i, buildData) {
+            var buildId = buildData["CPBUILDING.ID"];
+            for (var j = 0; j < planLayers.length; j++) {
+                var editLayer = parent.editLayers[planLayers[j]];
+                if (editLayer && editLayer.DataLayerType == 1 && (editLayer.Name.toLowerCase().indexOf("buildingsmodel".toLowerCase()) != -1)) {
+
+                    var obj = editLayer.GetObjByGuid(buildId);
+                    if (obj) {
+                        if (obj.Rtti !== 229) {
+                            continue;
+                        }
+                        var polygonList = getPolygonListOfModelContour(obj);
+
+                        for (var j = 0; j < buffers.length; j++) { // 道路
+                            var k = 0;
+                            for (k = 0; k < polygonList.length; k++) {  // 建筑物投影多边形
+                                var relation = earth.PolygonAlgorithm.PolysRelationship(polygonList[k], buffers[j].polygon);  // SECoordinateUnit.Degree
+                                // SEPolygonRelationship.Contain,SEPolygonRelationship.Equal,
+                                // SEPolygonRelationship.Intersect,SEPolygonRelationship.Within
+                                if (relation <= 3) {
+                                    break;
+                                }
+                            }
+                            if (k < polygonList.length) {
+                                var dist2 = calculateLinePolygonDistance(polygonList, buffers[j].line);
+
+
+//                                obj.HightLightIsFlash(false);
+//                                obj.ShowHighLight();
+//                                highLightObjArr.push(obj);
+                                //cy:10.10
+//                              dist2=dist2+6;
+
+                                if(dist2<parseFloat( $("#txtDist").val()))
+                                {
+
+                                obj.HightLightIsFlash(false);
+                                obj.ShowHighLight();
+                                highLightObjArr.push(obj);
+                                }
+                                //cy:10.10
+                            dataArr.push({"jzmc": buildData["CPBUILDING.NAME"], "hxmc": buffers[j].name, "hxjl": dist2.toFixed(2), obj: obj});
+
+                            }
+                        }
+                    }
+                }
+            }
+        });
+//        if(dataArr.length>0){
+        $("#div_tblResult").css("display","block");
+        $("#tblResult").datagrid("loadData", dataArr);
+//        }
+
+    }
+
+    //已看datagrid双击事件
+    var plan_dbclick=  function (rowIndex, rowData) {
+        var rows = $("#plan_div").datagrid("getRows");
+        var obj = rows[rowIndex].obj;
+        var  roadlineLayerId2=node.roadLine;
+        var roadLineObjList = getRoadLineObj(roadlineLayerId2);
+        if (!roadLineObjList) return;
+
+        for (var l = 0; l < roadLineObjList.length; l++) {
+
+            if(roadLineObjList[l].Guid==obj["CPROADLINE.ID"])
+            {
+                var lineObj = roadLineObjList[l];  //当前双击的红线
+                    projManager.centerObject(lineObj);    //居中
+
+
+
+
+                  //cy:可对选择的红线进行分析
+
+//                if (lineObj){
+//                    $("#btnAnalysis").removeAttr("disabled");
+//                    selectedRoadLineGuid=lineObj.Guid;
+//                }
+
+
+
+                //   lineObj.ShowHighLight();    //闪烁效果不明显
+            }
+
+    }
+
+    }
+
+    var dbclick = function (rowIndex, rowData) {
+        var rows = $("#tblResult").datagrid("getRows");
+        var obj = rows[rowIndex].obj;
+        if (obj) {
+            projManager.centerObject(obj);
+        }
+    }
+    var clickCell = function (rowIndex, field, value) {
+        var rows = $("#tblResult").datagrid("getRows");
+        // alert(rows[rowIndex])
+        //goToParse(rows[rowIndex]);
+    }
+
+    //datagrid 设置
+
+    $("#plan_div").datagrid({
+        onDblClickRow: plan_dbclick
+
+    });
+    $("#tblResult").datagrid({
+        onDblClickRow: dbclick,
+        onClickCell: clickCell
+
+    });
+    $(window).unload(function () {
+        if(parent.earth == null){
+            return;
+        }
+        clearBoxes();//清空控规盒
+        stopHightLight();//清空高亮
+        if(earth.SelectSet){
+            earth.SelectSet.Clear();//清空选泽
+        }
+
+        earth.ToolManager.SphericalObjectEditTool.Browse() ;//cy
+    });
+});
+function cellStyler(value, row, index) {
+
+    var projHeight = $("#txtDist").val();
+    if (value < parseFloat(projHeight)) {
+        return 'background-color:#ffee00;color:red;';
+    }
+}
+
+function   funcrowStyler(index,row){
+
+        return 'background-color:#ffee00;';
+}
+
+
+function check(){
+    var isok=true;
+    if(isNaN($("#txtDist").val()) == true){
+        alert("无效的退界距离");
+
+        isok= false;
+    }
+    return isok;
+}
+
+
+
+
+function  setsize()
+{
+
+
+    var winHeight= window.parent.document.getElementById('ifResult').offsetHeight;
+    var div_conditionHeight=document.getElementById('div_condition').offsetHeight;
+    var height=10;
+    if(winHeight- div_conditionHeight-20>0)
+    {
+
+        height=winHeight- div_conditionHeight-20 ;
+    }
+    document.getElementById ("div_tblResult").style.height =height + "px";
+
+}
+</script>
+</body>
+</html>

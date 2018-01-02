@@ -1,0 +1,450 @@
+<!DOCTYPE HTML>
+
+<html>
+
+<head>
+
+    <title>导入BIM模型</title>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" type="text/css" href="../../css/easyui/default/easyui.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/easyui/icon.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/common.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/index2.css" />
+    <style>
+    button {
+        width: 65px;
+        height: 30px;
+        margin: 5px 2px;
+    }
+    #progressbar .ui-progressbar-value {
+        background-color: #ccc;
+    }
+    </style>
+</head>
+
+<body oncontextmenu="return false;">
+
+    <div style="text-align: center;  height: 90px;padding: 2px; ">
+
+        <div style="text-align: left;padding-top:8px">
+            <label style="font-size: 15px;">部件类型:</label>
+            <input id="layername" name="startHeight" type="text" style="width:80px"  />
+
+            <br><br>
+            <label style="font-size: 15px;">选择模型文件:</label>
+            <input id="filepath" name="startHeight" type="text" style="width:350px" value="" disabled/>&nbsp;
+            <img src="../../image/file.jpg" id="btnAdd" width="22" height="22" />
+            <br><br>
+
+
+            <textarea id="fileList" rows="10" cols="80"></textarea>
+            <br><br>
+        </div>
+
+        <div style="text-align: left;padding-top:8px">
+            <label id="lblX" style="font-size: 15px;">选择投影文件:</label>
+            <input id="referenceInput" name="startHeight" type="text" style="width:350px" value="" disabled/>&nbsp;
+            <img src="../../image/file.jpg" width="22" height="22" id="addSpatialReference" />
+        </div>
+        <div border="false" style="text-align: center;padding-top:8px">
+            <button id="btnImport">导入</button>
+            <button id="clear">退出</button>
+        </div>
+    </div>
+    <div id="layoutMask" class="s-mask" style="display:none;"></div>
+    <div id="pbContainer1" class="s-overmask s-progressBar-Container1" style="display:none;">
+      <div id="pbContainer2" class="s-progressBar-Container2">
+        <div id="pbText" class="s-progressBar-text"></div>
+        <div id="progressBar"></div>
+      </div>
+    </div>
+    <object id="dataProcess" classid="clsid:DDA7E893-8EEE-4A1E-A506-867932BD0FB9" style="display:none;"></object>
+    <object id="generateEdit" classid="clsid:422A8D29-FF52-4C65-8EDF-F6DC3008E8A0" style="display:none;"></object>
+    <script src="../../js/lib/jquery.min.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/analysis.js"></script>
+    <script src="../../js/userdata.js"></script>
+    <script>
+    var earth = "";
+    var s = "";
+    var usxPathList = [];
+    var shpPathList = [];
+    var fieldDefns = [];
+    var guidList = [];
+    var nameList = [];
+    var nameCol = 0;
+    var _layer;
+    var importCurrent = 0;
+    var importTotal = 0;
+    var _timer;
+    var layerCount = 0;
+    var p = {};
+    var t = 0;
+    
+function getEarth(earthObj) {
+    earth = earthObj;   
+    var analysis = CITYPLAN.Analysis(earth);
+
+    
+    $("#btnAdd").click(function() {
+
+        var filePath = earth.UserDocument.OpenFilePathDialog("C:\\Users\\Administrator\\Desktop\\Stamp2模型批量入库测试数据","选择usx文件所在目录");
+        if (filePath == "") {
+            return;
+        }else{   
+            s = "";
+            usxPathList = [];
+            fieldDefns = [];
+            fileList.innerHTML = searchFiles(filePath.replace(/\\/g,"/"));
+            importTotal = usxPathList.length;
+        }
+
+        $("#filepath").attr("value", filePath);
+    });
+
+    //选择投影文件
+    $("#addSpatialReference").click(function() {
+        var filePath = earth.UserDocument.OpenFileDialog("C:\\Users\\Administrator\\Desktop\\Stamp2模型批量入库测试数据", "spatial文件(*.spatial)|*.spatial");
+        if (filePath == "") {
+                return;
+        }
+        $("#referenceInput").attr("value", filePath);
+            if ("" != $("#filepath").val()) {
+                $("#btnImport").removeAttr("disabled");
+            }
+    });
+
+    var database_link = earth.params.ip;
+    var editLayerName = "图层";
+    var editLayer = null;//earthObj.addEditLayer;
+    var globe_box = earth.Factory.CreateLonLatRect(-90,90,-180,180,0,100);
+
+    //批量导入模型
+    $("#btnImport").click(function() {     
+        if (check()) {
+            importTotal = usxPathList.length;
+            enableEarth(false);
+            showProgressBar('开始导入');
+
+            if(editLayer == null){
+                    //如果编辑图层不存在，则创建新的编辑图层
+                    var layerCount = earth.BIMeditLayerList.length;
+                  //  editLayerName += (layerCount+1);
+                editLayerName=   $("#layername").val();
+                var _guid = earth.Factory.CreateGUID();
+                    editLayer = earth.Factory.CreateEditLayer(_guid, editLayerName, globe_box, 0, 100, database_link);
+                    earth.Event.OnEditDatabaseFinished = on_add_layer_finished;
+                    var param = earth.Factory.CreateLayerParameter();
+                    param.Guid = editLayer.Guid;
+                    param.Name = editLayer.Name;
+                    param.Type = 1;
+                    param.MaxVisibleHeight = 100;
+                    earth.DatabaseManager.AddLayerInDatabase(database_link, param);
+                    earth.AttachObject(editLayer);
+                //    earth._addEditLayer(editLayer);
+                    
+            }else{
+             //   earth._addEditLayer(editLayer);
+                //如果编辑图层存在，则直接导入到该编辑图层中
+                on_add_layer_finished();
+            }
+        }
+    });
+     
+    function on_add_layer_finished(){
+        guidList = [];
+        nameList = [];
+         _timer=window.setInterval(refreshProcess,1000);
+
+    }
+//    function _addEditLayer(layer){
+//        _currentLayer = layer;
+//        BIMeditLayerList.push(layer);
+//        _initImportTree();
+//    }
+    function refreshProcess(){
+            var reference = $("#referenceInput").val(); 
+            var filePath = usxPathList[t];
+            if(t==importTotal){filePath=usxPathList[t-1];}
+            var fileFolder = filePath.substr(0,filePath.lastIndexOf('\\'));
+            var fileName = filePath.substr(filePath.lastIndexOf('\\')+1);
+            var logpath = earth.RootPath + "temp";
+            var savemethod = 1;
+           
+            var dataProcess = document.getElementById("dataProcess");
+            dataProcess.Load();
+            var singleimport = dataProcess.SingleMeshImport;
+            var rootpath = earth.RootPath + "userdata";     
+          //  singleimport.Set_Illumination(true);
+
+            singleimport.Set_Reference_file(reference);
+            singleimport.Set_Save_Type(0);
+            singleimport.Set_Desc_Path(rootpath);
+            singleimport.Init();
+            
+            var modelUtil = singleimport.Process_File_Local(fileFolder, fileName);
+          //  var altitude = earth.Measure.MeasureTerrainAltitude(modelUtil.Longitude, modelUtil.Latitude);
+           var altitude = modelUtil.altitude;
+
+        var flag = generateEdit.run_single_point_no_thread(editLayer.guid, database_link, fileFolder, fileName, fileFolder, modelUtil.Longitude,modelUtil.Latitude,altitude);
+            
+            if(flag){
+                var guidCount = generateEdit.get_guid_count();//获取已导入模型的数量
+                if(guidCount > 0){
+                    var guid = generateEdit.get_at(0);//获取第一个导入模型对象的guid
+                    guidList.push(guid);
+                    var name = fileName.substr(0,fileName.lastIndexOf('.usx'));
+                    nameList.push(name);
+                    t++;
+                    importCurrent++;
+                    showProgressBar('正在导入...');
+                    if(t==usxPathList.length-1){
+                        p.x = modelUtil.Longitude;
+                        p.y = modelUtil.Latitude;
+                        p.z = altitude;
+
+                        var _p = {};
+                        _p.guid = editLayer.guid;
+                        _p.x = p.x;
+                        _p.y = p.y;
+                        _p.z = p.z;
+                        earth.BIMeditLayerPositionList.push(_p);
+                    }
+                    var model = earth.Factory.CreateEditModelByLocal(guid, name, modelUtil.path, 3);
+                    model.name = name;
+                    model.SphericalTransform.SetLocationEx(modelUtil.Longitude, modelUtil.Latitude, altitude);
+                    editLayer.AttachObject(model);
+
+                    //earth.AttachObject(model);
+                    //earth.GlobeObserver.FlytoLookat(modelUtil.Longitude, modelUtil.Latitude, 50, 0, 60, 0, 200, 5);
+
+                }
+            }
+
+            if(t==usxPathList.length){
+                window.clearInterval(_timer);
+                earth.GlobeObserver.FlytoLookat(p.x, p.y, p.z, 0, 90, 0, 50, 3);
+                //createModel();
+                propertyProcess();
+                hideProgressBar();
+                alert("导入完成");
+
+                //cy 加
+                earth._BIMaddEditLayer(editLayer);
+                enableEarth(true);
+                analysis.clearHtmlBallon(earth.htmlBallon);
+            }
+    }
+    var _createDatum = function (reference) {
+        var datum = dataProcess.CoordFactory.CreateDatum();  //earth.Factory.CreateDatum();
+        datum.InitFromFile(reference);
+        return datum;
+    };
+    function createModel(){
+        var j=0;
+        earth.Event.OnEditDatabaseFinished = function(pres, pFeat){
+         
+            editLayer.BeginUpdate();
+            var editModel = earth.Factory.CreateEditModelByDatabase(pFeat.Guid, pFeat.Name, pFeat.MeshID, 1);
+
+            editModel.BeginUpdate();
+            editModel.SetBBox(pFeat.BBox.MinVec, pFeat.BBox.MaxVec);
+            editModel.Editable = true;
+            editModel.EndUpdate();
+            editModel.SphericalTransform.SetLocation(pFeat.SphericalTransform.GetLocation());
+            editModel.SphericalTransform.SetRotation(pFeat.SphericalTransform.GetRotation());
+            editModel.SphericalTransform.SetScale(pFeat.SphericalTransform.GetScale());
+                        
+            editLayer.AttachObject(editModel);
+            editLayer.EndUpdate();
+                        
+            j++; 
+
+            if(j<guidList.length){              
+                earth.DatabaseManager.GetDataBaseRecordByGuid(database_link, editLayer.Guid, guidList[j]);                           
+            }else{
+                earth.Event.OnEditDatabaseFinished = function(){};
+                propertyProcess();
+                hideProgressBar();
+                alert("导入完成");
+//                earth.BIMeditLayerList.push(editLayer);
+                earth._BIMaddEditLayer(editLayer);
+                enableEarth(true);
+                analysis.clearHtmlBallon(earth.htmlBallon); 
+            }
+        };
+                  
+        earth.DatabaseManager.GetDataBaseRecordByGuid(database_link, editLayer.Guid, guidList[j]);
+    }
+
+//    function _flyToLayer(layer) {
+//        var lonLatRect = layer.LonLatRect;
+//        var centerX = (lonLatRect.East + lonLatRect.West) / 2;
+//        var centerY = (lonLatRect.North + lonLatRect.South) / 2;
+//        var width = (parseFloat(lonLatRect.North) - parseFloat(lonLatRect.South)) / 2;
+//        var range = lonLatRect.MaxHeight + 50;
+//        earth.GlobeObserver.FlytoLookat(centerX, centerY, 0, 0, 90, 0, range, 4);
+//    };
+     
+    function check() {
+
+
+
+        var layername = document.getElementById("layername").value;
+        if ("" == layername) {
+            alert("请填写部件类型!");
+            return false;
+        }
+
+        var filepath = document.getElementById("filepath").value;
+        if ("" == filepath) {
+            alert("请选择usx目录!");
+            return false;
+        }
+        if(usxPathList.length==0){
+            alert("所选目录没有usx文件!");
+            return false;
+        }
+        return true;
+    }
+
+    function searchFiles(filepath){
+      var fso = new ActiveXObject("Scripting.FileSystemObject");
+      var f = fso.GetFolder(filepath);
+      var fc = new Enumerator(f.files);
+      for (; !fc.atEnd(); fc.moveNext()){
+        if(fc.item()!="" && fc.item()!=null){
+           if(fc.item().path.indexOf('.usx')>0){
+             s += fc.item().path;
+             s += "\n";
+             usxPathList.push(fc.item().path);
+           }
+           if(fc.item().path.indexOf('.shp')>0){
+             shpPathList.push(fc.item().path);
+           }
+        }
+      }
+      var fk = new Enumerator(f.SubFolders);
+      for (; !fk.atEnd(); fk.moveNext()){
+        if(fk.item()!="" && fk.item()!=null){
+          searchFiles(fk.item());
+        }
+      }
+      return s;
+    }
+
+    $("#clear").click(function() {
+        analysis.clearHtmlBallon(earth.htmlBallon);
+    });
+
+    function propertyProcess(){
+      if(shpPathList.length>0){
+        var _filePath = shpPathList[0];
+        var _fileFolder = _filePath.substr(0,_filePath.lastIndexOf('\\'));
+        var _fileName = _filePath.substr(_filePath.lastIndexOf('\\')+1);
+        var _dataProcess = document.getElementById("dataProcess");
+        _dataProcess.Load();
+        var ogrDataProcess = _dataProcess.OGRDataProcess;
+        var driver = ogrDataProcess.GetDriverByType(44);
+        var dataSource = driver.Open(_filePath, 0);
+        if(dataSource!=null){
+          var layerNum = dataSource.GetLayerCount();
+          _layer = dataSource.GetLayer(0);
+          var feature = _layer.GetFeature(0);
+          var featureDefn = feature.GetFeatureDefn();
+          var fieldCount = feature.GetFieldCount();
+          for (var m = 0; m < fieldCount; m++){
+            var fieldDefn = feature.GetFieldDefn(m);
+            fieldDefns.push(fieldDefn);
+            if(fieldDefn.Name=="NAME"){
+               nameCol = m;
+            }         
+        }
+        for(var i=0;i<fieldDefns.length;i++){
+            if(fieldDefns[i].Name!="GUID" && fieldDefns[i].Name!="IFPUBLISH"){
+              earth.DatabaseManager.AddAttributeCol(earth.params.ip, editLayer.Guid,
+                fieldDefns[i], 1002, fieldDefns[i].Width + 1, 0, "0");
+            }
+        }    
+
+        for(var j=0;j<guidList.length;j++){
+            for(var k=0;k<_layer.GetFeatureCount();k++){
+              var _feature = _layer.GetFeature(k);
+              if(_feature.GetFieldAsString(nameCol)==nameList[j]){
+                var _guid = guidList[j];
+                for(var n=0;n<fieldDefns.length;n++){
+                    earth.DatabaseManager.UpdateSpatialAttribute(earth.params.ip, editLayer.Guid, _guid, fieldDefns[n], 1002, _feature.GetFieldAsString(n));
+                }
+                break;
+              }
+            
+            }
+         }
+       }
+     }
+    }
+
+    var showProgressBar = function(value, current, total){
+        if(progressBar){
+            if(current == undefined){
+                current = importCurrent;
+            }
+            if(total == undefined){
+                total = importTotal;
+            }
+            try{
+                progressBar.show();
+                progressBar.setValue(current, total, value);
+            }catch(e){
+
+            }
+        }
+    };
+
+    var hideProgressBar = function(){
+        if(progressBar){
+            progressBar.hide();
+        }
+    };
+    
+  var progressBar = {
+    show: function() {
+        var h = $(document).height();
+        h *= 2 / 3;
+        $('#pbContainer1').css('top', h + 'px');
+        $('#layoutMask').fadeTo(0, 0.66);
+        $('#pbContainer1').show();
+    },
+    hide: function() {
+        $('#layoutMask').hide();
+        $('#pbContainer1').hide();
+    },
+    setValue: function(current, total, text) {
+        $('#pbText').text(text != undefined ? text : '');
+        $('#progressBar').progressbar({
+            width: 350,
+            value: current / total * 100,
+            text: '总进度: ' + current + '/' + total
+        });
+    }
+  }
+
+    var enableEarth = function(enable){
+        if(!enable){
+            earth.GlobeObserver.Stop();
+        }
+        earth.GlobeObserver.EnablePan = enable;
+        earth.GlobeObserver.EnableRotate = enable;
+        earth.GlobeObserver.EnableZoom = enable;
+        earth.GlobeObserver.EnablePanAuto = enable;
+        earth.GlobeObserver.EnableRotateAuto = enable;
+    }
+
+}
+
+
+
+    </script>
+</body>
+
+</html>

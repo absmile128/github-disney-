@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+<!-- saved from url=(0014)about:internet -->
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+    <title> 指标 </title>
+    <meta name="Generator" content="EditPlus">
+    <meta name="Author" content="">
+    <meta name="Keywords" content="">
+    <meta name="Description" content="">
+    <link rel="stylesheet" href="../../css/table.css"/>
+</head>
+
+<body  id="container" class="easyui-layout" >
+<table  width="100%"  border="0px" style=" background-color:#D5E3F8; text-align:left;  margin-bottom:20px; margin-top:10px"      >
+    <caption style="text-align: left;"><strong><label id="title"></label></strong></caption>
+    <tr>
+        <td  class="maintextclass"  >指标</td>
+        <td    class="maintextclass"> 数值</td>
+        <td    class="maintextclass"> 单位</td>
+    </tr>
+                    <tr>
+                        <td class="texttdclass2"   ><strong>项目名称</strong></td>
+
+                        <td id="XMMC" class="texttdclass2"  ></td>
+                        <td  class="texttdclass2" >
+                    </tr>
+
+
+                    <tr>
+                        <td   class="texttdclass"   ><strong>规划总用地</strong></td>
+
+                        <td  id="GHZYD" class="texttdclass"></td>
+                        <td   class="texttdclass" >平方米</td>
+                    </tr>
+
+
+    <tr>
+        <td   class="texttdclass"   ><strong>规划净用地</strong></td>
+
+        <td  id="GHJYD" class="texttdclass"></td>
+        <td   class="texttdclass" >平方米</td>
+    </tr>
+
+
+    <tr>
+        <td   class="texttdclass"   ><strong>建筑总面积</strong></td>
+
+        <td  id="ZJZMJ" class="texttdclass"></td>
+        <td   class="texttdclass" >平方米</td>
+    </tr>
+                    <tr>
+                        <td   class="texttdclass"   ><strong>建筑密度</strong></td>
+
+                        <td  id="JZMD" class="texttdclass"></td>
+                        <td   class="texttdclass" >%</td>
+                    </tr>
+
+                    <tr>
+                        <td   class="texttdclass"   ><strong>容积率</strong></td>
+
+                        <td  id="RJL" class="texttdclass"></td>
+                        <td   class="texttdclass" >%</td>
+                    </tr>
+
+
+
+                    <tr>
+                        <td   class="texttdclass"  ><strong>绿地率</strong></td>
+
+                        <td id="LDL" class="texttdclass" ></td>
+                        <td  class="texttdclass" >%</td>
+                    </tr>
+
+
+
+                </table>
+
+<script src="../../js/lib/jquery.js"></script>
+<!--<script src="../../js/lib/jquery.xml2json.js"></script>-->
+<!--<script src="../../js/CITYPLAN_config.js"></script>-->
+<script>
+    function setTranScroll(planData){
+
+
+        var params = location.href.split("?");
+        var id = "";
+
+        if(params.length > 1){
+            id = params[1].split("=")[1];
+        }
+        if(id){
+
+            //var plan = projManager.getPlanById(id)[0];
+            var plan = null;
+            for(var i=0;i<planData.length;i++){
+                if(id===planData[i].id){
+                   plan =planData[i].plan;
+                }
+            }
+            if(plan){
+
+                if(plan["CPPLAN.NAME"]){
+                    $("#title").text("方案:"+plan["CPPLAN.NAME"]);
+                }else{
+                    $("#title").text("现状");
+                }
+                $("#XMMC").text(plan["CPPLAN.NAME"]||"") ;
+                $("#GHZYD").text(plan["CPPLAN.GHZYD"]||"") ;
+                $("#GHJYD").text(plan["CPPLAN.GHJYD"]||"") ;
+                $("#ZJZMJ").text(plan["CPPLAN.ZJZMJ"]||"") ;
+                $("#JZMD").text(plan["CPPLAN.JZMD"]||"") ;
+                $("#RJL").text(plan["CPPLAN.RJL"]||"") ;
+                $("#LDL").text(plan["CPPLAN.LDL"]||"") ;
+            }
+        }
+
+    }
+</script>
+</body>
+</html>

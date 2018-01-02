@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>网格部件图层</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <link rel="stylesheet" href="../../css/common.css" />
+
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>
+    <script src="../../js/common.js"></script>
+    <script src="../../js/search.js"></script>
+    <script src="../../js/layer.js"></script>
+    <script src="../../js/project.js"></script>
+    <script src="../../js/part.js"></script>
+
+
+    <style>
+        .accordion-collapse{
+            background:url('../../css/easyui/gray/images/datagrid_row_collapse.gif') no-repeat;
+        }
+        .accordion-expand{
+            background:url('../../css/easyui/gray/images/datagrid_row_expand.gif') no-repeat;
+        }
+
+        .accordion .accordion-header{
+            background:rgb(140,191,239);
+            border-top-width:0;
+            cursor:pointer;
+            height:18px;
+            text-align: center;
+            font-size:15px;
+        }
+
+
+
+    </style>
+    <script type="text/javascript">
+
+        var earth =parent.earth;
+        var search=STAMP.Search(earth);
+       //var partTypeDatalist=parent.partTypeDatalist;   //网格部件全局变量（index.js定义）
+        var serverip=parent.CITYPLAN_config.server.ip;
+        var loaclUrl = window.location.href.substring(0, window.location.href.lastIndexOf("/"));
+        var xmlpath = loaclUrl +"/partlist.xml"; //ShowNavigate只能用绝对路径
+        var partmanager=  PART.PartManager(xmlpath);
+
+
+        $(function (){
+
+                if(parent.partTypeDatalist==undefined||parent.partTypeDatalist.length ==0)
+                {
+                    parent.initpartTypeDatalist(CITYPLAN_config.disney.PartProjectId);  //初始化的时候获得网格对象全局变量 ，与三维图层的guid挂接
+                    parent.partTypeDatalist= partmanager.SetLayerCount(parent.partTypeDatalist);
+                    parent.isgetpartcountFlag=true;
+
+
+                }
+
+            if(parent.isgetpartcountFlag==false)
+            {
+                parent.partTypeDatalist= partmanager.SetLayerCount(parent.partTypeDatalist);
+                parent.isgetpartcountFlag=true;
+            }
+
+            loaddata();
+
+
+        });
+
+
+
+       function loaddata()
+       {
+
+           for (var i=0;i<parent.partTypeDatalist.length;i++)
+              {
+                  var name=parent.partTypeDatalist[i].name;
+                  var code=   parent.partTypeDatalist[i].code;
+
+
+
+                  $('#accordion_div').accordion('add', {
+                      title: name,
+                      selected:false,   //默认不展开
+                     content:'<div style="padding:10px;padding-left: 40px;" isfirstinit="true"  title="'+name+'"></div>'
+
+
+
+                  });
+
+
+           $('#accordion_div').accordion('select',0)//选择第一个，下标从0开始
+           $('#accordion_div').accordion({
+               onSelect: function(title,index)   {
+                  var objdiv=$("div[title='"+title+"']") ;
+                  getsubtype(title,objdiv) ;
+               }}) ;
+       }
+}
+        function   showpoi(layerguid,obj) {
+
+            if(layerguid==""||layerguid==null){
+                alert("该图层没有部件！");
+                $(obj).attr("checked",false);
+                return;
+            }
+
+            var result=null;
+            var data=[];
+            //没有查询过    PoilayerDataArr全局变量：记录某个图层的所有数据，    parent.PoiIconControllerArr全局变量：某个图层所有标绘对象
+          if(  parent.PoilayerDataArr [layerguid]==null|| parent.PoilayerDataArr [layerguid]==undefined)
+          {
+
+              data= search.localSearch(layerguid,"", null) ;
+
+
+//              var pageCount=Math.ceil( result.RecordCount/100) ;//总个数
+//               for(var pageIndex=0;pageIndex<pageCount ;pageIndex++)
+//               {
+//                     var datatmp=null;
+//                    var tmpResultXml = result.GotoPage(pageIndex);
+//                    var attrData = $.xml2json(tmpResultXml);
+//                    if(attrData.SearchResult != null && attrData.SearchResult.total>0 && attrData.SearchResult.ModelResult != null){
+//                        if(attrData.SearchResult.total>1){
+//                            datatmp = attrData.SearchResult.ModelResult.ModelData;
+//
+//                         } else {
+//                            datatmp[0] = attrData.SearchResult.ModelResult.ModelData;
+//
+//                        }
+//               //   data.push(datatmp );
+//                        for(var u=0;u<datatmp.length;u++)
+//                        {
+//                           data.push(datatmp[u]);
+//                       }
+//
+//                    }
+//                }
+                   if(data.length==0){  alert("该图层没有部件！");return;}
+                  //某一个图层的数据字典加入全局变量   // 字典   key:图层guid value：该图层的全部对象数组
+                  parent.PoilayerDataArr [layerguid]= data;
+
+
+          }
+
+          else
+              {
+                    data= parent.PoilayerDataArr [layerguid];
+              }
+
+                //开始标绘
+                  var IconObjArr=[];
+                  for(var p=0;p<data.length;p++)
+                  {
+                      var record= data[p];
+                      var rectStr =record.LonLatBox;
+
+                    if (rectStr == null || rectStr == undefined) {return; }
+
+                        var rectArr=    rectStr.split(",");
+                        var lon=(  parseFloat( rectArr[2])+ parseFloat(rectArr[3]) )/2;
+                        var lat =( parseFloat( rectArr[0])+ parseFloat(rectArr[1]) )/2;
+                        var alt=(parseFloat(  rectArr[4])+ parseFloat(rectArr[5] ))/2;
+
+
+
+                      var userdataObj = {};
+                      userdataObj.earth = earth;
+                      var guid = earth.Factory.CreateGuid();
+                      userdataObj.name=record["标识码"];
+                      userdataObj.guid = guid;
+                      userdataObj.type = 209;
+
+                      userdataObj.longitude = lon;
+                      userdataObj.latitude = lat;
+                      userdataObj.altitude = alt;
+                      var myicon = earth.Factory.CreateElementIcon(userdataObj.guid, userdataObj.name);
+                      myicon.Create(userdataObj.longitude, userdataObj.latitude, userdataObj.altitude, "", "", userdataObj.name);
+                      myicon.Visibility = true;
+                      IconObjArr.push(myicon);
+                      earth.AttachObject(myicon);
+                  }
+                    //标绘字典
+                  parent.PoiIconControllerArr [layerguid]= IconObjArr;
+
+        }
+
+        function  hidepoi(layerguid) {
+
+
+      //     alert("取消标识"+layerguid);
+            if( parent.PoiIconControllerArr  [layerguid]==null|| parent.PoiIconControllerArr [layerguid]==undefined)
+            {
+                alert("该图层已经取消标识" );
+                return;
+              }
+
+
+
+            var IconObjArrCount=   parent.PoiIconControllerArr [layerguid].length;
+            for (var m=0;m<IconObjArrCount;m++)
+            {
+                var iconObj =   parent.PoiIconControllerArr [layerguid][m];
+                earth.DetachObject(iconObj);
+               }
+            parent.PoiIconControllerArr [layerguid]=null;//清空
+        }
+           function layeropenorclose(obj)
+           {
+
+               var typecode=   $(obj).parent().attr("typecode")  ;
+               var subtypecode=   $(obj).parent().attr("subtypecode")  ;
+               var layerguid=   $(obj).parent().attr("guid")  ;
+               var partcount= $(obj).parent().attr("partcount")  ;
+
+
+               var partmanager=  parent.partmanager;
+
+
+               if(obj.checked==true)  {
+
+
+                   parent.partTypeDatalist=  partmanager.SetLayercheckedByGUID(parent.partTypeDatalist,layerguid,true);
+                   showpoi(layerguid,obj,partcount) ;
+
+               }
+               else{
+                   parent.partTypeDatalist=  partmanager.SetLayercheckedByGUID(parent.partTypeDatalist,layerguid,false)
+                   hidepoi(layerguid);
+
+               }
+
+
+           }
+
+
+               //定位到查询结果
+               var goToGeoSearchObject = function(record) {
+
+                   if(!record){
+                       return;
+                   }
+
+                   var guid = earth.Factory.CreateGuid();
+
+                   var lyr = earth.LayerManager.GetLayerByGUID(layerId);
+                   var alt = lyr.LonLatRect.MinHeight;
+                   var eleObj = {};
+                   if (record.SHAPE.hasOwnProperty('Point')) {
+                       eleObj = earth.Factory.CreateElementCircle(guid, '');
+                       var coordinateArr = record.SHAPE.Point.Coordinates.split(',');
+                       var point = earth.Factory.CreateGeoPoint();
+                       for (var i = 0;
+                            (i + 2) < coordinateArr.length; i += 3) {
+                           point.Longitude = coordinateArr[i];
+                           point.Latitude = coordinateArr[i + 1];
+                           point.Altitude = earth.GlobeObserver.GetHeight(point.x, point.y); // 100;coordinateArr[i+2];
+
+                       }
+                       eleObj.SphericalTransform.SetLocationEx(point.Longitude, point.Latitude, point.Altitude);
+//            eleObj.BeginUpdate();
+//            eleObj.radius = 5;
+//            eleObj.FillStyle.FillColor = parseInt("0xff00ff00");
+//            eleObj.LineStyle.LineWidth = 2;
+//            eleObj.LineStyle.LineColor = parseInt("0xff00ff00");
+                       earth.GlobeObserver.GotoLookat(point.Longitude, point.Latitude, point.Altitude, 0, 90, 0, 100);
+//            eleObj.HightLightIsFlash(true);
+//            // eleObj.Underground = true;
+//            eleObj.AltitudeType = 1;
+//            eleObj.DrawOrder = 1;
+//            eleObj.EndUpdate();
+//            eleObj.ShowHighLight();
+//            searchResult.resultObj = eleObj;
+//            var detailCheck = document.getElementById("search_info").checked;
+
+                   }
+               };
+//          function showpdf(obj)
+//          {
+//
+//              var typecode=   $(obj).parent().attr("typecode")  ;
+//              var subtypecode=   $(obj).parent().attr("subtypecode")  ;
+//              var guid=   $(obj).parent().attr("guid")  ;
+//
+//
+//
+//               window.open(  "pdfbrowse.html?code="+typecode+subtypecode,'pdf浏览','width=900,height=600,resizable=yes') ;    //使用pdfobject 完成
+//
+//
+//          }
+        function   getsubtype(title,objdiv)
+        {
+          if(   $(objdiv).attr("isfirstinit")=="true"  ) //第一次加载
+          {
+            var content="";
+            for (var i=0;i<parent.partTypeDatalist.length;i++)
+            {var name=parent.partTypeDatalist[i].name;
+
+                if(name==title)
+                {
+                    for (var j=0;j<parent.partTypeDatalist[i].subtypelist.length;j++)
+                    {
+
+                        var typecode= parent.partTypeDatalist[i].code;
+                        var subtypecode= parent.partTypeDatalist[i].subtypelist[j].code;
+                        var guid=   parent.partTypeDatalist[i].subtypelist[j].guid;
+                        var ischecked=parent.partTypeDatalist[i].subtypelist[j].ischecked;
+                       var partcount=parent.partTypeDatalist[i].subtypelist[j].count;
+
+
+
+
+                        var inputhtml="";
+                        if(ischecked==true){
+                            // inputhtml=   "<input  type='checkbox' checked onclick=layeropenorclose(this) /> ";
+                        }
+                       else
+                        {
+                         //   inputhtml=   "<input  type='checkbox'  onclick=layeropenorclose(this) /> ";
+                        }
+                        var counttext=""  ;
+                        if(partcount>0){
+                            counttext= "<label style='color: red'>("+  partcount.toString()+")</label>";
+                        }
+                        else
+                        {
+                            counttext= counttext= "<label style='color: red'>(0)</label>";
+                        }
+
+                        var imgfilename="";
+                   //   content+=  "<div style='height:30px;' typecode='"+typecode +"' subtypecode='"+subtypecode+"' guid='"+guid+"'   >" +
+                       content+=  "<div style='height:30px;' typecode='"+typecode +"' subtypecode='"+subtypecode+"' guid='"+guid+"'"+' partcount='+ partcount+" >" +
+                              inputhtml+
+//                        "<img src='"+imgfilename+"'></img> "+
+
+                              "<a  style='text-decoration: none; cursor:hand;'    > <label>"+parent.partTypeDatalist[i].subtypelist[j].name+"</label>"+counttext+"</a> "+
+                       " </div>";
+
+
+                }
+            }
+            }
+              $(objdiv).html(content);
+              $(objdiv).attr("isfirstinit","false");
+          }
+
+
+                }
+
+
+
+    </script>
+
+</head>
+<body style="width:100%;height:100%;">
+
+
+<div id="accordion_div" class="easyui-accordion"  data-options=" fit: true ">
+
+</div>
+
+</body>
+</html>

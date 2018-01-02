@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+<!-- saved from url=(0014)about:internet -->
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+    <title> 属性 </title>
+    <meta name="Generator" content="EditPlus">
+    <meta name="Author" content="">
+    <meta name="Keywords" content="">
+    <meta name="Description" content="">
+    <link rel="stylesheet" href="../../css/table.css"/>
+    <script type="text/javascript" src="../../js/common.js"></script>
+
+</head>
+<body>
+
+
+<table id="dataTable" width="100%"  border="0px" style=" background-color:#D5E3F8; text-align:left;  margin-bottom:20px; margin-top:10px"      >
+    <thead>
+    <tr>
+        <td  class="maintextclass" width="50%">属性</td>
+        <td    class="maintextclass" width="50%"> 属性值</td>
+    </tr>
+    </thead>
+
+    <tbody>
+    </tbody>
+  </table>
+
+<div  style="height: 20px;margin-top: 20px; text-align: right" >
+    <a style="text-decoration:underline ;color:blue; cursor: hand;"  id="importExcelBtn"  onclick="importExcel()">导出Excel</a>
+
+</div>
+
+
+<script src="../../js/lib/jquery.js"></script>
+<script>
+
+
+    function postData(obj){
+
+
+        for (var objattr_i in obj)
+        {
+            if (obj.hasOwnProperty(objattr_i) && typeof obj[objattr_i] != "function") {
+                if(objattr_i.toString().toUpperCase()==="SHAPE"||objattr_i.toString().toUpperCase()==="SE_ID"||objattr_i.toString().toUpperCase()==="LONLATBOX"||objattr_i.toString().toUpperCase()=="OBJECTID"||objattr_i.toString().toUpperCase()=="FID_"||objattr_i.toString().toUpperCase()=="CODE"
+                        ||objattr_i.toString().toUpperCase()=="SE_NAME"||objattr_i.toString().toUpperCase()=="NAME"||objattr_i.toString().toUpperCase()=="POINT_X"||objattr_i.toString().toUpperCase()=="POINT_Y"
+                        ||objattr_i.toString().toUpperCase()=="EARTH"||objattr_i.toString().toUpperCase()=="PARENTLAYER"){
+                    continue;
+                }
+
+                var text=obj[objattr_i.toString()];
+                var fieldname=   getfieldname(objattr_i.toString());
+                if(fieldname!=""){
+                var html = '<tr ><td class="texttdclass">'+fieldname+'</td><td  class="texttdclass">'+text+'</td></tr>'
+
+                $("#dataTable").append(html);
+                }
+
+        }
+        }
+        //append后需要重新加载一下html元素 保证滚动条能正常显示
+        var bodyHtml = $("body").html();
+        $("body").html(bodyHtml);
+    }
+
+
+    function getfieldname    (nodetext)
+    {
+        var name="";
+        var  nodetextUpperCase=nodetext.toUpperCase();
+        //规划用地字段
+    if(nodetextUpperCase=="DKBH"){
+        name="区域编号";
+    }else if(nodetextUpperCase=="YDMJ"){
+        name="管理单位";
+    }else if(nodetextUpperCase=="YDXZDM"){
+        name="责任人";
+
+    }else if(nodetextUpperCase=="LXDH"){
+        name="联系电话";
+    }else if(nodetextUpperCase=="JZGD"){
+        name="建筑高度（米）/局部建筑高度";
+    }else if(nodetextUpperCase=="TCBW"){
+        name="停车泊位（辆）";
+
+
+    }else if(nodetextUpperCase=="BZ"){
+        name="备注";
+    }
+       else
+    {
+        name=nodetext;
+
+    }
+        //规划绿地字段
+//    else if(nodetextUpperCase=="ZMJ"){
+//        name="面积";
+//    }
+       return name;
+    }
+
+    /**
+     * 功能：【导出Excel】按钮onclick事件
+     */
+    function importExcel(){
+        var tabObj = $("#dataTable>tbody")[0];
+        var columns = ["名称","属性"];
+        importExcelByCommonTable(tabObj,columns);
+    }
+
+</script>
+</body>
+</html>

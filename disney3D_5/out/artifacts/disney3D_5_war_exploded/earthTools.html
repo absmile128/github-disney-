@@ -1,0 +1,133 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" href="css/mainpagestyle.css" />
+
+    <script type="text/javascript" src=" js/lib/jquery.js"></script>
+    <script type="text/javascript" src=" js/lib/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src=" js/CITYPLAN_config.js"></script>
+    <script type="text/javascript">
+        var earthToolHeight = 0;
+
+        function setFunc(tparams) {
+            getcoverdata();
+//            getabmormalcoverdata() ;
+            setInterval("getabmormalcoverdata() ", 2000);
+
+
+            var  clickItem = tparams.clickItem;
+            earthToolHeight = tparams.earthToolHeight;
+            $(".toolItem li a").click(function(){
+                clickItem($(this).attr("id"), $("#earthTools"));
+            });
+//            resizeWindow();
+        }
+
+//        function resizeWindow(){
+//            if($(window).height() < earthToolHeight){
+//
+//                $("#earthTools").css("margin-bottom", "22px");
+//            }else{
+//
+//                $("#earthTools").css("margin-bottom", "0px");
+//                document.documentElement.scrollTop = 0;
+//            }
+//        }
+
+//        window.onresize = function(){
+//            resizeWindow();
+//        }
+         function getcoverdata(){
+             $.ajax({
+                 dataType:'JSONP' ,
+                 type: "GET",
+                 url: CITYPLAN_config.disney.WebServiceUrl+ "/TriggerHandler.ashx?action=GetPagedTriggerList",
+                 data: {
+                     str:"",
+                     alarmstate:"",
+                     pageNo:1 ,
+                     pageSize:100
+
+                 },
+                 cache: false,
+                 success: function (data) {
+                     reformpagecount(data.TotalCount);
+                     $("#state").html("已连接");
+                 },
+                 error:function (x,t,e) {
+                     $("#state").html("断开");
+                 }
+             });
+         }
+        function getabmormalcoverdata(){
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/TriggerHandler.ashx?action=GetPagedTriggerList",
+                data: {
+                    str:"",
+                    alarmstate:"01",
+                    pageNo:1 ,
+                    pageSize:100
+
+                },
+                cache: false,
+                success: function (data) {
+
+                    reformAbnormalcoverpagecount(data.TotalCount);
+                    $("#state").html("已连接");
+
+                },
+                error:function (x,t,e) {
+                    $("#state").html("断开");
+                }
+            });
+        }
+        function reformpagecount(totalcount){
+        if(totalcount===""||totalcount===null||totalcount===undefined||totalcount==0){
+            $("#totalcount").html("0个");
+      }
+        else {
+            $("#totalcount").html(totalcount+"个");
+        }
+        }
+        function reformAbnormalcoverpagecount(totalcount){
+            if(totalcount===""||totalcount===null||totalcount===undefined||totalcount==0){
+                $("#AbnormalCovertotalcount").html("0个");
+            }
+            else {
+                $("#AbnormalCovertotalcount").html(totalcount+"个");
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="earthTools">
+
+        <!--<embed src="1.mp3" autostart="true" loop="true" width="200" height="200"></embed>-->
+
+
+        <div class="concact toolItem" id="concact">
+            <ul>
+                <li >
+                    <a  id="state">断开</a>
+                </li>
+                <li >
+                    <a   id="CoverSituation" class="yaz" >已安装[<label id="totalcount" href="#"  >加载中</label>]</a>&emsp;
+
+                    <a  id="CoverAlarmSituation"  class="bj">报警[<label id="AbnormalCovertotalcount" href="#">加载中</label>]
+
+                    <a  id="HistoryAlarmCoverSituation"   >[历史记录]</a></a>
+                </li>
+                <li >
+                    <a title="关闭"   id="CloseearthTools" ><img src="image/pageimg/cont2.png" ></a>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+
+
+</body>
+</html>

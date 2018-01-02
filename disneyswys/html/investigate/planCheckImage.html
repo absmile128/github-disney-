@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="../../js/lib/jquery-1.4.4.min.js"></script>
+</head>
+<body>
+<script language="javascript">
+var autoURL; 
+var autoWidth;
+var autoHeight;
+ $(function () {
+    var str=window.location.href; 
+	var urlStr = str.split("url=");
+	var url = urlStr[1];
+    var urlSplice = url.split("&width");
+    autoURL = urlSplice[0];
+	//alert(autoURL);
+    var objSize = url.split("&");
+    //height
+    var objHeightStr = objSize[objSize.length - 1];
+    //width
+    var objWidthStr = objSize[objSize.length - 2];
+    var objHeight = objHeightStr.split("=")[1];
+    var objWidth = objWidthStr.split("=")[1];
+    //alert(objWidth + " " + objHeight);
+    var atuoVue = document.getElementById("atuoVueObj");
+    atuoVue.ZoomFullResolution();
+    autoWidth = Number(objWidth) - 30;
+    autoHeight = Number(objHeight) - 30;
+    atuoVue.width = autoWidth;
+
+    atuoVue.height = autoHeight;
+
+
+    atuoVue.SRC = autoURL;
+    atuoVue.ZoomWidth();
+    // atuoVue.ZoomFullResolution();
+    //调用合适缩放接口
+    // atuoVue.ZoomFit();
+    // atuoVue.ZoomWidth();
+    // atuoVue.ZoomHeight();
+    //延迟加载 控制页面内容自适应
+    setTimeout(delay, 50);
+});   
+
+function delay(){
+    var atuoVue = document.getElementById("atuoVueObj");
+    if(autoWidth && autoHeight){
+        atuoVue.width = autoWidth;
+        atuoVue.height = autoHeight;
+    }
+    //atuoVue.ZoomFullResolution();
+    atuoVue.ZoomWidth();
+};
+</script>
+<object id='atuoVueObj' classid='clsid:B6FCC215-D303-11D1-BC6C-0000C078797F' style="position:absolute;left:0;top:0" /></object>
+</body>
+</html>

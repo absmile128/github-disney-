@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="gb2312"/>
+<title>属性查看</title>
+<link rel="stylesheet" href="../../css/common.css"/>
+<link rel="stylesheet" href="../../util/easyui/themes/default/easyui.css"/>
+<link rel="stylesheet" href="../../util/easyui/themes/icon.css"/>
+<style>
+	body{
+		margin: 0px;
+		padding: 0px;
+		font-size: 12px;
+	}
+    table {
+        width:100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+    }
+    .col {
+        text-align: center;
+        border-bottom: 1px solid #d3d3d3;
+    }
+
+    .w25p {
+        width: 30%;
+        text-align: left;
+        padding-right: 30px;
+        height: 30px;
+        word-wrap:break-word;
+        word-break:break-all;
+    }
+
+    .w75p {
+        width: 70%;
+        text-align: left;
+        padding-left: 30px;
+        height: 30px;
+        word-wrap:break-word;
+        word-break:break-all;
+    }
+    .div1{
+    	width: 50%;
+        text-align: left;
+        padding-left: 30px;
+        height: 30px;
+        word-wrap:break-word;
+        word-break:break-all;
+    }
+    .div2 {
+        width: 50%;
+        text-align: left;
+        padding-right: 30px;
+        height: 30px;
+        word-wrap:break-word;
+        word-break:break-all;
+    }
+    .w40p {
+        width: 40%;
+        text-align: left;
+        padding-left: 25px;
+        height: 30px;
+        word-wrap:break-word;
+        word-break:break-all;
+    }
+
+    .w60p {
+        width: 60%;
+        text-align: left;
+        height: 30px;
+        word-wrap:break-word;
+        word-break:break-all;
+    }
+    
+</style>
+</head>
+<body>
+<div id="divLineResult" style="background:#eef5fd;" class="easyui-tabs" >
+
+   <table id="tblLineResult" cellspacing="0">
+    <thead>
+    <tr>
+        <th>井室属性</th>
+        <th>属性值</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+</div>
+
+<script type="text/javascript" src="../../util/jquery.js"></script>
+<script type="text/javascript" src="../../util/easyui/jquery.easyui.js"></script>
+<script type="text/javascript" src="../../util/jquery.xml2json.js"></script>
+<script type="text/javascript" src="../../js/common.js"></script>
+<script type="text/javascript" src="../../js/statistics.js"></script>
+<script type="text/javascript" src="../../util/FileValueStringMap.js"></script>
+<script type="text/javascript">
+    var earth = top.earth;
+    $(function (){
+        var parseLocation = function (){
+            var urlSegs = location.href.split("?");
+            var params;
+            var keyvalue = null;
+            var results = {};
+            if(urlSegs.length > 1){
+                params = urlSegs[1].split("&");
+                for(var i=0; i< params.length; i++){
+                    keyvalue = params[i].split("=");
+                    results[keyvalue[0]] = keyvalue[1];
+                }
+            }
+            return results;
+        };
+		
+        var params = parseLocation();
+        var strPara = "(and,equal,US_KEY," + params.key + ")"; // + "&pg=0,30";
+        var layer = earth.LayerManager.GetLayerByGUID(params.parentLayerName.split("_")[0]);
+        var bLine = params.parentLayerName.indexOf("room") > -1;
+          var queryURL = layer.GISServer + "dataquery?service=" + layer.Guid + "&qt=16&dt=" +
+                (bLine ? "room" : " ") + "&pc=" + strPara + "&pg=0,100";
+                var xmlDoc=loadXMLStr(queryURL);
+                layer = earth.LayerManager.GetLayerByGUID(params.parentLayerName );
+                var QueryParam = layer.QueryParameter;
+		            QueryParam.Filter = strPara;//"(and,ls,OBJECTID,10)";
+		            //QueryParam.SetSpatialFilter(null);
+		            QueryParam.QueryType = 16;//SEQueryType.SE_AttributeData;
+		            //////////////////////////////////////////////////////////////////////////
+		            var pRst = layer.SearchFromGISServer();
+		            if (null != pRst)
+		            {
+		                var sText = pRst.GotoPage(0);
+		                var json = $.xml2json(sText);
+		       			
+				            $("#tblLineResult").append('<tr><td class="col w75p">OBJECTID_1</td><td class="col w25p">'+json.Result.Record.OBJECTID_1+'</td></tr>');
+				            $("#tblLineResult").append('<tr><td class="col w75p">US_ID</td><td class="col w25p">'+json.Result.Record.US_ID+'</td></tr>');
+				            $("#tblLineResult").append('<tr><td class="col w75p">US_KEY</td><td class="col w25p">'+json.Result.Record.US_KEY+'</td></tr>');
+				            $("#tblLineResult").append('<tr><td class="col w75p">OBJECTID</td><td class="col w25p">'+json.Result.Record.OBJECTID+'</td></tr>');			      
+				            $("#tblLineResult").append('<tr><td class="col w75p">ANNO</td><td class="col w25p">'+json.Result.Record.ANNO+'</td></tr>');
+				            $("#tblLineResult").append('<tr><td class="col w75p">DEPTH</td><td class="col w25p">'+json.Result.Record.DEPTH+'</td></tr>');
+				            $("#tblLineResult").append('<tr><td class="col w75p">NOTE</td><td class="col w25p">'+json.Result.Record.NOTE+'</td></tr>');
+				            $("#tblLineResult").append('<tr><td class="col w75p">SHAPE_LENG</td><td class="col w25p">'+json.Result.Record.SHAPE_LENG+'</td></tr>');
+        					
+		            }
+                
+    });
+</script>
+</body>
+</html>

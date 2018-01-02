@@ -1,0 +1,116 @@
+<html xmlns:v="http://www.w3.org/2001/XMLSchema">
+<head>
+    <title>添加人员</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script type="text/javascript" src="../../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.easyui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../js/util/easyui/themes/default/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" type="text/css" href="../../js/util/easyui/themes/icon.css"/>
+    <script src="../../js/CITYPLAN_config.js"></script>
+
+    <script>
+        var params = window.dialogArguments;
+        var depid="";
+        var depname="";
+                $(function () {
+                    depid=   params.depId  ;
+                    depname=  params.depName  ;
+                    $("#depname").val(depname);
+
+             });
+
+
+        function  submit() {
+
+            var  id = $('#id').val();
+            var name = $('#name').val();
+            var pwd = $('#pwd').val();
+            var pwd2 = $('#pwd2').val();
+            var depname= $('#depname').val();
+            var tel = $('#tel').val();
+
+            if (id == "" || name == "" ||pwd==""||pwd2==""  ||depname=="" ) {
+                alert(  "请将信息填写完整" );
+                return;
+            }
+            if (pwd!= pwd2) {
+                alert("两次密码不一致!");
+                return;
+
+            }
+
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/UserHandler.ashx?action=SaveUser",
+                data: {
+                    nvfid:"",
+                    uid:id,
+                    pwd:pwd,
+                    type:0,
+                    name:name,
+                    depid:depid,
+                    depname:depname,
+                    tel:tel
+        },
+                cache: false,
+                success: function (data) {
+                    if(data.Result==true){
+                        alert("添加成功！");
+                        window.returnValue=true;
+                        window.close();
+                    }else {
+                        alert("添加失败！原因："+data.ErrMsg.toString());window.returnValue=false;
+                    }
+                },
+                error:function (x,t,e) {
+                        alert("添加失败！");window.returnValue=false;
+
+                }
+            });
+        }
+        function  cancel() {window.close();}
+
+    </script>
+</head>
+
+
+
+<body  >
+<table>
+    <tr>
+        <td   class="texttdclass">用户ID：</td>
+        <td class="texttdclass"><input  id="id"  ></td>
+        <td   class="texttdclass">*</td>
+    </tr>
+    <tr>
+        <td   class="texttdclass">密码：</td>
+        <td class="texttdclass"><input  type="password" id="pwd"  ></td>
+        <td   class="texttdclass">*</td>
+    </tr>
+    <tr>
+        <td   class="texttdclass">再一次密码：</td>
+        <td class="texttdclass" ><input  type="password" id="pwd2"  ></td>
+        <td   class="texttdclass">*</td>
+    </tr>
+    <tr>
+        <td   class="texttdclass">姓名：</td>
+        <td class="texttdclass"><input  id="name"  ></td>
+        <td   class="texttdclass">*</td>
+    </tr>
+    <tr>
+        <td   class="texttdclass">部门：</td>
+        <td class="texttdclass"><input  id="depname"  readonly /></td>
+    </tr>
+    <tr>
+        <td   class="texttdclass">电话：</td>
+        <td class="texttdclass"><input  id="tel"  ></td>
+    </tr>
+</table>
+  <div style="text-align:center">
+<input id="ok_btn" type="button" value="确  定" style="width: 60px;" onclick="javascript:submit();">
+<input id="cancle_btn" type="button" value="取  消" style="width: 60px;margin-left: 20px;" onclick="javascript:cancel();">
+  </div>
+</body>
+</html>

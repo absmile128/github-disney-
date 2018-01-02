@@ -1,0 +1,520 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+
+    <title> </title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <link rel="stylesheet" href="../../css/common.css"/>
+
+
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/locale/easyui-lang-zh_CN.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+    <script src="../../js/searchAnalysis.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>
+    <script src="../../js/common.js"></script>
+    <script src="../../js/lib/jquery.jqpagination.js"></script>
+    <script src="../../js/search.js"></script>
+    <script src="../../js/cover/handle.js"></script>
+    <script src="../../js/statistics.js"></script>
+    <script src="../../js/pageHelper.js"></script>
+    <script>
+        var earth = null;
+        var searchAnalysis =null;
+        var search =null;
+
+        var pageSize = 16; //每页显示条数
+        var pageNo = 1;//页码数（第几页）
+        var totalcount=0;//总数
+        var totalpagecount = 0;//总页数
+        var showDataArr = [];
+         var IconObjArr=[];
+
+        var   abnormalwellcoverlist=[];//异常井盖数组
+        var cover_layerid= "";
+
+        function getEarth(earthObj) {
+            earth = earthObj;
+            searchAnalysis = CITYPLAN.searchAnalysis(earth);
+            search=STAMP.Search(earth);
+            cover_layerid= CITYPLAN_config.disney.cover_layerid;
+
+      //窗口变化后，尺寸调整
+     window.onresize = function(){
+         //初始化设置高度
+         var divHeight =$(document).height()-80 ;
+         var divWidth = $(document).width()  ;
+         $('#searchData').datagrid('resize',{
+             height:divHeight,
+             width:divWidth
+         });
+     };
+
+            //窗口变化后，尺寸调整
+            window.onunload = function(){
+
+                showorcloseIcon(false) ;
+            };
+
+     $(window).trigger("resize");
+
+            //搜索
+            searchdata();
+
+//            //从地球上去除异常井盖标绘
+//            ettachIconfromearch();
+
+            $('#searchData').datagrid({
+                onDblClickRow: dbclick
+            });
+        }
+
+        //格式化单元格提示信息
+        function formatCellTooltip(value){
+            return "<span title='" + value + "'>" + value + "</span>";
+        }
+
+        //获取基本信息
+        function  searchdata() {
+            totalcount=0;//总数
+            tipdivshow("search",true);
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/TriggerHandler.ashx?action=GetAlarmedTriggerList",
+                data: {   },
+                cache: false,
+                success: function (data) {
+                    setdata(data)
+                },
+                error:function (x,t,e) {
+
+                }
+            });
+
+        }
+
+        //行样式
+        function  rowStyle(index,row) {
+            if (row.handlestate=="未处理") {
+                return 'background-color:#ffee00;color:red;font-weight:bold;';
+            }
+        }
+
+        //行样式
+        function  rowformatter(value,row,index) {
+            if(row.handlestate=="未处理") {
+
+                return '<input type="button" onclick="dispose('+index+')"  value="派单"/>';
+
+            }
+        }
+        function  dispose(index) {
+            var rows = $("#searchData").datagrid("getRows");
+            var expnum=  rows[index].expnum;  //触发器编号
+            var params = {
+                alarmCoverInfo: showDataArr[expnum]
+
+            };
+            var returnValue=  openDialog("dispose.html", params, 400, 420,false);
+            if (returnValue=="已派单"){//当关闭时，判断返回值
+                rows[index]["handlestate"]="已派单";  //刷新处理状态
+                $('#searchData').datagrid('refreshRow', index);
+
+
+            }
+        }
+//        //定位到异常井盖
+//          function goToabnormalwellcoverInfo(machinecode) {
+//              var location=getlocation(machinecode) ;  //获得定位地址
+//              //气泡显示的属性信息
+//              var info = {};
+//              for(var i=0;i<abnormalwellcoverlist.length;i++) {
+//                  if(abnormalwellcoverlist[i].machinecode==machinecode) {
+//                    info = {
+//                      coverSituationInfo: abnormalwellcoverlist[i].info
+//                     }
+//                     break;
+//                  }
+//              }
+//              goToParse(location,info);
+//
+//          }
+        //datagrid双击事件
+        function dbclick(rowIndex,rowData){
+            var rows = $("#searchData").datagrid("getRows");
+            var machinecode=  rows[rowIndex].machinecode;  //触发器编号
+            var expnum=rows[rowIndex].expnum//管点编号
+            var location=getlocation(expnum) ;  //获得定位地址              根据管点编号 得到gis 点位
+            //气泡显示的属性信息
+            var info ={
+                coverSituationInfo:showDataArr[expnum]
+            }
+            if( location ==null||info.coverSituationInfo==null) {
+                alert("没有对应井盖！");
+                return;
+            }else{
+             goToParse(location, info);
+            }
+
+            if(expnum=="" ) {
+                alert("没有对应井盖模型！");
+                return;
+            } else {
+                highlight(expnum);
+            }
+        }
+//        //标绘异常井盖
+//        function  showIcon(location,machinecode)  {
+//            if(location==null||machinecode==null) {
+////                var tipstr="编号为"+machinecode+"的井盖无法标绘！";
+////                alert(tipstr);
+//                return;
+//            }
+//            var userdataObj = {};
+//            userdataObj.earth = earth;
+//            var guid = earth.Factory.CreateGuid();
+//            userdataObj.name=machinecode;
+//            userdataObj.guid = guid;
+//            userdataObj.type = 209;
+//            userdataObj.longitude = location.lon;
+//            userdataObj.latitude = location.lat;
+//            userdataObj.altitude = location.alt;
+//            var myicon = earth.Factory.CreateElementIcon(userdataObj.guid, userdataObj.name);
+//            myicon.Create(userdataObj.longitude, userdataObj.latitude, userdataObj.altitude, '','', userdataObj.name);
+//            myicon.Visibility = true;
+//            myicon.textFormat = 256;
+//            myicon.textColor = parseInt("0xff00ff00");
+//            myicon.minVisibleRange = 0;
+//            myicon.maxVisibleRange = 5;
+//            myicon.NormalIcon.IconIsClip = true;
+//            myicon.Underground = false;
+//            parent.CoverIconObjArr.push(myicon);
+//            earth.AttachObject(myicon);
+//
+//        }
+//        //从地球上去除异常井盖标绘
+//        function ettachIconfromearch() {
+//            for (var m=0;m<parent.CoverIconObjArr.length;m++){
+//                earth.DetachObject(parent.CoverIconObjArr[m]);
+//            }
+//            parent.CoverIconObjArr=[];//清空数组
+//        }
+        function highlight(expnum){
+            if( expnum =="" ) {
+                return;
+            }
+
+
+            var queryPipe = Query.PageHelper(earth);
+            var projectId  =CITYPLAN_config.disney.currentPrjGuid;
+            var pipelineList = StatisticsMgr.initPipelineListsz(projectId);//获取当前工程下的管线图层列表
+
+            if(pipelineList==undefined||pipelineList==null)  {
+                alert("无管线图层！");
+                return;
+            }
+
+            for (var i = 0; i < pipelineList.length; i++) {
+                var layerID = pipelineList[i].id;
+                queryPipe.highlightObject(layerID, '管点', null, expnum);
+            }
+        }
+        //获得管点编号pointid
+        function getpointid(machinecode) {
+            var pointid ="";
+
+            var coverGisdata = getCoverGISInfo(machinecode);
+
+            if (coverGisdata == null || coverGisdata.length == 0) {
+                return pointid;
+            }
+
+            var pointid = coverGisdata[0]["POINTID"];
+            return pointid;
+        }
+
+        //获得定位地址
+        function getlocation(expnum) {
+            var location =null;
+
+            var coverGisdata = getCoverGISInfo(expnum);
+
+            if (coverGisdata == null || coverGisdata.length == 0) {
+                return location;
+            }
+
+            var coordinateArr = coverGisdata[0]["SHAPE"]["Point"]["Coordinates"].split(',');
+            var point = earth.Factory.CreateGeoPoint();
+            for (var i = 0; (i + 2) < coordinateArr.length; i += 3) {
+                point.Longitude = coordinateArr[i];
+                point.Latitude = coordinateArr[i + 1];
+               // point.Altitude = earth.GlobeObserver.GetHeight(point.x, point.y); // 100;coordinateArr[i+2];
+                point.Altitude = earth.Measure.MeasureTerrainAltitude(point.x, point.y); // 100;coordinateArr[i+2];
+            }
+            var location = {
+                lon: point.Longitude,
+                lat: point.Latitude,
+                alt: point.Altitude,
+            }
+            return location;
+        }
+        //定位
+        function goToParse(location,info){
+
+            if( location ==null||info.coverSituationInfo==null) {
+                return;
+            }
+
+//            earth.GlobeObserver.GotoLookat(location.lon , location.lat, location.alt, 0, 90, 0, 30); //定位
+            earth.GlobeObserver.GotoLookat(location.lon+0.0002 , location.lat, location.alt, 0, 90, 0, 60); //定位
+
+
+            var isneedinfo = $("#InfoCheck").attr('checked');
+            if (isneedinfo) {
+                searchAnalysis.createHtmlBollon("CoverSituationTable.html", info, location, 350, 360)
+            }
+        }
+////        设置异常井盖信息
+//        function setabnormalwellcoverlist(data) {
+//
+//            var abnormalinfohmtl="";
+//            if(data===""||data===null||data===undefined||data.length==0)
+//            {
+//                abnormalinfohmtl="暂无";
+//            }
+//            else {
+//
+//                for (var j = 0; j < data.length; j++) {
+//                    var machinecode = data[j].machinecode;
+//                    var alarmcause = data[j].alarmcause;
+//                    var abnormalwellcover={
+//                        machinecode:machinecode,
+//                        info:data[j] ,
+//                    };
+//                        abnormalwellcoverlist.push(abnormalwellcover);
+//                        abnormalinfohmtl += "<a href='#' onclick=goToabnormalwellcoverInfo('"+machinecode + "') >编号" + machinecode + "</a><span>&nbsp&nbsp&nbsp</span>";
+//                        var location = getlocation(machinecode);
+//                        showIcon(location,machinecode);
+//
+//                }
+//            }
+//
+//            $("#abnormalinfo").html(abnormalinfohmtl);
+//
+//        }
+      //获取异常井盖信息
+//        function getabnormalwellcoverlist (){
+//            $.ajax({
+//                type: "POST",
+//                url: "/disneySZ/CoverServlet",
+//                data: {
+//                    commdCode: "getAbnormalWellCoverList"
+//                },
+//                dataType: "json",
+//                success: function (data) {
+//
+//                    //设置基本信息表
+//                    setabnormalwellcoverlist(data)
+//            });
+//
+//        }
+
+        //设置页数+基本信息
+        function setdata(data)         {
+            tipdivshow("search",false);
+            tipdivshow("nodata",false);
+            if(data===""||data===null||data===undefined||data.length==0){
+                tipdivshow("nodata",true);
+                return;
+            }
+
+            reformdata(data);
+            bh($("#iconCheck"));
+        }
+        //设置页数
+        function reformpagecount(data) {
+            if (data == null || data == "0" || data == "") {
+                totalcount = 0;
+            }
+            else {
+                totalcount= parseInt(data);
+            }
+                $("#totalcount_label").html(totalcount+"个");  //设置总数
+
+
+        }
+        //设置数据
+        function reformdata(data)    {
+            var dataArr = [];//结果集
+            if(data===""||data===null||data===undefined||data.length==0)
+            {
+                $("#searchData").datagrid("loadData",[]);
+                $("#totalcount_label").html("0个");  //设置总数
+                return;
+            } else {
+                $("#totalcount_label").html(data.length+"个");  //设置总数
+            }
+
+
+            abnormalwellcoverlist=data; //全局
+            for(var j=0;j<data.length;j++){
+                var listNum=j+1;
+                var machinecode=handlefield("machinecode", data[j].MACHINECODE).valuealias;
+                var expnum=handlefield("expnum", data[j].EXPNUM).valuealias;
+                var expnumalias=handlefield("expnumalias", data[j].EXPNUM).valuealias;
+                data[j].EXPNUMALIAS= expnumalias;
+                var alarmstate=handlefield("alarmstate",data[j].ALARMSTATE).valuealias;
+                var reporttime=handlefield("reporttime", data[j].REPORTTIME).valuealias  ;
+                var handlestate=handlefield("handlestate",data[j].HANDLESTATE).valuealias  ;
+                dataArr.push({"listNum":listNum,"expnum":expnum,"expnumalias":expnumalias,"machinecode": machinecode,alarmstate:alarmstate,reporttime:reporttime,handlestate:handlestate  });
+                showDataArr[expnum]= data[j] ;
+                $("#searchData").datagrid("loadData",dataArr);
+            }
+
+
+        }
+        //GIS查询
+        function getCoverGISInfo(expnum) {
+            var searchDataResult;
+            if (expnum != null & expnum != "" & cover_layerid != null & cover_layerid != "") {
+              var  pcStr = '&pc=' + '(and,like,EXPNO,' + expnum + ')';
+                 searchDataResult = search.gisSearch(cover_layerid, pcStr);
+            }
+            return searchDataResult;
+        }
+        function  bh(obj){
+            var isshow = $(obj).attr('checked');
+//            alert(isshow);
+            if (isshow) {
+                showorcloseIcon(true);
+            }else {
+                showorcloseIcon(false);
+            }
+            }
+
+
+
+        function   showorcloseIcon (isshow) {
+
+            if (isshow) {
+                data=abnormalwellcoverlist;
+                //没有标绘过
+                 if(   IconObjArr==[]||IconObjArr.length==0) {
+                     //开始标绘
+                     for (var j = 0; j < data.length; j++) {
+
+                         var expnumalias=handlefield("expnumalias", data[j].EXPNUM).valuealias;
+                         var expnum = data[j].EXPNUM;
+                         var location = getlocation(expnum);
+                         if(location==null)  {continue;}
+                         var lon = location.lon;
+                         var lat = location.lat;
+                         var alt = location.alt;
+
+                         var userdataObj = {};
+                         userdataObj.earth = earth;
+                         var guid = earth.Factory.CreateGuid();
+                         userdataObj.name = expnumalias;
+                         userdataObj.guid = guid;
+                         userdataObj.type = 209;
+
+                         userdataObj.longitude = lon;
+                         userdataObj.latitude = lat;
+                         userdataObj.altitude = alt;
+                         var myicon = earth.Factory.CreateElementIcon(userdataObj.guid, userdataObj.name);
+                         var path= earth.RootPath + "\\icon\\" + "alarm.png";
+//                         var path= earth.RootPath + "\\icon\\" + "alarm1.gif";
+//                         myicon.minVisibleRange = 0;
+//                         myicon.maxVisibleRange = 5;
+                         myicon.Create(lon, lat, alt,path, path, userdataObj.name);
+                         myicon.Visibility = true;
+                         IconObjArr.push(myicon);
+                         earth.AttachObject(myicon);
+                     }
+
+
+                 }
+            }  else{
+                var IconObjArrCount=   IconObjArr.length;
+                for (var m=0;m<IconObjArrCount;m++)
+                {
+                    var iconObj =   IconObjArr[m];
+                    earth.DetachObject(iconObj);
+                }
+                IconObjArr =[];//清空
+
+            }
+        }
+
+    </script>
+</head>
+<body id="container" class="easyui-layout"  >
+
+    <div id="div_searchData" region="center" border="false" style="overflow-y: hidden;overflow-x: hidden;height:100%;margin-top: 10px;"  >
+
+
+        <div style="float:left;">报警井盖：<label id="totalcount_label">0个</label> <label >（双击定位）</label></div>
+
+        <div style="float:right;">
+            <input  id="InfoCheck"  type="checkbox"    >详细信息 </input>
+            <input  id="iconCheck"  type="checkbox" onclick="bh(this)"  checked="checked">标绘 </input>
+       </div>
+
+        <table  id="searchData" class="easyui-datagrid" data-options="fitColumns:true,singleSelect:true,rowStyler :rowStyle  " style="height:100px"    >
+            <thead>
+            <tr >
+                <th data-options="field:'listNum',width:50,formatter:formatCellTooltip">序号</th>
+                <th data-options="field:'expnumalias',width:120 ,formatter:formatCellTooltip">井盖编号</th>
+                <th data-options="field:'expnum',width:100 ,formatter:formatCellTooltip,hidden:'true'">井盖编号</th>
+                <th data-options="field:'machinecode',width:100,formatter:formatCellTooltip">触发器编号</th>
+
+                <th data-options="field:'alarmstate',width:120,formatter:formatCellTooltip" >最新状态</th>
+                <th data-options="field:'reporttime',width:120,formatter:formatCellTooltip" >最新一次上报时间</th>
+                <th data-options="field:'handlestate',width:120,formatter:formatCellTooltip" >处理状态</th>
+                <th data-options="field:'dispose',width:120,formatter:rowformatter" >派单</th>
+
+            </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+          <!--异常井盖信息-->
+            <!--<div style="height: 100px;font-size: 13px;margin-top: 10px;height:45px">-->
+                <!--<div  style="width: 100px; float: left"><label>当前异常井盖：</label></div>-->
+                <!--<div style="  margin-left: 100px"><span   id="abnormalinfo">暂无</span>-->
+            <!--</div>-->
+         </div>
+
+    </div>
+    <!--<div region="south" border="false" style="height: 50px;overflow:hidden;">-->
+        <!--<%&#45;&#45;  页码开始&#45;&#45;%>-->
+        <!--<ul  class="pagination" style=" width:100%; text-align:center;">-->
+            <!--<li  class="firstpageli"><img src="../../image/test/firstpage.png" ></li>-->
+            <!--<li class="prepageli"><img src="../../image/test/prepage.png"></li>-->
+            <!--第-->
+            <!--<li  class="currentpageli"><input  style="width:20px;" value=' '/></li>-->
+            <!--页-->
+            <!--<li class="nextpageli"><img src="../../image/test/nextpage.png" ></li>-->
+            <!--<li class="endpageli"><img src="../../image/test/endpage.png" ></li>-->
+            <!--共<li  class="totalpageli">&nbsp;</li>页-->
+        <!--</ul>-->
+        <!--<%&#45;&#45;  页码结束&#45;&#45;%>-->
+        <!--<div style="margin-top: 0px; float: right;margin-right: 10px;">-->
+            <!--<button id="importExcelBtn"  style="margin-left: 10px;">导出excel</button>-->
+        <!--</div>-->
+    <!--</div>-->
+</div>
+
+
+
+    <div  id="searchtip_div" class="tipdivclass"   > 正在查询.... </div>
+    <div id="nodatatip_div" class="tipdivclass"  > 没有查到相关结果 </div>
+</body>
+</html>

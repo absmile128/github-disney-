@@ -1,0 +1,211 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>系统设置</title>    
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">   
+	<link rel="stylesheet" type="text/css" href="../../util/easyui/themes/default/easyui.css"/>
+	<link rel="stylesheet" type="text/css" href="../../util/easyui/themes/icon.css"/>
+    <link rel="stylesheet" type="text/css" href="../../css/common.css"/>
+    <style type="text/css">
+        td.col1{
+            border-bottom: 1px double #cdcab8;
+            border-right: 1px double #cdcab8;
+            text-align: center;
+            width: 40%;
+            height: 20px;
+        }
+        td.col2{
+            border-bottom: 1px double #cdcab8;
+            border-right: 1px double #cdcab8;
+            text-align: center;
+            width: 40%;
+        }
+        td.col3{
+            border-bottom: 1px double #cdcab8;
+        }
+        .btn1{ width: 65px; height: 28px;}
+        .button{ width: 50px; height: 28px;}
+        .textFieldLong{
+            width: 150px;;
+        }
+    </style>
+</head>
+  
+<body class="easyui-layout">
+<OBJECT id="dlgHelper"	CLASSID="clsid:3050f819-98b5-11cf-bb82-00aa00bdce0b" width="0px" height="0px"></OBJECT>
+            <div style="margin-left:15px;text-align: center;">
+		        <table cellspacing="10" style="text-align: center;">
+                    <tr style="line-height: 30px; ">
+                        <td>当前工程:</td>
+                        <td>
+                            <select class="textFieldLong" id="projectList" name="projectList">
+                            </select>
+                        </td>
+                    </tr>
+                    <!--<tr style="line-height: 40px;" >
+                        <td>剖面高程:</td>
+                        <td>
+                            <select class="textFieldLong" id="profileAlt" name="profileAlt">
+                                    <option value="1"  >按地形高程显示</option>
+                              <option value="0">按数据高程显示</option>
+                            </select>
+                        </td>
+                    </tr>-->
+                    <tr style="line-height: 30px;">
+                        <td>初始视点:</td>
+                        <td><input class="textFieldLong" id="viewPoint" name="alt" type="text" readonly/></td>
+                        <td>
+                            <input type="button" id="setViewPoint" value = "获取" style="width:60px; height: 25px; "/>
+                        </td>
+                    </tr>
+
+                <!--
+                    <tr style="line-height: 40px;">
+                        <td>参考面高程:</td>
+                        <td><input class="textFieldLong" id="alt" name="alt" type="text" value="0" /></td>
+                    </tr>-->
+		        </table>
+          </div>
+<div border="false" >
+	<div style="text-align: center;">
+		<button class="normalBtn" id="confirmBtn" >确定</button>&nbsp;&nbsp;
+		<button class="normalBtn" onclick="window.close();" >取消</button>
+	</div> 
+</div>
+<script type="text/javascript" src="../../util/jquery.js"></script>  <script type="text/javascript" src="../../util/CustomFcn.js"></script>
+<script type="text/javascript">
+	  var  earth = null;
+      $(function(){
+          var params = window.dialogArguments;
+          earth = params.earth;
+          /*
+          功能：递归判断该图层下是否有管线图层，存在管线图层的工程才显示在系统设置的切换工程中
+          说明：add by zhangd 2015-03-27
+          **/
+          function hasPipelinelayer(layer){
+              var bHasPipeline = false;
+              var layerCount = layer.GetChildCount();
+              for(var s=0;s<layerCount;s++){
+                  var childLayer = layer.GetChildAt(s);
+                  var pipelayerType = childLayer.LayerType;
+                  if(pipelayerType === "Pipeline"){
+                      return true;
+                  }else if(pipelayerType === "Folder"){
+                      bHasPipeline = hasPipelinelayer(childLayer);
+                      if(bHasPipeline){
+                        return true;
+                      }
+                  }
+              }
+              return false;
+          }
+          function initProjectList(){
+            var pipeProjectList = [];
+    	    	var rootLayerList = earth.LayerManager.LayerList;
+    	    	var projectCount = rootLayerList.GetChildCount();
+    	    	for(var i = 0; i < projectCount; i++){
+    	    		var childLayer = rootLayerList.GetChildAt(i);
+    	    		var layerType = childLayer.LayerType;
+    	    		if(layerType === "Project"){  //17
+    	    			var projectId = childLayer.Guid;
+    	    			var projectName = childLayer.Name;
+                var  pipeTag = false;
+                pipeTag = hasPipelinelayer(childLayer);//modified by zhangd 2015-03-27 之前只判断3层，工程-文件夹-管线图层，修改成递归方法，层次无限制
+                // var chlildrenCount = childLayer.GetChildCount();
+                // for(var x=0;x<chlildrenCount;x++){
+                //     var pipechildLayer = childLayer.GetChildAt(x);
+                //     var pipelayerType = pipechildLayer.LayerType;
+                //     if(pipelayerType === "Pipeline"){
+                //       pipeTag = true;
+                //     }
+                //     if(pipelayerType === "Folder"){
+                //         var threeLayerCount = pipechildLayer.GetChildCount();
+                //         for(var s=0;s<threeLayerCount;s++){
+                //             var threechildLayer = pipechildLayer.GetChildAt(s);
+                //             var threepipelayerType = threechildLayer.LayerType;
+                //             if(threepipelayerType === "Pipeline"){
+                //                 pipeTag = true;
+                //             }
+                //         }
+                //     }
+                // }
+                if(pipeTag){
+                    pipeProjectList.push({id:projectId,name:projectName});
+                }
+    	    		}
+    	    	}
+            return pipeProjectList;
+    	  }
+          /**
+           * 功能：初始化文本框值域
+           * 参数：无
+           * 返回值：无
+           */
+          function initList(){
+              var layer = earth.LayerManager.LayerList;
+             // var a = initProjectList(layer);
+              var projectList =  initProjectList();
+              if(projectList != null){
+                  var count = projectList.length;
+                  for(var i=0; i<count; i++){
+                      var project = projectList[i];
+                      var option = '<option value="' + project.id + '">' + project.name + '</option>';
+                      $("#projectList").append(option);
+                  }
+              }
+              $("#projectList").val(params.project);
+              $("#viewPoint").val(params.Position);
+              //$("#profileAlt").val(params.profileAlt);
+          }          
+          initList(); //初始化文本框
+          $("#projectList").change(function(){
+              var layerId = $("#projectList").val();
+              if(!layerId){
+                return;
+              }
+              var ProLayer = earth.LayerManager.GetLayerByGUID(layerId);
+              var alt = 0;
+              if(ProLayer){
+                  alt = ProLayer.ProjectSetting.UnderRefAlt;
+              }
+              $("#alt").val(alt);
+          });
+          $("#projectList").trigger("change");
+
+          /**
+           * 功能：获取当前视角
+           * 参数：无
+           * 返回值：无
+           */
+          $("#setViewPoint").click(function(){
+              var obj = {};
+              obj.longitude=earth.GlobeObserver.TargetPose.Longitude;
+              obj.latitude=earth.GlobeObserver.TargetPose.Latitude;
+              obj.altitude=earth.GlobeObserver.TargetPose.Altitude;
+              obj.tilt=earth.GlobeObserver.Pose.Tilt;
+              obj.heading=earth.GlobeObserver.Pose.Heading;
+              obj.roll=earth.GlobeObserver.Pose.Roll;
+              obj.range=earth.GlobeObserver.Pose.Range;
+              var viewPoint = obj.longitude+","+obj.latitude+","+obj.altitude+","+obj.tilt+","+obj.heading+","+obj.roll+","+obj.range;
+              $("#viewPoint").val(viewPoint);
+          });
+	      /**
+           * 功能：【确定】按钮onclick事件
+           * 参数：无
+           * 返回值：无
+           */
+	      $("#confirmBtn").click(function(){
+	          // params.profileAlt = $("#profileAlt").val();
+              params.project = $("#projectList").val();
+              params.Alt = $("#alt").val();
+              params.Position = $("#viewPoint").val();
+	          window.returnValue = params;
+	          window.close();
+	      });
+      });
+
+</script>
+</body>
+</html>

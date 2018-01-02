@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+	<meta http-equiv="Content-Type" content="textml; charset=UTF-8" />
+    <title>附属物查询</title>
+    <link rel="stylesheet" href="../../css/common.css"/>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css" />
+    <link rel="stylesheet" href="../../css/easyui/icon.css" />
+    <style type="text/css">
+		body {
+			margin: 0px;
+			padding: 0px;
+			font-size: 12px;
+		}
+		#divPipeLineTypeList {
+            overflow-y: auto;
+        }
+
+        #divPipeLineTypeList div {
+            display: inline-block;
+            min-width: 85px;
+        }
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+        button{
+        	width: 50px;
+        	height: 22px;
+        }
+       
+    </style>
+</head>
+<body id="container" class="easyui-layout" scroll=no >
+<div region="north" border="false" style="height: 210px;overflow:hidden;">
+    <fieldset style="margin: 5;">
+        <legend>参数设置</legend>
+        <div style="width:100%; height:25px;padding-left:30px;">
+            <label for="projectList">选择工程:</label>
+            <select id="projectList" style="width:140px;"></select>
+        </div>
+        <div style="width:100%;padding-bottom:5px;padding-left:30px;">
+            <label for="selLayers">图层:</label>
+            <select id="selLayers" style="width: 100px;"></select>
+            &nbsp;&nbsp;<button id="btnQueryVal">获取</button>
+        </div>
+        <div id="divPipeLineTypeList" style="height: 100px; width:120px;border:1px solid silver;float:left;margin-left:10px;"></div>
+        <div style="height: 100px; width:70px; float: right;text-align: center;padding-top: 10px;margin-right:10px;">
+            <button id="btnSelectAll" disabled>全选</button>
+            <button id="btnSelectReverse" style="margin: 10px auto;" disabled>反选</button>
+            <button id="btnSelectNone" disabled>清空</button>
+        </div>
+        <div style="clear: both;"></div>
+        <div style="padding-top: 5px;text-align: center; overflow:hidden; padding-left:30px;">
+            <button id="btnQuery" style="float:left; margin-left:13px;" disabled>全部</button>&nbsp;
+            <button id="btnCircleSelect" style="float:left; margin-left:8px;" disabled>圆域</button>&nbsp;
+            <button id="btnPolygonSelect" style="float:left; margin-left:8px;" disabled>多边形</button>
+        </div>
+    </fieldset>
+</div>
+<div class="center" region="center" border="true" style="overflow-y: hidden;overflow-x: hidden; ">
+    <table id="dg" title="查询结果" style="width:224px;" border="0" fit="true" data-options="
+                rownumbers:false,
+                singleSelect:true,
+                autoRowHeight:false,
+                pagination:true">
+    </table>
+</div>
+
+<div region="south" border="false" style="height: 38px;">
+    <div style="margin-top: 8px;float: left;">
+        <input type="checkbox" id="detailData" name="detailData" disabled>详细信息
+    </div>
+    <div style="margin-top: 8px; float: right;margin-right: 10px;">
+        <button id="importExcelBtn" disabled style="margin-left: 10px;">导出</button>
+    </div>
+</div>
+<div style="display: none;">
+    <table id="importResult">
+        <tbody></tbody>
+    </table>
+</div>
+<script type="text/javascript" src="../../util/jquery.js"></script>  <script type="text/javascript" src="../../util/CustomFcn.js"></script>
+<script type="text/javascript" src="../../util/jquery-easyui/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="../../js/common.js"></script>
+<script type="text/javascript" src="../../util/jquery.xml2json.js"></script>
+<script type="text/javascript" src="../../js/statistics.js"></script>
+<script type="text/javascript" src="../../js/pageHelper.js"></script>
+<script type="text/javascript" src="../../js/query/query.js"></script>
+<script type="text/javascript">
+/**
+ * 屏蔽右键菜单
+ */
+	document.oncontextmenu = function() {
+		event.returnValue = false;
+	};
+	var earth=null;
+     var query;
+     $('div.enter').bind("selectstart", function() { return false; });  
+    //document.onselectstart = new Function('event.returnValue=false;');
+
+    $("div.enter").mouseenter(function(){//mouseover mouseenter
+       document.onselectstart = new Function('event.returnValue=false;');
+    });
+
+    $("div.enter").mouseleave(function(){//mouseout mouseleave
+       document.onselectstart = new Function('event.returnValue=true;');
+    });
+    $("#detailData").click(function (){
+        var bShow  = $(this).attr("checked") == "checked";
+        //alert(bShow);
+        if(!bShow){
+            top.clearHtmlBalloons();
+        }
+        if(query){
+            query.setShow(bShow);
+        }
+    });
+    $(function () {
+        var divHeight = $(parent.document).height() - 502;
+        $("#dg").height(divHeight);
+        earth = top.earth;
+        var spaceParams=null;
+        StatisticsMgr.initProjectList($("select#projectList"));// 初始化“阶段”下拉列表
+        StatisticsMgr.initPipelineSelectList($("select#projectList").val(), $("#selLayers"));//初始化管线图层列表
+        parent.SYSTEMPARAMS.project = $("select#projectList").val();
+        parent.SystemSetting.getProjectConfig();
+        $("select#projectList").change(function () {
+            $("#divPipeLineTypeList").empty();
+            StatisticsMgr.initPipelineSelectList($("select#projectList").val(), $("#selLayers"));//初始化管线图层列表
+            parent.SYSTEMPARAMS.project = $("select#projectList").val();
+            parent.SystemSetting.getProjectConfig();
+        });
+        $("#selLayers").change(function(){
+            $("#divPipeLineTypeList").empty();
+            btnQueryEnabled();
+        });
+        /**
+         * 发送异步请求，查询管线图层中所有的子类型
+         * @param queryURL
+         */
+        var queryPointType = function (queryURL,layerId){
+             
+        };
+		// 默认请求第一个图层的特征类型
+		var btnQueryEnabled=function(){
+        	var length=$("#divPipeLineTypeList input:checkbox[checked=checked]").length;
+        	if(length>0){
+        		$("#btnQuery").attr("disabled",false);
+                $("#btnCircleSelect").attr("disabled", false);
+                $("#btnPolygonSelect").attr("disabled", false);
+                //$("#importExcelBtn").attr("disabled", false);
+        	}else{
+				$("#btnQuery").attr("disabled",true);
+                $("#btnCircleSelect").attr("disabled", true);
+                $("#btnPolygonSelect").attr("disabled", true);
+                //$("#importExcelBtn").attr("disabled", true);
+        	}
+        };
+        $("#divPipeLineTypeList").click(function(){
+        	btnQueryEnabled();
+        });
+        $("#btnSelectAll").click(function () {
+            $("#divPipeLineTypeList input:checkbox").attr("checked", "checked");
+            btnQueryEnabled();
+        });
+        $("#btnSelectReverse").click(function () {
+            $.each($("#divPipeLineTypeList input:checkbox"), function (i, v) {
+                var vv = $(v);
+                if (vv.attr("checked")) {
+                    vv.removeAttr("checked");
+                } else {
+                    vv.attr("checked", "checked");
+                }
+            });
+            btnQueryEnabled();
+        });
+        $("#btnSelectNone").click(function () {
+            $("#divPipeLineTypeList input:checkbox").removeAttr("checked");
+            btnQueryEnabled();
+        });
+        var isArray = function(obj) {
+            return Object.prototype.toString.call(obj) === '[object Array]'; 
+        };
+        $("#btnQueryVal").click(function (){
+            var vv = $("#selLayers option:selected");
+            var guid = vv.val();
+            var layer = earth.LayerManager.GetLayerByGUID(guid);
+			var tableName = top.getName("US_ATTACHMENT",0,true);
+            var mQueryString = layer.GISServer + "dataquery?service=" + guid + "&qt=256&fd="+tableName+"&dt=point";
+            earth.Event.OnEditDatabaseFinished = function(pRes, pFeature){
+                if (pRes.ExcuteType == parent.excuteType){
+                    $("#divPipeLineTypeList").empty();
+                    var xmlStr = pRes.AttributeName;
+                    var xmlDoc = parent.loadXMLStr(xmlStr);
+                    var json = $.xml2json(xmlDoc);
+                    if(json==null||!json.ValueRangeResult){
+                        return;
+                    }
+                    StatisticsMgr.initPipeConfigDoc(guid, true, false); //初始化编码映射文件对象, 不初始化空间坐标转换对象
+                    var values = json.ValueRangeResult.ValueRange.Value;
+                    //这里要先判断是否是字符串
+                    if(isArray(values)){
+                        for (var i = 0; i < values.length; i++) {
+                            if(values[i]){
+                                $("#divPipeLineTypeList").append('<div><label><input type="checkbox" value="' +
+                                        values[i] + '"/>' +
+                                        values[i] + '</label></div>');
+                            }
+                        }
+                    }else{
+                        if(values){
+                            $("#divPipeLineTypeList").append('<div><label><input type="checkbox" value="' +
+                                    values + '"/>' +
+                                    values + '</label></div>');
+                        }
+                    }
+                    
+                    var length = $("#divPipeLineTypeList input:checkbox").length;
+                    if(length>0){
+                        $("#btnSelectAll").attr("disabled", false);
+                        $("#btnSelectReverse").attr("disabled", false);
+                        $("#btnSelectNone").attr("disabled", false);
+                    }else{
+                        $("#btnSelectAll").attr("disabled", true);
+                        $("#btnSelectReverse").attr("disabled", true);
+                        $("#btnSelectNone").attr("disabled", true);
+                    }
+                }
+            }
+            earth.DatabaseManager.GetXml(mQueryString);
+        });
+        /**
+         * 全部区域
+         */
+        $("#btnQuery").click(function () {
+            earth.ShapeCreator.Clear();
+        	creatQuery(null);
+        });
+        /**
+         * 多边形查询
+         */
+        $("#btnPolygonSelect").click(function () {
+            earth.Event.OnCreateGeometry = onCreatePolygon;
+            earth.ShapeCreator.Clear();
+            earth.ShapeCreator.CreatePolygon();
+        });
+        /**
+         * 画多边形回调函数
+         * @param pFeat
+         * @param geoType
+         */
+        var onCreatePolygon = function (pFeat, geoType) {
+            if (pFeat.Count < 3) {
+                alert("无效的多边形");
+                return false;
+            }
+            creatQuery(pFeat);
+            earth.Event.OnCreateGeometry = function () {
+            };
+        };
+        $("#btnCircleSelect").click(function () {
+            earth.Event.OnCreateGeometry = onCreateCircle;
+            earth.ShapeCreator.Clear();
+            earth.ShapeCreator.CreateCircle();
+        });
+        var onCreateCircle = function (pFeat, geoType) {
+           creatQuery(pFeat);
+            earth.Event.OnCreateGeometry = function () {
+            };
+        };
+        var creatQuery=function(pFeat){
+            var bShow  = $("#detailData").attr("checked") == "checked";
+			var tableName = top.getName("US_ATTACHMENT",0,true);
+            var strPara = "";
+            $("#divPipeLineTypeList input:checkbox[checked=checked]").each(function (i,v){
+                strPara += "(or,equal,"+ tableName + "," + $(v).val() + ")";
+            });
+            var vv = $("#selLayers option:selected");
+            var guid = vv.val();
+            var name = vv.text();
+            //查询
+            var header = ["US_KEY", "US_ATTACHMENT"];
+            var aliasHeader = ["编号", "附属物"];
+            var queryTableType = [0];
+            query = Query.PageHelper(earth);
+            query.setShow(bShow);
+            query.initParams([guid], [name, name], pFeat, strPara, 16, queryTableType, header, aliasHeader);
+            spaceParams=pFeat;
+            $("#detailData").attr("disabled", false);
+        };
+        /**
+		 * 功能：【导出Excel】按钮onclick事件
+		 */
+		$("#importExcelBtn").click(function(){
+            $("#importResult>tbody").empty();
+            var strPara = "";
+            $("#divPipeLineTypeList input:checkbox[checked=checked]").each(function (i,v){
+                strPara += "(or,equal,"+ tableName + "," + $(v).val() + ")";
+            });
+            var vv = $("#selLayers option:selected");
+            var guid = vv.val();
+            var standardName=["INDEX","DISPLAYTYPE"];
+            QueryObject.paramQueryALL(spaceParams,guid,strPara,16,0, null,query.getTotalNum(),standardName);
+            var tabObj = $("#importResult>tbody")[0];
+            var columns = ["编号", "类型"];
+            StatisticsMgr.importExcelByTable(tabObj, columns);
+		});
+        $(window).unload(function () {
+            if(earth.ShapeCreator!=null){
+                earth.ShapeCreator.Clear();
+            }
+            //关闭页面的时候关闭所有管线的闪烁
+            if(query){
+                query.stopHighLight(); 
+            }
+            StatisticsMgr.detachShere();
+        });
+    });
+</script>
+</body>
+</html>

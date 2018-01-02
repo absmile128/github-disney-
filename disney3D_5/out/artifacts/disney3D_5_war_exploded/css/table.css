@@ -1,0 +1,39 @@
+/**
+ * User: wyh
+ * Date: 12-11-21
+ * Time: 下午10:23
+ * Desc: 
+ */
+@CHARSET "UTF-8";
+td{
+    height:20px;
+    padding:0px
+}
+.maintextclass
+{
+    background-color:#99B2D7;
+    font-size:12px;
+    font-weight:bold;
+    padding:5px;
+    text-align: center;
+
+}
+.texttdclass2
+{
+    border: 1px solid #808080;
+    background-color:#fff445;
+    font-size:11px;
+    padding-left:5px;
+    padding-right:5px;
+    text-align:left;
+}
+
+
+.texttdclass
+{border: 1px solid #808080;
+    background-color:#ffffff;
+    font-size:11px;
+    padding-left:5px;
+    padding-right:5px;
+    text-align:left;
+}

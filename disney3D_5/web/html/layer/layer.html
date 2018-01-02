@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>图层管理</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <link rel="stylesheet" href="../../css/common.css" />
+
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+
+    <!--<script src="../../js/index.js"></script>-->
+    <script src="../../js/layer.js"></script>
+    <script src="../../js/project.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>
+
+</head>
+<body>
+
+            <div class="easyui-tabs" fit="true" border="false">
+
+                <div title="基础图层">
+                    <ul id="layerTree" class="ztree"></ul>
+                </div>
+            </div>
+            <object id="dataProcess" classid="clsid:DDA7E893-8EEE-4A1E-A506-867932BD0FB9" style="display:none;"></object>
+  <script>
+      var earth =null;
+      var layerManager=null;
+      var projManager=null;
+
+
+
+           $(function (){
+                 earth = parent.earth;
+                 layerManager = CITYPLAN.LayerManager(earth);
+//                 projManager = CITYPLAN.ProjectManager(earth, document.getElementById("dataProcess"));
+                 initLayerTree(); //cy:初始化基础图层树
+                });
+
+
+                /**
+                 * 初始化基础图层树
+                 */
+                function initLayerTree() {
+                    var setting = {
+                        check: {
+                            enable: true, //是否显示checkbox或radio
+                            chkStyle: "checkbox" //显示类型,可设置(checbox,radio)
+                        },
+                        data: {
+                            simpleData: {
+                                enable: true
+                            }
+                        },
+                        view: {
+                            dblClickExpand: false, //双击节点时，是否自动展开父节点的标识
+                            expandSpeed: "", //节点展开、折叠时的动画速度, 可设置("","slow", "normal", or "fast")
+                            selectedMulti: false //设置是否允许同时选中多个节点
+                        },
+                        callback: {
+                            onCheck: function(event, treeId, node) {
+                                parent.showDatas(node);
+                            },
+                            onDblClick: function (event, treeId, node) {
+                                if (node && node.id) {
+                                        var layer = earth.LayerManager.GetLayerByGUID(node.id);
+                                        if (layer && layer.LayerType) {
+                                            layerManager.flyToLayer(layer); //定位图层
+                                        }
+                            }
+                            }
+                        }
+                    };
+
+                    var zNodes = [];
+//                   var baseLayerDatas = layerManager.getLayerData(null,"",parent.currentPrjGuid);
+
+//                    zNodes = zNodes.concat(baseLayerDatas);
+//                    $.fn.zTree.init($("#layerTree"), setting, zNodes);
+//                    var tree = $.fn.zTree.getZTreeObj("layerTree");
+//                    var treeNode = tree.getNodeByParam("id", parent.currentPrjGuid);
+//                    tree.checkNode(treeNode, false, true);
+
+
+                    var baseLayerDatas = layerManager.getLayerData(null,true);
+                    $.fn.zTree.init($("#layerTree"), setting, baseLayerDatas);
+                }
+
+  </script>
+
+
+</body>
+</html>

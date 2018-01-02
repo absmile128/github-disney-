@@ -1,0 +1,323 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+    <meta charset="UTF-8"/>
+    <title>规划用地查询</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <link rel="stylesheet" href="../../css/common.css" />
+
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+
+
+    <script type="text/javascript" src="../../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.ztree.core-3.5.min.js"></script>
+
+
+    <script src="../../js/CITYPLAN_config.js"></script>
+    <script src="../../js/common.js"></script>
+
+</head>
+<body >
+
+
+<div style=" text-align:center;  margin-top: 5px;">
+    <div id="div_word" style="height: 20px;margin-top: 20px;" >
+        <a style="text-decoration:underline ;color:blue; cursor: hand;"  id="chk"  onclick="chk_change()">开启规划信息导览图</a>
+
+        <!--<button id="chk" class="normal2Btn"  style="margin-right: 5px;" onclick="chk_change()" >关闭无关图层</button>-->
+    </div>
+    <div style="height: 20px; margin-top: 20px;" >
+        <input type="checkbox"  id="chkinput" style="position: absolute;right:75px;" value="30"  onclick="chkinput_change()" />
+        <label id="chkinput_label" style="float:right;" >关闭无关图层 </label>
+    </div>
+
+
+<!--图例          -->
+         <div id="legend_div" style=" display: none;  text-align:left; overflow: auto;  margin-top: 20px; font-weight: bold;">
+
+
+        <table   >
+            <tr >
+                <td ><label>设施：</label></td>
+            </tr>
+            <tr>
+               <td>  <img  src="../../image/legend/ss_pic.png"/></td>
+
+
+            </tr>
+
+            <tr>
+                <td ><label>控制线：</label></td>
+            </tr>
+            <tr>
+                <td>  <img  src="../../image/legend/kzx_pic.png"/></td>
+
+
+            </tr>
+
+
+
+            <tr>
+                <td ><label>用地性质：</label></td>
+            </tr>
+            <tr>
+                <td>  <img  src="../../image/legend/ydxz_pic.png"/></td>
+
+
+            </tr>
+
+
+
+
+        </table>
+
+
+
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+<script>
+    var earth = parent.earth;
+
+    var WMSLayerArray=     parent.WMSLayerArray;//shape文件
+    var layerArray=null;
+     var layer=   parent.WMSLayerArray[0]   ;//cy:eg  wms_disney
+
+
+    var  layer2 =null;
+    var id=   parent.WMSLayerArray[0].id   ;
+    layer2 = earth.LayerManager.GetLayerByGUID(id);
+    $(function () {
+       setsize()  ;   //设置图例高度，以适合不同的屏幕分辨率
+        iswwmsvisible();
+
+
+
+
+        //读取服务树内容
+//        function gettree(){
+//
+//            var setting = {
+//                check: {
+//                    enable: true, //是否显示checkbox或radio
+//                    chkStyle: "checkbox" //显示类型,可设置(checbox,radio)
+//                },
+//                data: {
+//                    simpleData: {
+//                        enable: true
+//                    }
+//                },
+//                view: {
+//                    dblClickExpand: false, //双击节点时，是否自动展开父节点的标识
+//                    expandSpeed: "", //节点展开、折叠时的动画速度, 可设置("","slow", "normal", or "fast")
+//                    selectedMulti: false //设置是否允许同时选中多个节点
+//                },
+//                callback: {
+//                    onDblClick: function (event, treeId, node) {
+//                        if (node && node.id) {
+//                            var layer = earth.LayerManager.GetLayerByGUID(node.id);
+//                            if (layer && layer.LayerType) {
+//                                layerManager.flyToLayer(layer); //定位图层
+//                            }
+//                        }
+//                    },
+//                    onCheck: function (event, treeId, node) {
+//                        var layer = earth.LayerManager.GetLayerByGUID(node.id);
+//                        layer.Visibility = node.checked;
+//                    }
+//                }
+//            };
+//
+//
+//            var nodes = {id:1, pId:0, name:"规划信息",open:true, nocheck: false,isParent:true};
+//
+//            var planNodes =[];
+//            for(var i=0;i<layer.children.length;i++)
+//
+//            {   planNodes.push({id:layer.children[i].id,name:layer.children[i].name,pId:1,open:true,isParent:false}); }
+//
+//
+//            nodes.children =  planNodes;
+//            var Tree= $.fn.zTree.init($("#tree"), setting, nodes);
+//            Tree.expandAll(true);
+//
+//        }
+//        gettree();
+
+
+        $(window).unload(function(){
+            if(parent.earth == null){
+                return;
+            }
+            recoverhide();
+            closewms();
+    });
+    });
+
+
+
+
+
+    function iswwmsvisible()
+    {
+
+        if (layer2.Visibility==true) {
+        //  hide();
+          $("#legend_div").css("display","block");
+
+        }
+
+
+
+    }
+
+
+
+    function chk_change()
+    {
+
+        var txt=$("#chk").text();
+        if(txt=="开启规划信息导览图")
+        {
+
+//          hide();
+            openwms();
+            $("#chk").text("关闭规划信息导览图");
+            $("#legend_div").css("display","block");
+        }
+        else
+
+        {
+//        recoverhide();
+            closewms();
+
+            $("#chk").text("开启规划信息导览图");
+            $("#legend_div").css("display","none");
+        }
+
+
+
+
+    }
+
+    function chkinput_change() {
+
+
+        if($("#chkinput").attr("checked")=="checked"){
+            hide();
+//            $("#chkinput_label").text("开启无关图层");
+        }
+        else
+        {
+            recoverhide();
+//            $("#chkinput_label").text("开启无关图层");
+
+        }
+     }
+
+    function hide()
+    {
+
+        parent.setalllayersvisibility(false);  //关闭所有地上模型
+
+
+
+
+        var  layer2isopen=  layer2.Visibility;
+        layer2.Visibility =  layer2isopen  ;
+
+
+//            if (layer2.Visibility==false) {
+//                layer2.Visibility =true;
+//            }
+//        else
+//            {
+//
+//                layer2.Visibility =true;
+//            }
+
+
+    }
+    function recoverhide()
+    {
+
+        for(var i=0;i<parent.hidedlayers.length;i++)
+        {
+            var layer=  parent.hidedlayers[i];
+            layer.Visibility=true;
+        }
+
+
+
+  //cy:10.10
+
+        var elistarray1= parent.currentLayerObjList[parent.currentApproveProjectGuid];
+        if(elistarray1!=null&&elistarray1.length>0){
+             parent.hideXZ(); //抠现状
+        }
+      //cy:10.10
+        var  layer2isopen=  layer2.Visibility;
+        layer2.Visibility =  layer2isopen  ;
+//        if(this.layer2!=null)     //关闭地块图层
+//            if (this.layer2.Visibility==true) {
+//                this.layer2.Visibility =false;
+//            }
+    }
+
+
+
+    function closewms()
+    {
+        if(this.layer2!=null)     //关闭地块图层
+            if (this.layer2.Visibility==true) {
+                this.layer2.Visibility =false;
+            }
+
+    }
+
+    function openwms()
+    {
+
+        if (layer2.Visibility==false) {
+            layer2.Visibility =true;
+        }
+        else
+        {
+
+            layer2.Visibility =true;
+        }
+    }
+
+
+    function  setsize()
+    {
+
+
+        var winHeight= window.parent.document.getElementById('ifResult').offsetHeight;
+        var div_wordHeight=document.getElementById('div_word').offsetHeight;
+
+
+
+     document.getElementById ("legend_div").style.height =winHeight- div_wordHeight-80 + "px";
+    }
+</script>
+
+</body>
+
+</html>

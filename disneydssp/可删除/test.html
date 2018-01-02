@@ -1,0 +1,177 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
+<head>
+    <title>上海国际旅游度假区三维空间基础信息平台</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+
+    <script  type="text/javascript"  src="js/lib/jquery.js"></script>
+    <script  type="text/javascript"  src="js/lib/jquery.easyui.min.js"></script>
+
+
+
+
+    <script type="text/javascript">
+        $(function (){
+
+
+//            var webserviceurl="http://172.26.36.26/service/AccountService.asmx/Login";
+//            $.post( webserviceurl,
+//                    { user: '1' , pwd: '1' },
+//
+//                        function(data){
+//                            alert(1);
+//                        }
+//                );
+
+//             contentType: "application/json;utf-8", //WebService会返回json类型
+       /////////////////////////////////////////////////////////////////////
+//            var webserviceurl = "http://172.26.36.26/service/AccountService.asmx/Login";
+////            var  clientid="4XacdVnU7VdM2CDYrMdMQg=="  ;
+////            var   clientpwd="7YgmbUBwVaU="  ;
+//
+////            var obj = {"name":"1","pwd":"1","clientid":clientid,"clientpwd":clientpwd};
+////            var str = JSON.stringify(obj);
+//         //   data: {name:'1',pwd:'1',clientid:clientid,clientpwd:clientpwd}, //这里是要传递的参数
+//
+//            debugger;
+//            $.ajax({
+//                type: "POST",  //访问WebService使用post方式请求
+//                contentType:  "application/json;utf-8",
+//                url: webserviceurl, //调用WebService的地址和方法名称组合
+//                data: {name:'1',pwd:'1'}, //这里是要传递的参数
+//                dataType: "json",
+//                success: function(result) {
+//                    alert(result.d);
+//                }
+//            })
+
+
+            /////////////////////////////////////////////////////////////////////
+
+
+
+
+
+//            var webserviceurl = "http://172.26.36.26/service/AccountService.asmx/Login";
+//            var user = new Object();
+//         //   user.name = "guest";
+//            user.name = "11";
+//            user.pwd = "123";
+//            user.clientid = "4XacdVnU7VdM2CDYrMdMQg==";
+//            user.clientpwd = "7YgmbUBwVaU=";
+//            var json = JSON.stringify(user);
+//
+//
+//            $.ajax({
+//                type: "POST",  //访问WebService使用post方式请求
+//                contentType: "application/json;utf-8",   //WebService会返回json类型
+//                url: webserviceurl, //调用WebService的地址和方法名称组合
+//                data:json,  //这里是要传递的参数
+//                dataType: "json",
+//                success: function(result) {
+//                    alert(result.d);
+//                }
+//            })
+
+
+
+//            var webserviceurl = "http://172.26.36.61/ExternalService/AccountService.asmx/HelloWorld";
+//            $.ajax({
+//                type: "POST",  //访问WebService使用post方式请求
+//                contentType: "application/json;utf-8",   //WebService会返回json类型
+//                url: webserviceurl, //调用WebService的地址和方法名称组合
+//
+//                dataType: "json",
+//                success: function(result) {
+//                    debugger;
+//                    alert(result);
+//                }
+//            })
+
+          GetXml() ;
+
+
+
+        });
+
+
+        /*	异步，动态的加载数据	*/
+        function GetXml()
+        {
+
+//            var user = new Object();
+//            user.name = "guest";
+//            user.pwd = "123";
+//            user.clientid = "4XacdVnU7VdM2CDYrMdMQg==";
+//            user.clientpwd = "7YgmbUBwVaU=";
+//            var json = JSON.stringify(user);
+
+            var username="guest";
+            var  password = "123";
+            var  clientid="4XacdVnU7VdM2CDYrMdMQg=="  ;
+            var   clientpwd="7YgmbUBwVaU="  ;
+
+
+
+//       var s="POST /ExternalService/AccountService.asmx HTTP/1.1"+
+//            "Host: 172.26.36.61"+
+//            "Content-Type: application/soap+xml; charset=utf-8"+
+//           "Content-Length: length"+
+//
+//                "<?xml version='1.0' encoding='utf-8'?>"+
+//        "<soap12:Envelope xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xsd='http://www.w3.org/2001/XMLSchema' xmlns:soap12='http://www.w3.org/2003/05/soap-envelope'>"+
+//               "<soap12:Body>"+
+//        "<Login xmlns='www.baosight.com'>"+
+//                "<name>"+name+"</name>"+
+//                "<pwd>"+pwd+"</pwd>"+
+//                "<clientid>"+clientid+"</clientid>"+
+//                "<clientpwd>"+clientpwd+"</clientpwd>"+
+//                "</Login>"+
+//                "</soap12:Body>"+
+//                "</soap12:Envelope>";
+
+
+
+
+
+            var webserviceurl="http://172.26.36.26/service/AccountService.asmx/Login";    //宝信服务地址
+            var args = "?name="+username+"&pwd="+password+"&clientid="+clientid+"&clientpwd="+clientpwd;
+            var url= webserviceurl+  args;
+
+            var XmlHttp=new ActiveXObject("Microsoft.XMLHTTP")
+            XmlHttp.onreadystatechange=function()
+            {
+                if(XmlHttp.readyState==4)
+                {
+                    if(XmlHttp.status==200)
+                    {
+                        var Xmldoc=XmlHttp.responseXML;
+                        //window.alert(Xmldoc.xml);
+                        if(Xmldoc.documentElement!=null)
+                        {
+                            var root=Xmldoc.documentElement;
+                            alert(root.text);
+
+
+
+                        }
+                    }
+                }
+            }
+            XmlHttp.open("get",url,false)  ;
+            XmlHttp.send() ;
+        }
+
+    </script>
+
+</head>
+<body>
+
+
+
+
+</body>
+
+</html>
+

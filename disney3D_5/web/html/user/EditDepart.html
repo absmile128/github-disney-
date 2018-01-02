@@ -1,0 +1,101 @@
+<html xmlns:v="http://www.w3.org/2001/XMLSchema">
+<head>
+    <title>修改部门信息</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script type="text/javascript" src="../../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.easyui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../js/util/easyui/themes/default/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" type="text/css" href="../../js/util/easyui/themes/icon.css"/>
+    <script src="../../js/CITYPLAN_config.js"></script>
+
+    <script>
+        var params = window.dialogArguments;
+        var depId=params.depId;
+        $(function () {
+
+                getinfo(depId);
+
+        });
+        function getinfo(depId) {
+
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/CaseHandler.ashx?action=GetDepartmentInfoById",
+                data: {
+                    depId:depId
+                },
+                cache: false,
+                success: function (data) {
+                    setinfo(data);
+
+                },
+                error:function (x,t,e) {
+
+                    alert("添加失败！");window.returnValue=false;
+
+                }
+            });
+        }
+        function setinfo(data) {
+
+            $("#depname").val(data.DEPNAME);
+            $("#description").val(data.DESCRIPTION);
+
+        }
+        function  submit() {
+            var depname=$.trim($("#depname").val() );
+            if(depname=="") {alert("请将信息填写完整！");return;}
+            var description=$.trim($("#description").val() );
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/CaseHandler.ashx?action=SaveDepartmentInfo",
+                data: {
+                    depId:depId,
+                    depName:depname,
+                    description:description
+              },
+                cache: false,
+                success: function (data) {
+                   if(data.Result==true){
+                       alert("修改成功！");
+                       window.returnValue=true;
+                       window.close();
+                   }else {
+                       alert("修改失败！原因："+data.ErrMsg.toString());window.returnValue=false;
+                   }
+                },
+                error:function (x,t,e) {
+
+                        alert("修改失败！");window.returnValue=false;
+
+                }
+            });
+        }
+        function  cancel() {window.close();}
+    </script>
+</head>
+
+
+
+<body  >
+<table>
+    <tr>
+        <td   class="texttdclass">部门名字：</td>
+        <td class="texttdclass"><input  id="depname"  ></td>
+        <td   class="texttdclass">*</td>
+    </tr>
+    <tr>
+        <td   class="texttdclass">描述：</td>
+        <td class="texttdclass"><input  id="description"  ></td>
+
+    </tr>
+</table>
+  <div style="text-align:center">
+<input id="ok_btn" type="button" value="确  定" style="width: 60px;" onclick="javascript:submit();">
+<input id="cancle_btn" type="button" value="取  消" style="width: 60px;margin-left: 20px;" onclick="javascript:cancel();">
+  </div>
+</body>
+</html>

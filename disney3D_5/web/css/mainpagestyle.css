@@ -1,0 +1,190 @@
+/*reset*/
+body{font-size:12px;font-family:"宋体";}
+*,body,div,p,a,span,strong,label,ul,li,table,th,td,img{margin:0px;padding:0px;}
+ul,li{list-style:none;}
+a{ text-decoration:none;cursor:pointer;}
+img{border:none;margin:0;padding:0px;}
+.clear{clear:both;}
+
+/**/
+.top{
+	height:93px;
+	width:100%;
+	background:url(../image/pageimg/topbg.jpg) repeat-x;
+}
+
+.topin{
+	height:93px;
+	width:1185px;
+	margin:auto;
+	background:url(../image/pageimg/topbgin.jpg) repeat-x;
+}
+
+.logo{
+	float:left;
+	margin-left:40px;
+	margin-top:20px;
+}
+.logo1{
+	float:right;
+	margin-right:40px;
+}
+.back{
+	float:right;
+	margin-right:30px;
+	margin-top:60px;
+}
+
+.mainmenu{
+	margin:10px 0px 5px 0px;
+	height:85px;
+}
+
+.menul{
+	width:80%;
+	height:100%;
+	float:left;
+	border-right:dashed 1px rgb(4,100,187);
+}
+
+.menul>ul{
+}
+
+.menul>ul>li{
+	width:150px;
+	height:31px;
+	text-indent:45px;
+	line-height:31px;
+	font-weight:bold;
+	float:left;
+	margin-left:20px;
+	position:relative;
+}
+.menul>ul>li>a{
+	color:#333;
+	font-size:14px;
+	font-family: "宋体";
+}
+.menul>ul>li:hover>a{
+	color:#fff;
+}
+.menul ul li.li1{
+	background:url(../image/pageimg/i1.png) no-repeat;
+}
+.menul ul li.li2{
+	background:url(../image/pageimg/i2.png) no-repeat;
+}
+.menul ul li.li3{
+	background:url(../image/pageimg/i3.png) no-repeat;
+}
+.menul ul li.li4{
+	background:url(../image/pageimg/i4.png) no-repeat;
+}
+.menul ul li.li5{
+	background:url(../image/pageimg/i5.png) no-repeat;
+}
+.menul ul li.li1:hover{
+	background:url(../image/pageimg/i11.png) no-repeat;
+}
+.menul ul li.li2:hover{
+	background:url(../image/pageimg/i22.png) no-repeat;
+}
+.menul ul li.li3:hover{
+	background:url(../image/pageimg/i33.png) no-repeat;
+}
+.menul ul li.li4:hover{
+	background:url(../image/pageimg/i44.png) no-repeat;
+}
+.menul ul li.li5:hover{
+	background:url(../image/pageimg/i55.png) no-repeat;
+}
+.menur {
+	width:19%;
+	float:right;
+}
+.menur li{
+	width:50px;
+	height:50px;
+	float:left;
+	margin-top:20px;
+	margin-left:10px;
+}
+.submenu{
+	position:absolute;
+	top:40px;
+	width:800px;
+}
+.submenu li{
+	height:40px;
+	line-height:40px;
+	width:130px;
+	float:left;
+	background:red;
+	text-indent:35px;
+}
+.submenu li a{
+	font-family: "宋体";
+	font-size:12px;
+	color:#333;
+	font-weight:normal;
+
+}
+.submenu li a:hover{
+	color:rgb(4,100,187);
+}
+.submenubg{
+	height:40px;
+	line-height:40px;
+	background:#eee;
+	width:100%;
+	margin-top:40px;
+}
+.content{
+	height:710px;
+	margin:auto;
+	border:solid 1px rgb(156,175,189);
+}
+.conleft{
+	width:250px;
+	float:left;
+	height:100%;
+}
+.lefttit{
+	height:32px;
+	line-height:32px;
+	text-align:center;
+	background:url(../image/pageimg/lefttit.png) repeat-x;
+	border-bottom:solid 1px rgb(116,155,188);
+	font-size:14px;
+}
+.btn{
+	width:6px;
+	height:710px;
+	float:left;
+	background:url(../image/pageimg/btnbg.png) repeat-y;
+}
+#btn{
+	width:6px;
+	height:53px;
+	background:url(../image/pageimg/btn.png);
+	margin-top:300px;
+}
+.conright{
+	height:710px;
+	float:right;
+	background:url(../image/pageimg/contrbg.png) right bottom no-repeat;
+}
+.concact{ width:490px; height: 38px;background: url(../image/pageimg/cont0.png) 0px 0px no-repeat; margin: auto; margin-top: 0px;}
+.concact ul li{ float: left; height: 30px; line-height: 30px; border-right: 1px solid #ccc; margin-top: 3px;font-size: 14px;}
+.concact ul li a{color: #242424; cursor: pointer;}
+.concact ul li a:hover{color: #e9862a;}
+/*.concact ul li a label:hover{color: #e9862a;}*/
+/*.concact ul li:first-child{ width:115px;background:url(../image/pageimg/cont111.png) 24px 8px no-repeat; text-indent: 47px;}*/
+.concact ul li:first-child{ width:115px;background:url(../image/pageimg/cont1.gif) 20px 5px no-repeat; text-indent: 47px;}
+/*.concact ul li:first-child+li{ width:235px; text-indent: 25px;}*/
+.concact ul li:first-child+li{ width:315px; text-indent: 25px;}
+.concact ul li a.yaz{ color: #00761f;}
+.concact ul li a.bj{color: #f82c2c;}
+.concact ul li a.ls{color: #00761f;}
+.concact ul li:first-child+li+li{ width:55px; border-right: 0px; text-align: center;}
+.concact ul li:first-child+li+li img{ margin-top:6px;}

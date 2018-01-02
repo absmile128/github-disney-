@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>通视分析</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/common.css"/>
+
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+</head>
+<body>
+<div style="margin-top: 20px;text-align: center">
+    <span>起点高度:&nbsp;</span>
+    <input id="startHeight" name="startHeight" width="110px" type="text" value="2"/>
+    <span>米</span>
+</div>
+
+<div style="text-align: center;margin-top: 20px;" >
+    <span>目标高度:&nbsp;</span>
+    <input id="endHeight" name="endHeight" type="text" value="2"/>
+    <span>米</span>
+</div>
+<div style="height: 20px;margin-top: 20px;" >
+    <input type="checkbox"  id="chk" width="110px" style="position: absolute;right:80px;" value="30" checked/>
+    <label style="float:right;" >仅分析方案 </label>
+</div>
+<!--<div style="text-align: center;">-->
+    <!--<button  id="btnStart">开始分析</button>-->
+    <!--<button   id="showHeight" disabled>显示高度</button>-->
+  <!--&lt;!&ndash;  <button  id="clear"   >退出</button>&ndash;&gt;-->
+<!--</div>-->
+
+<div style="border-bottom:1px dashed #000000;  margin-top: 20px;"></div>        <!--虚线-->
+<div  style=" text-align: right;  margin-top: 30px;">
+    <!--<button    id="btnStart" class="largeBtn" >开始分析</button>-->
+    <!--<button   id="showHeight"  class="largeBtn"  disabled>显示高度</button>-->
+    <button    id="btnStart" class="normal2Btn" >开始分析</button>
+    <button   id="showHeight"  class="normal2Btn"  disabled>显示高度</button>
+</div>
+
+
+<script src="../../js/lib/jquery.min.js"></script>
+<script src="../../js/lib/jquery.easyui.min.js"></script>
+<script src="../../js/CITYPLAN_config.js"></script>
+
+<script src="../../js/project.js"></script>
+<script src="../../js/common.js"></script>
+<!--<script src="../../js/index.js"></script>-->
+<script src="../../js/analysis.js"></script>
+<!--<script src="../../js/analysis.js"></script>-->
+<script>
+    var earth = parent.earth;
+    var analysis = CITYPLAN.Analysis(earth);
+    $(function () {
+
+        var  btnAry = [$("#btnStart"),
+            $("#showHeight"),
+            $("#clear"),
+            $("#endHeight"),
+            $("#startHeight")];
+        //var lightsightClear=false;
+
+            $("#btnStart").click(function(){   
+             if(check()){            
+                    if($("#btnStart").text()==="开始分析"){
+                        $("#btnStart").attr("disabled","disabled") ;
+                        $("#endHeight").attr("disabled","disabled") ;
+                        $("#startHeight").attr("disabled","disabled") ;
+                        var analysisT = $("#chk").attr("checked");
+
+                          var startHeight= $("#startHeight").val();
+                        var endHeight= $("#endHeight").val();
+
+                        analysis.lineOfSight(startHeight,endHeight,analysisT,btnAry);
+                    }
+                }
+            });
+//            $("#clear").click(function(){
+//                parent.clearHtmlBallon(earth.htmlBallon);
+//            });
+            $("#showHeight").click(function(){
+                analysis.showHeightLine();
+                $("#btnStart").removeAttr("disabled") ;
+                $("#showHeight").attr("disabled","disabled") ;
+                $("#clear").removeAttr("disabled") ;
+            });
+
+        window.onunload=function(){
+            analysis.clear();
+        };
+    });
+
+    function check(){
+        if(isNaN($("#startHeight").val()) == true){
+            alert("无效的起点高度");
+            startHeight.select();
+            startHeight.focus();
+            return false;
+        }
+        if(isNaN($("#endHeight").val()) == true){
+            alert("无效的目标高度");
+            endHeight.select();
+            endHeight.focus();
+            return false;
+        }
+        return true;
+    }
+    /* function linesight(){
+     analysis.lineOfSight(startHeight.value,endHeight.value);
+     document.getElementById("btnStart").text("");
+     }*/
+</script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+	<meta http-equiv="Content-Type" content="textml; charset=UTF-8" />
+    <title>道路查询</title>
+    <link rel="stylesheet" href="../../css/common.css"/>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css" />
+    <link rel="stylesheet" href="../../css/easyui/icon.css" />
+    <style type="text/css">
+        #divPipeLineLayersList {
+            overflow-y: auto;
+        }
+
+        #divPipeLineLayersList div {
+            width: 85px;
+            display: inline-block;
+        }
+
+        button {
+            margin: 5px;
+        }
+
+    </style>
+</head>
+<body id="container" class="easyui-layout" >
+<div region="north" border="false" style="width: 255px;overflow:hidden;">
+    <fieldset style="margin: 0;">
+        <legend>参数设置</legend>
+        <div style="width:100%; height:25px;padding-left:30px;">
+            <label for="projectList">选择工程:</label>
+            <select id="projectList" style="width:140px;"></select>
+        </div>
+        <div style="float: left;width: 100%;padding-left:30px;">
+            <input type="text" id="where" name="where" size="13" style="width:120px;">&nbsp;&nbsp;
+            <button id="btnWhere">过滤</button>
+        </div>
+        <div style="float: left;width: 125px;height: 120px;border:1px solid silver; margin-left:10px;">
+            <div style="width: 100%;height:90px;overflow: auto;">
+                <table id="tabList"></table>
+            </div>
+            <div id="divPage" border="false" style="display:none;width: 99%;height: 30px;">
+                <div id="page" style="border-top:1px solid #ddd;height: 30px;">  
+                </div>
+            </div>
+        </div>
+        <div id="divPipeLineLayersList"
+             style="height: 120px; width:85px;border:1px solid silver; float:right;overflow: auto;margin-right:10px;">
+        </div>
+        <div style="clear: both;"></div>
+        <div style="padding-top: 5px;text-align: left;width: 100%; padding-left:30px;">
+            缓冲半径:<input type="text" id="radius" name="radius" value="50" size="5" disabled>米
+            <button id="btnQuery" disabled>查询</button>
+        </div>
+    </fieldset>
+</div>
+<div region="center" border="true" style="overflow-y: hidden;overflow-x: hidden;">
+    <table id="dg" title="查询结果" style="width:254px;height:300px" border="0" data-options="
+                rownumbers:false,
+                singleSelect:true,
+                autoRowHeight:true,
+                pagination:true"
+            >
+    </table>
+</div>
+<div region="south" border="false" style="height: 30px;overflow:hidden">
+    <div style="margin-top: 3px;float: left;">
+        <input type="checkbox" id="detailData" name="detailData" disabled>详细信息
+    </div>
+    <div style="margin-top: 0px; float: right;margin-right: 10px;">
+        <button id="importExcelBtn" disabled style="margin-left: 10px;">导出</button>
+    </div>
+</div>
+<div style="display: none;">
+    <table id="importResult">
+        <tbody></tbody>
+    </table>
+</div>
+<script type="text/javascript" src="../../util/jquery.js"></script>  <script type="text/javascript" src="../../util/CustomFcn.js"></script>
+<script type="text/javascript" src="../../util/jquery-easyui/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="../../js/common.js"></script>
+<script type="text/javascript" src="../../util/jquery.xml2json.js"></script>
+<script type="text/javascript" src="../../util/FileValueStringMap.js"></script>
+<script type="text/javascript" src="../../js/statistics.js"></script>
+<script type="text/javascript" src="../../js/parameter.js"></script>
+<script type="text/javascript" src="../../js/query/query.js"></script>
+<script type="text/javascript" src="../../js/pageHelper.js"></script>
+<script type="text/javascript"> 
+    /**
+     * 屏蔽右键菜单
+     */
+    document.oncontextmenu = function () {
+        event.returnValue = false;
+    };
+    var earth = null;
+    var query;
+    var pageSize = 10; //每页显示条数
+    var pageIndex = 1;//页码数（第几页）
+    var filterCondition = null;
+    $("#detailData").click(function (){
+        var bShow  = $(this).attr("checked") == "checked";
+        //alert(bShow);
+        if(!bShow){
+            top.clearHtmlBalloons();
+        }
+        if(query){
+            query.setShow(bShow);
+        }
+    });
+
+    $('div.enter').bind("selectstart", function() { return false; });  
+    //document.onselectstart = new Function('event.returnValue=false;');
+
+    $("div.enter").mouseenter(function(){//mouseover mouseenter
+       document.onselectstart = new Function('event.returnValue=false;');
+    });
+
+    $("div.enter").mouseleave(function(){//mouseout mouseleave
+       document.onselectstart = new Function('event.returnValue=true;');
+    });
+
+    $(function () {
+
+        var divHeight = $(parent.document).height() - 422;
+        $("#dg").height(divHeight);
+
+        earth = top.earth;
+        //var projectId = parent.SYSTEMPARAMS.project;
+        StatisticsMgr.initProjectList($("select#projectList"));// 初始化“阶段”下拉列表
+        StatisticsMgr.initPipelineList($("select#projectList").val(), $("#divPipeLineLayersList"));//初始化管线图层列表
+        parent.SYSTEMPARAMS.project = $("select#projectList").val();
+        parent.SystemSetting.initSystemParam();
+        $("select#projectList").change(function () {
+            StatisticsMgr.initPipelineList($("select#projectList").val(), $("#divPipeLineLayersList"));//初始化管线图层列表
+            parent.SYSTEMPARAMS.project = $("select#projectList").val();
+            parent.SystemSetting.initSystemParam();
+        });        
+        /**
+         * 过滤
+         */
+        $("#btnWhere").click(function () {
+            pageIndex = 1;
+            filterCondition = $("#where").val();
+            queryPageData(true);
+            
+            btnEnabled();
+            $("#radius").removeAttr("disabled");
+        });
+        
+        //分页查询数据
+        var queryPageData = function(bClickFilter){
+            var tabList = $("#tabList");
+            tabList.empty();
+            var radius=$("#radius").val();
+            QueryObject.setRadius(radius);
+            QueryObject.getTypeQuery2(tabList, "road" , filterCondition, $("select#projectList").val(), null,pageIndex-1, pageSize, bClickFilter, pagePagination);
+        }
+
+        //分页控件
+        var pagePagination  = function(totalCount, pageCount){ //
+            $("#page").pagination({
+                total:totalCount,//总的记录数
+                pageSize:pageSize,//每页显示的大小。
+                showPageList:false,
+                showRefresh:false,
+                displayMsg:"",
+                beforePageText: "",
+                afterPageText: "" + pageCount + "页",
+                //pageList: [10,20,50,100],//选择每页显示的记录数的下拉框的值。
+                onSelectPage: function(pageNumber, ps){//选择相应的页码时刷新显示内容列表。
+                    pageIndex = pageNumber;
+                    queryPageData(false);
+                }
+            });
+            var pageNextArr = $("#page td");
+            pageNextArr[0].style.display = "none";
+            pageNextArr[pageNextArr.length-1].style.display = "none";
+            $(".pagination-num").css("width","1em");
+            if(totalCount > 0){
+                $("#divPage").show();
+            }
+            btnEnabled();
+        }
+
+        $("#divPipeLineLayersList").click(function(){
+            btnEnabled();
+        });
+        $("#tabList").click(function(){
+            btnEnabled();
+        });
+        $("#radius").keyup(function () {
+            var radius=$("#radius").val();
+            if(isNaN(radius)||radius<0||radius==""){
+                $("#radius").val(0);
+            }
+            QueryObject.setRadius(radius);
+            //QueryObject.setRadius(radius);
+            //QueryObject.createBufferFromLine(radius);
+        });
+        var btnEnabled = function () {
+            var roadName = $(".trbg").html();//道路
+            var length = ($("#divPipeLineLayersList input:checkbox[checked=checked]")).length;
+            if (length > 0&&roadName!=null) {
+                $("#btnQuery").attr("disabled", false);
+                //$("#importExcelBtn").attr("disabled", false);
+                $("#detailData").attr("disabled", false);
+            } else {
+                $("#btnQuery").attr("disabled", true);
+                //$("#importExcelBtn").attr("disabled", false);
+                $("#detailData").attr("disabled", true);
+            }
+        };
+        $("#divPipeLineLayersList").click(function () {
+            btnEnabled();
+        });
+        /**
+         *查询
+         */
+        $("#btnQuery").click(function () {
+            createQuery();
+        });
+        /**
+         * 执行查询函数
+         */
+        var createQuery = function () {
+            var bShow  = $("#detailData").attr("checked") == "checked";
+            var radius=$("#radius").val(); //半径
+            var roadName = $(".trbg").html();//道路
+            var compoundCondition="road,"+roadName+","+radius;
+            var queryTableType = [1, 0];
+            var ids = [];
+            var names=[];
+            $.each($("#divPipeLineLayersList input:checkbox[checked=checked]"), function (i, v) {
+                var vv = $(v);
+                var guid = vv.val();  // checkbox的value值
+                ids.push(guid);
+                var name = vv.next().text();
+                names.push(name,name);
+            });
+            QueryObject.QuerySelectedArea("road", $("select#projectList").val(), roadName, true);//查询时定位
+
+            //查询
+            var header = ["US_KEY", "US_FEATURE","layerName"];
+            var aliasHeader = ["编号", "类型","图层"];
+            query = Query.PageHelper(earth);
+            query.setShow(bShow);
+            query.initParams(ids, names, null, null, 16, queryTableType, header, aliasHeader,compoundCondition);
+            $("#detailData").attr("disabled", false);
+        };
+        /**
+         * 功能：【导出Excel】按钮onclick事件
+         */
+        $("#importExcelBtn").click(function () {
+            $("#importResult>tbody").empty();
+            var radius=$("#radius").val(); //半径
+            var roadName = $(".trbg").html();//道路
+            var compoundCondition="road,"+roadName+","+radius;
+            var queryTableType = [1, 0];
+            var standardName=["INDEX","DISPLAYTYPE","LAYER"];
+            $.each($("#divPipeLineLayersList input:checkbox[checked=checked]"), function (i, v) {
+                var vv = $(v);
+                var guid = vv.val();  // checkbox的value值
+                for(var j=0;j<queryTableType.length;j++){
+                    QueryObject.paramQueryALL(null,guid,null,16,queryTableType[j],compoundCondition,query.getTotalNum(),standardName);
+                }
+            });
+
+            var tabObj = $("#importResult>tbody")[0];
+            var columns = ["编号", "类型","图层"];
+            StatisticsMgr.importExcelByTable(tabObj, columns);
+        });
+
+        $(window).unload(function () {
+            QueryObject.clearBuffer();
+            //关闭页面的时候关闭所有管线的闪烁
+            if(query){
+                query.stopHighLight(); 
+            } 
+            StatisticsMgr.detachShere();
+        });
+    });
+</script>
+</body>
+</html>

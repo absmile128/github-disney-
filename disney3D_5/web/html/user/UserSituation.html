@@ -1,0 +1,362 @@
+<html xmlns:v="http://www.w3.org/2001/XMLSchema">
+<head>
+    <title>市政巡查人员</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <script type="text/javascript" src="../../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.easyui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../js/util/easyui/themes/default/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" type="text/css" href="../../js/util/easyui/themes/icon.css"/>
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>
+    <script src="../../js/common.js"></script>
+    <script>
+
+        var showDataArr = [];
+        var inspectorlist=null;
+        var earth=null;
+        var slecteddepid="";
+        function getEarth(earthObj) {
+            earth = earthObj;
+            getdepartlist();
+            //窗口变化后，尺寸调整
+            window.onresize = function () {
+                //初始化设置高度
+                var divHeight = $(document).height() - 50;
+                $('#searchData').datagrid('resize', {
+                    height: divHeight
+                });
+            };
+            $(window).trigger("resize");
+            $('#deldep').click(function () {
+
+                var treeObj = $.fn.zTree.getZTreeObj("departlistTree");
+                var nodes = treeObj.getSelectedNodes(true);
+                if (nodes.length == 1) {
+                    if (nodes[0].isParent) {
+                        return;
+                    } //不对父节点操作
+                    var str = nodes[0].name;
+                    var indexs = str.indexOf("（");
+                    var indexe = str.indexOf("）");
+                    var num = parseInt(str.substr(indexs + 1, 1));
+                    if (num > 0) {
+                        alert("有巡查员属于该部门，不能删除！");
+                        return;
+                    } else {
+
+                        var msg = "是否删除该部门？";
+                        if (confirm(msg) == true) {
+                            $.ajax({
+                                dataType: 'JSONP',
+                                type: "GET",
+                                url: CITYPLAN_config.disney.WebServiceUrl + "/CaseHandler.ashx?action=DelDepartmentInfo",
+                                data: {
+                                    depId: nodes[0].id
+                                },
+                                cache: false,
+                                success: function (data) {
+                                    if (data.Result == true) {
+                                        alert("删除成功！");
+                                        //删除选中的节点
+                                        treeObj.removeNode(nodes[0]);
+
+
+                                    } else {
+                                        alert("删除失败！原因：" + data.ErrMsg);
+                                    }
+                                },
+                                error: function (x, t, e) {
+                                    alert("删除失败！");
+
+                                }
+                            });
+
+
+                        }
+                    }
+                }
+            });
+
+            $('#adddep').click(function () {
+
+                var returnValue = openDialog("AddDepart.html","", 300, 250, false);
+                if (returnValue == true) {//当关闭时，判断返回值
+                    getdepartlist();  //刷新处理状态
+                }
+            });
+            $('#editdep').click(function () {
+                var treeObj = $.fn.zTree.getZTreeObj("departlistTree");
+                var nodes = treeObj.getSelectedNodes(true);
+                 if (nodes==null)  {
+                     return;
+                 }
+                else if (nodes.length == 1) {
+                    if (nodes[0].isParent) {
+                        return;
+                    } //不对父节点操作
+                }
+                var params ={
+                    depId: slecteddepid
+
+                };
+                var returnValue = openDialog("EditDepart.html",params, 300, 250, false);
+                if (returnValue == true) {//当关闭时，判断返回值
+                    getdepartlist();  //刷新处理状态
+                }
+            });
+
+            $('#adduser').click(function () {
+                var tree= $.fn.zTree.getZTreeObj("departlistTree");
+                var node = tree.getNodeByParam("id",slecteddepid );
+                var str=node.name;
+                var index=str.indexOf("（");
+                var depname=str.substr(0, index);
+                var params ={
+                    depId: slecteddepid ,
+                    depName: depname
+
+                };
+            var returnValue = openDialog("AddUser.html",params, 300, 250, false);
+            if (returnValue == true) {//当关闭时，判断返回值
+                getdepartlist();  //刷新处理状态
+                getuserlistbydepartid(slecteddepid); //刷新处理状态
+            }
+        });
+            $('#edituser').click(function () {
+                var  nvfid="";
+                var tree= $.fn.zTree.getZTreeObj("departlistTree");
+                var node = tree.getNodeByParam("id",slecteddepid );
+                var str=node.name;
+                var index=str.indexOf("（");
+                var groupname=str.substr(0, index);
+                var row= $('#searchData').datagrid('getSelected');
+                if (row){
+                    nvfid=row.nvfid;
+                    var params = {
+                        nvfid: nvfid ,
+                        depId: slecteddepid
+                };
+                var returnValue = openDialog("EditUser.html",params, 300, 250, false);
+                if (returnValue == true) {//当关闭时，判断返回值
+
+                    getuserlistbydepartid(slecteddepid); //刷新处理状态
+                }
+                }
+            });
+            $('#deluser').click(function () {
+                var  nvfid="";
+               var row= $('#searchData').datagrid('getSelected');
+                if (row){
+                    nvfid=row.nvfid;
+                }
+                else {
+                    alert("请选择需要删除的人员！");
+                    return;
+                }
+                        var msg = "是否删除该人员？";
+                        if (confirm(msg) == true) {
+                            $.ajax({
+                                dataType: 'JSONP',
+                                type: "GET",
+                                url: CITYPLAN_config.disney.WebServiceUrl + "/UserHandler.ashx?action=DelUser",
+                                data: {
+                                    nvfid:  nvfid
+                                },
+                                cache: false,
+                                success: function (data) {
+                                    if (data == true) {
+                                        alert("删除成功！");
+                                        var rowIndex= $('#searchData').datagrid('getRowIndex');
+                                        $('#searchData').datagrid('deleteRow',rowIndex );
+                                        getdepartlist();
+                                    } else {
+                                        alert("删除失败！" );
+                                    }
+                                },
+                                error: function (x, t, e) {
+                                    alert("删除失败！");
+                                }
+                            });
+
+
+                        }
+
+            });
+        }
+
+
+
+        function  getdepartlist() {
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/CaseHandler.ashx?action=GetDepartmentList",
+                data: {
+
+                },
+                cache: false,
+                success: function (data) {
+                    debugger;
+                    inspectorlist=data;
+                    //设置基本信息表
+                    setdepartlist(data)
+                },
+                error:function (x,t,e) {
+
+                }
+            });
+        }
+        function  setdepartlist(data) {
+            var setting = {
+                data: {
+                    simpleData: {
+                        enable: true
+                    }
+                },
+                view: {
+                    dblClickExpand: false, //双击节点时，是否自动展开父节点的标识
+                    expandSpeed: "", //节点展开、折叠时的动画速度, 可设置("","slow", "normal", or "fast")
+                    selectedMulti: false //设置是否允许同时选中多个节点
+                },
+                callback: {
+                    onClick:    function (event, treeId, node) {
+                        if (node && node.id) {
+
+                            if(node.isParent == false){
+                               $("#adduser").attr("disabled",false);
+                                slecteddepid=node.id;
+                                getuserlistbydepartid(slecteddepid);
+                            }  else {
+                                $("#adduser").attr("disabled",true);
+                            }
+                        }
+
+                    }
+                }
+            };
+            var treeData = [];
+            treeData.push({  id:  1,  pId: 0,  name: "全部部门（"+data.length+"）",  open: true   });
+            for(var i=0;i<data.length;i++) {
+                treeData.push({  id:  data[i].DEPID,  pId: 1,  name: data[i].DEPNAME+"（"+data[i].USERCOUNT+"人）" ,  open: true   });
+
+            }
+
+
+            $.fn.zTree.init($("#departlistTree"), setting, treeData);
+            //设置选中节点
+            if(slecteddepid!=""){
+                var tree= $.fn.zTree.getZTreeObj("departlistTree");
+                var node =tree.getNodeByParam("id",slecteddepid );
+                tree.selectNode(node,true);
+            }
+
+        }
+        function  getuserlistbydepartid(depid) {
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/UserHandler.ashx?action=GetUserListByDepId",
+                data: {
+                   depId:depid
+                },
+                cache: false,
+                success: function (data) {
+                    debugger;
+                    //设置基本信息表
+                    setuserlist(data.List)
+                },
+                error:function (x,t,e) {
+
+                }
+            });
+        }
+        function setuserlist(data) {
+            var dataArr = [];
+            if (data === "" || data === null || data === undefined || data.length == 0) {
+                $("#searchData").datagrid("loadData", []);
+                return;
+            }
+
+            for (var i = 0; i < data.length; i++) {
+
+                    for (var i = 0;i < data.length; i++) {
+                        var listNum = i + 1;
+                        var id = data[i].ID;
+                        var nvfid = data[i].NVFID;
+                        var name = data[i].NAME;
+                        var depname = data[i].DEPNAME;
+                        var tel = data[i].TEL;
+                        dataArr.push({
+                            "listNum": listNum,
+                            "nvfid":nvfid,
+                            "id": id,
+                            "name": name,
+                            "depname": depname,
+                            "tel": tel
+                        });
+                        showDataArr[id] = data[i];
+                    }
+                }
+                $("#searchData").datagrid("loadData", dataArr);
+
+
+        }
+    </script>
+</head>
+
+
+
+<body class="easyui-layout">
+<div data-options="region:'west' " style="width:200px" >
+
+    <table align="center" style="width: 100%;height: 100%">
+        <tr style="height: 30px; background-color:#D0D0CE;">
+            <td>
+                <button id="adddep"   style="margin-left: 10px;">添加</button>
+                <button id="editdep"  style="margin-left: 10px;">编辑</button>
+                <button id="deldep"  style="margin-left: 10px;">删除</button>
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 100%; vertical-align: top">
+                <div title="巡查人员列表">
+                    <ul id="departlistTree" class="ztree"></ul>
+                </div>
+            </td>
+        </tr>
+
+    </table>
+</div>
+<div data-options="region:'center' " >
+    <table align="center"  style="width: 100%;height: 100%">
+        <tr>
+            <td style="text-align: right; height: 30px; background-color:#D0D0CE; ">
+                <button id="adduser" disabled="disabled" style="margin-left: 10px;">添加</button>
+                <button id="edituser"  style="margin-left: 10px;">编辑</button>
+                <button id="deluser"  style="margin-left: 10px;">删除</button>
+            </td>
+        </tr>
+        <tr>
+            <td style="  vertical-align: top">
+                <table  id="searchData" class="easyui-datagrid" data-options="fitColumns:true,singleSelect:true "     >
+                    <thead>
+                    <tr >
+                        <th data-options="field:'listNum',width:50">序号</th>
+                        <th data-options="field:'name',width:100">姓名</th>
+                        <th data-options="field:'depname',width:120" >部门</th>
+                        <th data-options="field:'tel',width:120" >电话</th>
+
+                    </tr>
+                    </thead>
+            </td>
+        </tr>
+
+    </table>
+</div>
+</body>
+</body>
+</html>

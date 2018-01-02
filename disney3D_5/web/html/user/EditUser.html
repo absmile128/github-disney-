@@ -1,0 +1,138 @@
+<html xmlns:v="http://www.w3.org/2001/XMLSchema">
+<head>
+    <title>修改人员信息</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script type="text/javascript" src="../../js/lib/jquery.js"></script>
+    <script type="text/javascript" src="../../js/lib/jquery.easyui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../js/util/easyui/themes/default/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" type="text/css" href="../../js/util/easyui/themes/icon.css"/>
+    <script src="../../js/CITYPLAN_config.js"></script>
+
+    <script>
+        var params = window.dialogArguments;
+        var nvfid=params.nvfid;
+        var depid=params.depId ;
+        var pwd="";
+        $(function () {
+
+            getinfo(nvfid);
+            $('#pwdbtn').click(function () {
+                pwd ="123" ;
+
+            });
+        });
+        function getinfo(nvfid) {
+
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/UserHandler.ashx?action=GetUserInfoById",
+                data: {
+                    nvfid:nvfid
+                },
+                cache: false,
+                success: function (data) {
+                    setinfo(data);
+
+                },
+                error:function (x,t,e) {
+
+                    alert("查询失败！");
+
+                }
+            });
+        }
+        function setinfo(data) {
+             //注：PWD传来为“”
+            $("#id").val(data.ID);
+            $("#name").val(data.NAME);
+            $("#depname").val(data.DEPNAME);
+            $("#tel").val(data.TEL);
+
+
+        }
+        function  submit() {
+
+            var  id = $('#id').val();
+            var name = $('#name').val();
+            var depname= $('#depname').val();
+            var tel = $('#tel').val();
+
+            if (id == "" || name == ""    ||depname=="" ) {
+                alert(  "请将信息填写完整" );
+                return;
+            }
+
+
+            $.ajax({
+                dataType:'JSONP' ,
+                type: "GET",
+                url: CITYPLAN_config.disney.WebServiceUrl+ "/UserHandler.ashx?action=SaveUser",
+                data: {
+                    nvfid:nvfid,
+                    uid:id,
+                    pwd:pwd,
+                    type:0,
+                    name:name,
+                    depId:depid,
+
+                    tel:tel
+        },
+                cache: false,
+                success: function (data) {
+                    if(data.Result==true){
+                        alert("修改成功！");
+                        window.returnValue=true;
+                        window.close();
+                    }else {
+                        alert("修改失败！");window.returnValue=false;
+                    }
+                },
+                error:function (x,t,e) {
+                        alert("修改失败！");window.returnValue=false;
+
+                }
+            });
+        }
+        function  cancel() {
+            window.close();
+        }
+
+    </script>
+</head>
+
+
+
+<body  >
+<table>
+    <tr>
+        <td   class="texttdclass">用户ID：</td>
+        <td class="texttdclass"><input  id="id"  ></td>
+        <td   class="texttdclass">*</td>
+    </tr>
+    <tr>
+        <td   class="texttdclass"><input  type="button" id="pwdbtn" value="密码重置" /></td>
+        <td   class="texttdclass">(重置密码为：123)</td>
+    </tr>
+
+    <tr>
+        <td   class="texttdclass">姓名：</td>
+        <td class="texttdclass"><input  id="name"  ></td>
+        <td   class="texttdclass">*</td>
+    </tr>
+    <tr>
+        <td   class="texttdclass">部门：</td>
+        <td class="texttdclass"><input  id="depname"  readonly /></td>
+    </tr>
+    <tr>
+        <td   class="texttdclass">电话：</td>
+        <td class="texttdclass"><input  id="tel"  ></td>
+    </tr>
+</table>
+  <div style="text-align:center">
+<input id="ok_btn" type="button" value="确  定" style="width: 60px;" onclick="javascript:submit();">
+<input id="cancle_btn" type="button" value="取  消" style="width: 60px;margin-left: 20px;" onclick="javascript:cancel();">
+  </div>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<html>
+<!-- saved from url=(0014)about:internet -->
+<head>
+    <title>截屏</title>
+    <meta charset="UTF-8"/>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css" />
+    <link rel="stylesheet" href="../../css/easyui/icon.css" />
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css" />
+    <link rel="stylesheet" href="../../css/common.css" />
+    <script src="../../js/lib/jquery.min.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+    <style>
+        div{ margin: 10px; }
+        #bldchbx{width: 45px; margin: 0 5px; font-weight: bold; text-align: left;}
+        #bldchbx1{width:45px; margin: 0 5px; font-weight: bold; text-align: left;}
+        button{ width: 65px; height: 30px; margin: 5px 2px;text-align: center;}
+    </style>
+</head>
+<body  style="font-size: 12px;">
+
+<div style="margin-top: 15px;text-align: left;">
+    <span>图片高度: </span>
+    <input id="height" style="width: 120px;margin-left:0px;" />
+    <span>像素</span>
+</div>
+<div style="margin-top: 15px;text-align: left;">
+    <span>图片宽度: </span>
+    <input id="width"  style="width: 120px;margin-left: 0px;" />
+    <span>像素</span>
+</div>
+<div style="margin-top: 15px;text-align: left;" >
+    <span>存储路径:</span>
+    <input id="path"  type="text" value="" style="width:120px" disabled/>
+    <span><img src="../../image/file.jpg" width="25" height="25" id="select" /></span>
+</div>
+<div style="margin-top: 25px;text-align: center;">
+    <button id="btn_select_sector" type="button" class="normalButton" disabled>确定</button>
+    <button  id="clear"   >退出</button>
+</div>
+<script>
+    document.oncontextmenu = function () {
+        event.returnValue = false;//212221
+    };
+
+    var earth ="";
+    function setTranScroll(earthObj){
+        earth = earthObj;
+        $("#width").val(earth.clientWidth);
+        $("#height").val(earth.clientHeight);
+        $("#btn_select_sector").click(function(){
+            var path=$("#path").val();
+            var width= $("#width").val();
+            var height = $("#height").val();
+            if(check()){
+                if(path){
+                    $("#width").attr("disabled",true);
+                    $("#height").attr("disabled",true);
+                    $("#clear").attr("disabled",true);
+                    earth.ScreenShot(path,width,height,1,false);
+                    $("#path").val("");
+                    $("#btn_select_sector").attr("disabled",true);
+                }
+                $("#width").attr("disabled",false);
+                $("#height").attr("disabled",false);
+                $("#clear").attr("disabled",false);
+            }
+        });
+
+        $("#select").click(function(){
+            var path = earth.UserDocument.SaveFileDialog("", "*.jpg|*.JPG","jpg");
+            if(!path){
+                return;
+            }
+            var filename = path.substring(path.lastIndexOf("\\")+1,path.lastIndexOf("."));
+            if(containSpecial(filename)){
+                alert("名称不能有特殊字符！");
+                return;
+            }
+            $("#path").val(path);
+            if(""!=$("#path").val()&&""!=$("#width").val()&&""!=$("#height").val()){
+                $("#btn_select_sector").attr("disabled",false);
+            }
+        });
+
+        $("#clear").click(function(){
+            if (earth.htmlBallon != null){
+                earth.htmlBallon.DestroyObject();
+                earth.htmlBallon = null;
+            }
+        });
+    }
+    function check(){
+        if(height.value == ""){
+            alert("无效的高度值");
+            height.focus();
+            return false;
+        }
+        if(isNaN(height.value)){
+            alert("无效的高度值");
+            height.select();
+            height.focus();
+            return false;
+        }
+        if(height.value<=0){
+            alert("无效的高度值");
+            height.select();
+            height.focus();
+            return false;
+        }
+        if(width.value == ""){
+            alert("无效的宽度值");
+            width.focus();
+            return false;
+        }
+        if(isNaN(width.value)){
+            alert("无效的宽度值");
+            width.select();
+            width.focus();
+            return false;
+        }
+        if(width.value<=0){
+            alert("无效的宽度值");
+            width.select();
+            width.focus();
+            return false;
+        }
+        if(path.value == ""){
+            alert("请选择存储路径");
+            path.focus();
+            return false;
+        }
+        return true;
+    }
+    function containSpecial( s ){
+        var containSpecial = RegExp(/[(\ )(\~)(\!)(\@)(\#)(\$)(\%)(\^)(\&)(\*)(\()(\))(\-)(\_)(\+)(\=)(\[)(\])(\{)(\})(\|)(\\)(\;)(\:)(\')(\")(\,)(\.)(\/)(\<)(\>)(\?)(\)]+/);
+        return ( containSpecial.test(s) );
+    }
+</script>
+</body>
+</html>

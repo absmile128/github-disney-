@@ -1,0 +1,415 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html" charset="utf-8">
+    <title>视频监控</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <script src="../../js/lib/jquery.min.js"></script>
+    <script src="../../js/CITYPLAN_config.js"></script>
+    <script src="../../js/common.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+
+    <style type="text/css">
+        td {
+            font-size:12px;
+        }
+        .id {
+            color: #C63F05;
+            font-weight: bold;
+            text-align:center;
+            background-image:url(../../image/id1.gif);
+            background-repeat:no-repeat;
+            background-position:center;
+        }
+        body {
+            width:100%;
+            height: 100%;
+            background-color: #FFFFFF;
+            overflow: hidden;
+            text-align: center;
+            margin: 0px 0px 0px 0px;
+            padding: 0px 0px 0px 0px;
+        }
+        a{
+            color: red;
+            text-decoration: underline;
+        }
+    </style>
+    <script src="../../js/lib/jquery.min.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+    <script src="../../js/searchAnalysis.js"></script>
+    <script src="../../js/layer.js"></script>
+    <script>
+        var earth=parent.earth;
+        var searchAnalysis=CITYPLAN.searchAnalysis(earth);
+        var showDataArr = [];
+    //    var layerid=  "00f7c613-1335-4f48-8cf1-6aa06126b319";   //摄像头图层id
+
+    //    var cameras = [];
+
+        function cellStyler(value, row, index) {
+            return 'color:blue;text-decoration: underline ; cursor:hand';
+        }
+        $(function(){
+            $('#searchData').datagrid({
+                onDblClickRow: dbclick
+            });
+            $('#searchData').datagrid({
+                onClickCell:onCellClick
+            });
+
+
+            function onCellClick (rowIndex, field, value)
+            {
+                if(field=="sp")
+                {
+                    var rows = $("#searchData").datagrid("getRows");
+                    goToParse(rows[rowIndex]);
+                    var guid=  rows[rowIndex].guid;
+//                     var  camera = cameras[guid];
+//                    alert(camera.guid);
+//                    camera.EnableCameraShot = false;
+//                    camera.EnableRTSP = true;
+//                    camera.UseTCP = false;
+                    var address=  rows[rowIndex].address;
+
+                    window.open("mediaplayer.html?address="+address);
+
+                //    window.open(address);
+
+            }
+
+            }
+
+            //关键字搜索
+            $("#searchBtn" ).click(function(){
+                    $("#div_searchData").css("display","none");
+                    $("#searchData").datagrid("loadData", []);
+                   var sxtbh=$("#searchkey").val();
+                    if(sxtbh){
+                    searchCameraDataByAnaly(CITYPLAN_config.disney.sxt_layerid,"sxt_code",sxtbh);
+                    }
+            });
+
+
+            $("#btnCircleSelect").click(function(){
+                searchAnalysis.clear();
+                earth.ShapeCreator.Clear();
+                earth.Event.OnCreateGeometry = function(pval, type) {
+                    debugger;
+                    onSearchCallback("", pval);
+                    earth.ShapeCreator.Clear();
+                    earth.Event.OnCreateGeometry = function() {};
+                };
+
+                earth.ShapeCreator.CreateCircle();
+            });
+            $("#btnPolygonSelect").click(function(){
+                searchAnalysis.clear();
+                earth.ShapeCreator.Clear();
+                earth.Event.OnCreateGeometry = function(pval, type) {
+                    debugger;
+                    onSearchCallback("", pval);
+                    earth.ShapeCreator.Clear();
+                    earth.Event.OnCreateGeometry = function() {};
+                };
+
+                earth.ShapeCreator.CreatePolygon();
+            });
+
+            var onSearchCallback = function(keyword, spatialObj, layerId) {
+
+              var    searchResult = localSearch(CITYPLAN_config.disney.sxt_layerid, keyword, spatialObj);
+                setdata2(searchResult) ;
+
+            }
+
+
+            var localSearch = function(layerid, keyword, spatialObj) {
+                var layerObj = earth.LayerManager.GetLayerByGUID(layerid);
+
+                if (spatialObj == null) {
+                    var rect = layerObj.LonLatRect;
+                    var vec3s = earth.Factory.CreateVector3s();
+                    vec3s.Add(rect.West,rect.North,0);
+                    vec3s.Add(rect.East,rect.North,0);
+                    vec3s.Add(rect.East,rect.South,0);
+                    vec3s.Add(rect.West,rect.South,0);
+                    spatialObj = vec3s;
+                }
+               var searchParam = layerObj.LocalSearchParameter;
+                if (searchParam == null) {
+                    return;
+                }
+                searchParam.ClearSpatialFilter();
+                if (searchParam == null) {
+                    return null;
+                }
+                if (spatialObj != null) {
+                    searchParam.SetFilter("", "");
+                    searchParam.SetSpatialFilter(spatialObj);
+                }
+                if (keyword != "") {
+
+                    searchParam.SetFilter(keyword, "");
+                }
+
+
+                searchParam.HasDetail = true;
+                searchParam.HasMesh = true;
+                searchParam.ReturnDataType = 1; //0 返回所有数据，1 返回xml数据，2 返回渲染数据
+                var result = layerObj.SearchFromLocal();
+                return result;
+            }
+
+        });
+
+
+
+
+
+        //datagrid双击事件
+        function dbclick(rowIndex,rowData){
+
+            var rows = $("#searchData").datagrid("getRows");
+            goToParse(rows[rowIndex]);
+        }
+
+        //定位
+        function goToParse(obj){
+            var guid=obj.guid;
+            var pLayer = parent.editLayers[CITYPLAN_config.disney.sxt_layerid];
+            var obj = pLayer.GetObjByGuid(guid);
+            var lon =obj.SphericalTransform.Longitude;
+            var lat = obj.SphericalTransform.Latitude;
+            var alt = obj.SphericalTransform.Altitude;
+            earth.GlobeObserver.GotoLookat(lon, lat,alt, 5, 44,33, 23);
+
+
+//            var rect = obj.GetLonLatRect();
+//            var north = rect.North;
+//            var south = rect.South;
+//            var east = rect.East;
+//            var west = rect.West;
+//            var top = rect.MaxHeight;
+//            var bottom = rect.MinHeight;
+//            var centerX = (east + west) / 2;
+//            var centerY = (north + south) / 2;
+//            var centerZ = (top + bottom) / 2;
+
+
+
+            obj.ShowHighLight ();
+        }
+        function searchCameraDataByAnaly(m_layerid,field,key){
+
+            earth.Event.OnEditDatabaseFinished=function(pRes, pLayer){
+
+                var types;
+                var fieldLength;
+                var columnName;
+                if(pLayer.Count){
+                    types = [], fieldLength =[], columnName=[];
+                    for(var i = 0; i < pLayer.Count; i++){
+                        var columnInfo = pLayer.Items(i);
+                        types.push(columnInfo.iType);
+                        fieldLength.push(columnInfo.len);
+                        columnName.push(columnInfo.Name);
+                    }
+                }
+                // C_INT_TYPE = 1000,  C_UINT64_TYPE = 1001, C_STRING_TYPE = 1002,C_BLOB_TYPE = 1003,C_BYTE_TYPE = 1004,C_DOUBLE_TYPE = 1005,
+                earth.Event.OnEditDatabaseFinished = function(pResult, pLyr){
+
+                    earth.Event.OnEditDatabaseFinished = function(){};
+                    var allAttrs = [];
+                    for(var i = 0; i < pLyr.Count; i++){
+                        var seAttribute = pLyr.Items(i);
+                        var attrs = [];
+                        var offset = 0;
+                        for(var j = 0; j < types.length; j++){
+                            var tAttr = types[j];
+                            switch(tAttr){
+                                case 1000:
+                                    attrs[j] = seAttribute.IntValue(offset,fieldLength[j]);
+                                    break;
+                                case 1002:
+                                    attrs[j] = seAttribute.StringValue(offset,fieldLength[j]);
+                                    break;
+                                case 1003:
+                                    attrs[j] = seAttribute.BoleanValue(offset,fieldLength[j]);
+                                    break;
+                                case 1005:
+                                    attrs[j] = seAttribute.DoubleValue(offset,fieldLength[j]);
+                                    break;
+                                default:
+                                    break;
+                            }
+                            offset += fieldLength[j];
+                        }
+                        allAttrs.push(attrs);
+
+
+                    }
+
+                 setdata(allAttrs);
+                }
+
+                var sql=field+" like '%"+key+"%'";
+                earth.DatabaseManager.GetAttributeBySQL  (m_layerid,sql);
+            }
+
+            //得到图层的属性信息
+            earth.DatabaseManager.GetAttributeColInfo(m_layerid);
+        }
+         function setdata(allAttrs)
+         {
+             var dataArr = [];//结果集
+
+             if(allAttrs===""||allAttrs===null||allAttrs===undefined)    return;
+
+             for(var j=0;j<allAttrs.length;j++){
+
+                 var listNum=j+1;
+                 var guid=    allAttrs[j][0];     //guid
+                 var name=    allAttrs[j][2];     //  name
+                 var address = allAttrs[j][3];       //address
+                 var code=     allAttrs[j][4];          //sxj_code
+                 var sp=  "视频播放";     //  name
+
+//                 var camera = earth.factory.CreateElementCamera(guid, name);
+//                 camera.RtspURL = address;
+//                 alert(address);
+//                 camera.EnableCameraShot = false;
+//                 cameras[guid] = camera;
+
+                dataArr.push({"listNum":listNum,"code":code,address:address,sp:sp,guid:guid});
+                 if(dataArr.length==0){
+                     alert("没有查到相关结果！");
+                     $("#searchData").datagrid("loadData",[]);
+                 }
+                 else{
+                     $("#div_searchData").css("display","block");
+                     $("#searchData").datagrid("loadData",dataArr);
+                 }
+
+             }
+         }
+             function setdata2(allAttrs)
+             {
+                 var dataArr = [];//结果集
+
+                 if(allAttrs===""||allAttrs===null||allAttrs===undefined)    return;
+                 var tmpResultXml = allAttrs.GotoPage(0);
+                 var json = $.xml2json(tmpResultXml);
+                 var   records = json.SearchResult.ModelResult.ModelData;
+                 if (records === undefined) {
+                         alert("没有查到相关结果!");
+                         $("#searchData").datagrid("loadData",[]);
+                         return;
+                 }
+                 if(records[0]==undefined||records[0]==null)
+                 {
+                     var listNum=1;
+                     var guid=    records.SE_ID;     //guid
+                     var name=    records.NAME;     //  name
+                     var address = records.ADDRESS;       //address
+                     var code=     records.SXT_CODE;          //sxj_code
+                     var sp=  "视频播放";     //  name
+                     dataArr.push({"listNum":listNum,"code":code,address:address,sp:sp,guid:guid});
+
+
+                 }
+            else{
+            $.each(records, function(i, record) {
+            //属性数据
+                    var listNum=i+1;
+                    var guid=    record.SE_ID;     //guid
+                    var name=    record.NAME;     //  name
+                    var address = record.ADDRESS;       //address
+                    var code=     record.SXT_CODE;          //sxj_code
+                    var sp=  "视频播放";     //  name
+                    dataArr.push({"listNum":listNum,"code":code,address:address,sp:sp,guid:guid});
+                     })
+                 }
+
+             if(dataArr.length==0){
+                 alert("没有查到相关结果！");
+                 $("#searchData").datagrid("loadData",[]);
+             }
+             else{
+                 $("#div_searchData").css("display","block");
+                 $("#searchData").datagrid("loadData",dataArr);
+             }
+
+
+         }
+
+    </script>
+
+</head>
+<body>
+<object id="dataProcess" classid="clsid:DDA7E893-8EEE-4A1E-A506-867932BD0FB9" style="display:none;"></object>
+
+
+<table width="100%"  cellspacing="0" cellpadding="0" border="0">
+    <tr>
+        <td align="center"  id="td_keyword" name="td_keyword">
+            <fieldset style="width:196px;height:60px" align="center">
+                <table style="width: 196px;">
+                      <tr>
+                        <td align="left"  >
+                            摄像头编号：
+                            <input id="searchkey" name="searchkey" type="text" value=""  onFocus="focusindex = 1" onBlur="focusindex =0" style="width:80px">
+                            <img src="../../image/search/search.gif" name="searchBtn" width="24" height="24" align="absmiddle" id="searchBtn" style="cursor:hand" >
+                        </td>
+                    </tr>
+
+
+                </table>
+
+
+                <table>
+                    <tr>
+                        <td>
+                            <button  id="btnCircleSelect" style="margin-left:20px">圆域</button>
+                            <button  id="btnPolygonSelect" style="margin-left:20px" >多边形 </button>
+                        </td>
+                    </tr>
+
+                    <!--<tr>-->
+                    <!--<td height="1" style="background:url(../../image/dot.gif) repeat-x;"></td>-->
+                    <!--</tr>-->
+                </table>
+
+
+            </fieldset>
+        </td>
+    </tr>
+    <tr>
+        <td height="15" align="left" id="result_count">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;搜索结果:
+        </td>
+    </tr>
+    <div id="div_searchData" class="enter" region="center" border="true" style="overflow: auto;  margin-top: 20px;display: none">
+
+        <table  id="searchData" class="easyui-datagrid" data-options="fitColumns:true,singleSelect:true "   style="height:600px;" >
+            <thead>
+            <tr >
+                <th data-options="field:'listNum',width:100">序号</th>
+                <th data-options="field:'code' ,width:100">摄像头编号</th>
+                <th data-options="field:'sp' ,width:100 ,styler:cellStyler">视频播放</th>
+
+            </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+</table>
+</body>
+
+</html>

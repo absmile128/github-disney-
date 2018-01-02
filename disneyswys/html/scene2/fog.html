@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<!-- saved from url=(0014)about:internet -->
+<head>
+    <meta charset="UTF-8"/>
+    <title>天气效果 - 雾</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" type="text/css" href="../../css/easyui/default/easyui.css" />
+    <script src="../../js/lib/jquery.min.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+    <script src="../../js/lib/locale/easyui-lang-zh_CN.js"></script>
+    <style>
+            /* html,body{ padding: 5px; }
+             div{ width: 100%; margin: 5px;}
+             input{ height: 15px; width: 50px; }
+             #btnStart{ width: 75px; }
+             #rainHeight{ width: 100px; font-size: 12px; }*/
+        button{ width: 85px; height: 28px;}
+    </style>
+</head>
+<body style="color:#fffffe" >
+
+<div id="divRainControl" style="margin-left:20px;height:40px;text-align: center;padding-top:20px;">
+    <input id="timeSlider" class="easyui-slider" showTip="false"   min="0" max="10" value = "10" rule="['小','大']"  style="width:180px;" />
+</div>
+<OBJECT id="dlgHelper" CLASSID="clsid:3050f819-98b5-11cf-bb82-00aa00bdce0b" width="0px" height="0px"></OBJECT>
+<script type="text/javascript">
+    document.oncontextmenu = function () {
+        event.returnValue = false;//212221
+    };
+    var earth ="";
+    function setTranScroll(earthObj){
+        earth = earthObj;
+        var bRain = false;
+        $("#rainHeight").change(function (){
+            earth.WeatherEffect.SetFogHeight( parseInt($("#rainHeight").val()) || 100);
+        });
+        $("#rainHeight").trigger("change");
+        $("#color").change(function (){
+            var color=parseInt("0x"+$("#TailColor").val().substring(1).toLowerCase());
+            earth.WeatherEffect.SetFogColor(color);
+        });
+        $("#color").trigger("change");
+        $("#btnStart").click(function (){
+            earth.WeatherEffect.SetFogEnable(true);
+            earth.WeatherEffect.SetFogHeight( parseInt($("#rainHeight").val()) || 100);
+            var color=parseInt("0x"+$("#TailColor").val().substring(1).toLowerCase());
+            earth.WeatherEffect. SetFogColor(color);
+            $("#stop").removeAttr("disabled");
+            $("#timeSlider").slider("enable");
+            $("#btnStart").attr("disabled", "disabled");
+            earth.WeatherEffect.SetFogType(2);
+        });
+        //
+        $("#stop").click(function (){
+            //earth.WeatherEffect.SetFogType(0);
+            earth.WeatherEffect.SetFogEnable(false);
+            $("#stop").attr("disabled","disabled");
+            $("#timeSlider").slider("disable");
+            $("#timeSlider").slider({value:3});
+            $("#btnStart").removeAttr("disabled");
+        } );
+        //拖动条
+        $("#timeSlider").slider({
+            onChange: function(value){  
+                earth.WeatherEffect.SetFogHeight( earth.fogHeight || 100);
+                if(earth.fogColor){
+                    earth.WeatherEffect. SetFogColor(earth.fogColor);
+                }
+
+                if(value>=0&&value<2){
+                    earth.WeatherEffect.SetFogType(0);
+                }  else if(value>=2&&value<4){
+                    earth.WeatherEffect.SetFogType(1);
+                }  else if(value>=4&&value<6){
+                    earth.WeatherEffect.SetFogType(2);
+                }  else if(value>=6&&value<8){
+                    earth.WeatherEffect.SetFogType(3);
+                }  else if(value>=8&&value<=10){
+                    earth.WeatherEffect.SetFogType(4);
+                }
+            }
+        });
+
+        $(window).unload(function (){
+            earth.WeatherEffect.SetFogEnable(false);
+        });
+    
+        var sInitColor = null;
+        function fillColorDlg(){
+            var sColor = null;
+            if (sInitColor == null) {
+                sColor = dlgHelper.ChooseColorDlg();
+            } else {
+                sColor = dlgHelper.ChooseColorDlg(sInitColor);
+            }
+            sColor = sColor.toString(16);
+            if (sColor.length < 6) {
+                var sTempString = "00000000".substring(0,6-sColor.length);
+                sColor = sTempString.concat(sColor);
+            }
+            sColor = "#" + sColor;
+            document.getElementById("TailColor").value = sColor;
+        }
+    }
+
+</script>
+</body>
+</html>

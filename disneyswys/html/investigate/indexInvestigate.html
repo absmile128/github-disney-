@@ -1,0 +1,147 @@
+﻿<!DOCTYPE HTML>
+<html>
+<!-- saved from url=(0014)about:internet -->
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+    <title> 指标比对 </title>
+    <meta name="Generator" content="EditPlus">
+    <meta name="Author" content="">
+    <meta name="Keywords" content="">
+    <meta name="Description" content="">
+    <link rel="stylesheet" href="../../css/table.css"/>
+    <script type="text/javascript" src="../../js/common.js"></script>
+
+    <style>
+
+        .redColor{
+          background-color:  #ffee00;
+            color: red;
+            font-weight:bold;
+        }
+    </style>
+</head>
+
+<body>
+<table  id="tblResult" width="100%"  border="0px" style=" background-color:#D5E3F8; text-align:left;  margin-bottom:20px; margin-top:10px"      >
+    <caption><strong><label>指&nbsp;标&nbsp;比&nbsp;对&nbsp;结&nbsp;果&nbsp;</label>
+        <!--<div style="text-align:left;">-->
+       <!--<br/>-->
+    <!--<label >项目名称：</label>-->
+    <!--<label id="XMMC"></label>-->
+        <!--</div>-->
+
+
+    </strong></caption>
+    <thead>
+    <tr>
+        <td  class="maintextclass"  >指标</td>
+        <td    class="maintextclass"> 指标值</td>
+        <td  class="maintextclass">方案值</td>
+        <td    class="maintextclass"> 单位</td>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr>
+        <td class="texttdclass2"   ><strong>项目名称</strong></td>
+        <td  class="texttdclass2"  ></td>
+        <td id="XMMC" class="texttdclass2"  ></td>
+        <td  class="texttdclass2" >---</td>
+    </tr>
+
+
+    <tr>
+        <td   class="texttdclass"   ><strong>用地面积</strong></td>
+        <td  id="YDMJ2" class="texttdclass"></td>
+        <td  id="YDMJ" class="texttdclass"></td>
+        <td   class="texttdclass" >平方米</td>
+    </tr>
+    <tr>
+        <td   class="texttdclass"   ><strong>建筑密度</strong></td>
+        <td  id="JZMD2" class="texttdclass"></td>
+        <td  id="JZMD" class="texttdclass"></td>
+        <td   class="texttdclass" >%</td>
+    </tr>
+
+    <tr>
+        <td   class="texttdclass"   ><strong>容积率</strong></td>
+        <td  id="RJL2" class="texttdclass"></td>
+        <td  id="RJL" class="texttdclass"></td>
+        <td   class="texttdclass" >%</td>
+    </tr>
+
+
+
+    <tr>
+        <td   class="texttdclass"  ><strong>绿地率</strong></td>
+        <td id="LDL2" class="texttdclass" ></td>
+        <td id="LDL" class="texttdclass" ></td>
+        <td  class="texttdclass" >%</td>
+    </tr>
+    <tr>
+        <td   class="texttdclass"   ><strong>建筑限高</strong></td>
+        <td  id="JZXG2" class="texttdclass" ></td>
+        <td  id="JZXG" class="texttdclass" ></td>
+        <td   class="texttdclass" >米</td>
+    </tr>
+    </tbody>
+
+</table>
+<div  style="height: 20px;margin-top: 20px; text-align: right" >
+    <a style="text-decoration:underline ;color:blue; cursor: hand;"  id="importExcelBtn"  onclick="importExcel()">导出Excel</a>
+
+</div>
+<script src="../../js/lib/jquery.js"></script>
+<script>
+
+
+    function postData(obj){
+
+        if(obj){
+
+            var JZXG=0;
+            if(obj.ParcelData)
+            {
+
+                    $("#YDMJ2").text(obj.ParcelData["CPPROJECT.YDMJ"] || "");//设计单位
+                    $("#JZMD2").text(obj.ParcelData["CPPROJECT.JZMD"] || "");//设计单位
+                    $("#RJL2").text(obj.ParcelData["CPPROJECT.RJL"] || "");//设计单位
+                    $("#LDL2").text(obj.ParcelData["CPPROJECT.LDL"] || "");//设计单位
+                    $("#JZXG2").text(obj.ParcelData["CPPROJECT.JZXG"] || "");//设计单位
+                }
+
+
+
+            if(obj.BuildingData&&obj.BuildingData.length>0)
+            {
+                $.each(obj.BuildingData, function (i, building) {
+                    var BJ=parseFloat(building["CPBUILDING.JZGD"]);
+                    if(BJ>JZXG){
+                        JZXG=BJ;
+                    }
+                });
+            }
+            if(obj.SchemeData)
+            {
+                $("#XMMC").text(obj.SchemeData["CPPLAN.NAME"]||"") ;
+                     $("#YDMJ").text(obj.SchemeData["CPPLAN.GHZYD"]||"").addClass(((obj.ParcelData["CPPROJECT.YDMJ"]>=obj.SchemeData["CPPLAN.GHZYD"])?"":"redColor"));//
+                    $("#JZMD").text(obj.SchemeData["CPPLAN.JZMD"]||"").addClass((((obj.ParcelData["CPPROJECT.JZMD"])>=(obj.SchemeData["CPPLAN.JZMD"]))?"":"redColor"));//
+                    $("#RJL").text(obj.SchemeData["CPPLAN.RJL"]||"").addClass(((obj.ParcelData["CPPROJECT.RJL"]>=obj.SchemeData["CPPLAN.RJL"])?"":"redColor"));//
+                    $("#LDL").text(obj.SchemeData["CPPLAN.LDL"]||"").addClass(((obj.ParcelData["CPPROJECT.LDL"]<=obj.SchemeData["CPPLAN.LDL"])?"":"redColor"));//
+                    $("#JZXG").text(JZXG|| "").addClass(((obj.ParcelData["CPPROJECT.JZXG"]>=JZXG)?"":"redColor"));//设计单位
+
+            }
+       }
+    }
+    /**
+     * 功能：【导出Excel】按钮onclick事件
+     */
+    function importExcel(){
+        var tabObj = $("#tblResult>tbody")[0];
+        var columns = ["指标","指标值","方案值","单位"];
+        importExcelByCommonTable(tabObj,columns);
+    }
+</script>
+</body>
+</html>

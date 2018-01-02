@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>BIM图层管理</title>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css"/>
+    <link rel="stylesheet" href="../../css/easyui/icon.css"/>
+    <link rel="stylesheet" href="../../css/zTree/zTreeStyle.css"/>
+    <link rel="stylesheet" href="../../css/common.css" />
+
+    <script src="../../js/lib/jquery.js"></script>
+    <script src="../../js/lib/jquery.easyui.js"></script>
+    <script src="../../js/lib/jquery.easyui.min.js"></script>
+    <script src="../../js/lib/jquery.ztree.all.min.js"></script>
+    <script src="../../js/lib/jquery.xml2json.js"></script>
+
+    <!--<script src="../../js/index.js"></script>-->
+    <script src="../../js/CITYPLAN_config.js"></script>
+    <script src="../../js/layer.js"></script>
+    <script src="../../js/analysis.js"></script>
+    <script src="../../js/generalQuery.js"></script>
+    <script src="../../js/project.js"></script>
+
+</head>
+<body>
+
+<table>
+    <tr>
+        <td>
+
+
+
+
+                         <button  id="btnImportBIM" style="margin-left:10px;"  >导入BIM模型</button>
+                          <button  id="btnSearchBIMAttr" style="margin-left :20px ; "    >点击查询 </button>
+                <div   style="margin :20px ; " >
+                    <input  type="checkbox"  checked style="text-decoration:underline ;color:blue; cursor: hand;"  id="chk"   >关闭无关图层</input>
+                </div>
+
+        </td>
+    </tr>
+
+    <!--<tr>-->
+    <!--<td height="1" style="background:url(../../image/dot.gif) repeat-x;"></td>-->
+    <!--</tr>-->
+</table>
+<div style="border-bottom:1px dashed #000000;   "></div>        <!--虚线-->
+            <!--<div class="easyui-tabs" fit="true" border="false">-->
+
+                <div title="BIM图层">
+                    <ul id="BIMTree" class="ztree"></ul>
+                </div>
+            <!--</div>-->
+            <label id="tip_label">暂无BIM模型</label>
+
+  <script>
+
+      var earth =null;
+      var BIMeditLayerList=parent._GlobalBIMeditLayerList;   //index.js中定义的全局变量
+      var BIMeditLayerPositionList=[];
+
+
+      $(function (){
+          earth = parent.earth;
+          initTree();
+          //关键字搜索
+          $("#btnImportBIM" ).click(function(){
+              var analysis = CITYPLAN.Analysis(earth);
+              analysis.showMoveHtml("importUSB4" );
+          });
+          $("#btnSearchBIMAttr" ).click(function(){
+              GeneralQuery.propertyQuery_BIM();
+          });
+          $("#chk" ).click(function(){
+              hideorrecoverOtherlayer(this);
+
+          });
+          Otherlayerhide();   //隐藏其他图层
+          BIMlayerhide(false) ;            //开启bim图层
+          window.onunload=function(){
+
+              recoverOtherlayerhide();    //隐藏其他图层
+              BIMlayerhide(true) ;            //开启bim图层
+          }
+
+      });
+
+      function hideorrecoverOtherlayer(obj)
+      {
+
+
+          if(obj.checked==true)  {
+              Otherlayerhide();
+          }
+          else{
+
+              recoverOtherlayerhide();
+          }
+
+
+      }
+      function  initTree(){
+
+          if(BIMeditLayerList!=null)
+          {
+              if(BIMeditLayerList.length==0){
+
+                 }
+              else
+              {
+             // alert(BIMeditLayerList.length);
+                  initImportTree();
+              }
+
+      }
+      }
+     function  _BIMaddEditLayer(layer){
+
+
+          BIMeditLayerList.push(layer);
+          initImportTree();
+     }
+      function _flyToLayer(layer) {
+        var lonLatRect = layer.LonLatRect;
+        var centerX = (lonLatRect.East + lonLatRect.West) / 2;
+        var centerY = (lonLatRect.North + lonLatRect.South) / 2;
+        var width = (parseFloat(lonLatRect.North) - parseFloat(lonLatRect.South)) / 2;
+        var range = lonLatRect.MaxHeight + 50;
+        earth.GlobeObserver.FlytoLookat(centerX, centerY, 0, 0, 90, 0, range, 4);
+    };
+      function initImportTree() {
+          var zNodes =[ { id:"1", name:"BIM部件图层列表",pId:"0",open:true,checked:true,isParent:true }
+          ];
+          debugger;
+          if(BIMeditLayerList!=null&&BIMeditLayerList.length>0)
+          {
+              $("#tip_label").html("");
+          }
+
+          for(var i=0;i< BIMeditLayerList.length;i++){
+              var node = {};
+              node.id = BIMeditLayerList[i].guid;
+              node.name = BIMeditLayerList[i].name;
+              node.pId = "1";
+              node.open = true;
+              node.checked = true;
+              node.isParent = false;
+              zNodes.push(node);
+          }
+
+          var setting = {
+              check: {
+                  enable: true,
+                  chkStyle: "checkbox"
+              },
+              callback: {
+                  onClick: function(event, treeId, node) {
+
+                  },
+                  onDblClick: function(event, treeId, node) {
+
+                      for(var i=0;i<BIMeditLayerList.length;i++){
+                          if(BIMeditLayerList[i].guid==node.id){
+                            _flyToLayer(BIMeditLayerList[i]);
+                          }
+                      }
+
+
+
+                  },
+                  onCheck: function(event, treeId, node) {
+                      if (node && node.id) {
+                          for(var i=0;i<BIMeditLayerList.length;i++){
+                              if(BIMeditLayerList[i].guid==node.id){
+                                  BIMeditLayerList[i].visibility = node.checked;
+                                  break;
+                              }
+                          }
+                      }
+                  }
+              }
+          };
+          $.fn.zTree.init($("#BIMTree"), setting, zNodes);
+      }
+
+
+
+      function  Otherlayerhide()
+      {
+
+          parent.setalllayersvisibility(false);  //关闭所有地上模型
+
+
+      }
+      function recoverOtherlayerhide()
+      {
+
+          for(var i=0;i<parent.hidedlayers.length;i++)
+          {
+              var layer=  parent.hidedlayers[i];
+              layer.Visibility=true;
+          }
+
+          //cy:10.10
+
+          var elistarray1= parent.currentLayerObjList[parent.currentApproveProjectGuid];
+          if(elistarray1!=null&&elistarray1.length>0){
+              parent.hideXZ(); //抠现状
+          }
+
+      }
+
+
+      function   BIMlayerhide(ishide){
+
+
+              if(ishide)
+              {
+//                  alert("关闭bim")  ;
+
+                  for(var i=0;i<BIMeditLayerList.length;i++){
+
+                          BIMeditLayerList[i].visibility = false;
+
+                  }
+
+                  }
+
+
+              else
+              {
+//                  alert("开启bim")  ;
+                  for(var i=0;i<BIMeditLayerList.length;i++){
+
+                      BIMeditLayerList[i].visibility = true;
+
+                  }
+              }
+
+
+      }
+  </script>
+
+
+</body>
+
+</html>

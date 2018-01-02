@@ -1,0 +1,677 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+	<meta http-equiv="Content-Type" content="textml; charset=UTF-8" />
+    <title>埋深统计</title>
+    <link rel="stylesheet" href="../../css/common.css" />
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css" />
+    <link rel="stylesheet" href="../../css/easyui/icon.css" />
+	<style type="text/css">
+		body {
+			margin: 0px;
+			padding: 0px;
+			font-size: 12px;
+		}
+        #projectList {
+            width: 160px;
+            margin: 2px 0px;
+        }
+		#pipeListDiv{
+			width: 150px;
+			height: 117px;
+			border: 1px double #7f9db9;
+			overflow: auto;
+			text-align: left;
+		}
+		
+		#depthRangeDiv{
+			width: 50px;
+			height: 90px;
+			border: 1px double #7f9db9;
+			overflow: auto;
+			text-align: left;
+		}
+		
+		#statisticsRangeDiv{
+			width: 60px;
+			height: 90px;
+			border: 1px double #7f9db9;
+			overflow: auto;
+			text-align: left;
+		}
+		
+		#statisticsListDiv{
+			height: 69px;
+			overflow: auto;
+			text-align: left;
+		}
+		
+		#resultDiv{
+        width: 100%;
+			overflow: auto;
+		}	
+		
+		#statPartNum{
+			width: 26px;
+			border: 1px double #7f9db9;
+		}
+		
+	
+		td.upLimitTd{
+			cursor: default;
+			border-bottom: 1px double #ACA899;
+		}
+		
+		td.downLimitTd{
+			width: 30px;
+			cursor: default;
+			border-right: 1px double #ACA899;
+			border-bottom: 1px double #ACA899;
+		}	
+		button{
+			width: 50px;
+			height: 22px;
+			margin:0 0 10px 0;
+		}		
+		
+	</style>
+</head>  
+<body id="container" class="easyui-layout" >
+<div region="north" border="false" style="width: 255px;overflow:hidden;">
+    <fieldset style="margin: 0;">
+        <legend>参数设置</legend>
+        <div style="width:100%; height:25px;padding-left:30px;margin-bottom:5px;">
+            <label>选择工程:</label>
+            <select id="projectList" style="width:140px;"></select>
+        </div>
+        <div id="pipeListDiv" style="height: 95px; width:130px;border:1px solid silver;float:left;margin-left:25px;"></div>
+        <div style="height: 100px; width:70px; float: right;text-align: center;padding-top: 10px;margin-right:10px;">
+            <button id="selectAllBtn" >全选</button>
+            <button id="InvSelectBtn" >反选</button>
+            <button id="clearSelectBtn" >清空</button>
+        </div>
+        <div style="width:100%; height:145px;padding-left:30px;margin-bottom:5px;overflow:hidden">
+			<div style="width:60px;float:left">
+				<label style="display:block; height:20px;">埋深范围:</label>
+				<div id="depthRangeDiv"></div>
+			</div>
+			<div style="width:70px;float:left;margin-right:10px;">
+				<table >
+					<tr><td><button style="margin-bottom:2px;margin-top:10px;width:70px;" id="upLimitBtn" disabled>上限-&gt;</button></td></tr>
+					<tr><td><button style="margin-bottom:2px;width:70px;" id="downLimitBtn" disabled>下限-&gt;</button></td></tr>
+					<tr><td><button style="margin-bottom:2px;width:70px;" id="addRowBtn" disabled>添加行</button></td></tr>
+					<tr><td><button style="margin-bottom:2px;width:70px;" id="deleteRowBtn" disabled>删除行</button></td></tr>
+				</table>			
+			</div>
+			<div style="width:70px;float:left;">
+				<label style="display:block; height:20px;">统计范围:</label>
+				<div id="statisticsRangeDiv">
+					<table style="width:100%; background-color: #ebeadb;" cellspacing="0">
+						<tr>
+							<td class="downLimitTd" height="20px">下限</td>
+							<td class="upLimitTd">上限</td>
+						</tr>
+					</table>
+					<div id="statisticsListDiv">
+						<table id="statisticsListTab" cellspacing="0" style="width:100%;">
+						</table>
+					</div>
+				</div>			
+			</div>
+			<div style="width:200px;float:left; margin-top:5px;">
+				<label style=" height:20px;">段数:</label>
+				<input id="statPartNum"  type="text" value="5" min="1"/>
+			</div>
+		</div>
+	
+        <div style="clear: both;"></div>
+        <div style="padding-top: 5px;text-align: center; overflow:hidden; padding-left:30px; margin-bottom:5px;">
+            <button id="statisticsBtn" style="float:left; margin-left:13px;" disabled>全部</button>&nbsp;
+            <button id="btnCircleSelect" style="float:left; margin-left:8px;" disabled>圆域</button>&nbsp;
+            <button id="btnPolygonSelect" style="float:left; margin-left:8px;" disabled>多边形</button>
+        </div>
+    </fieldset>
+</div>
+<div class="center" region="center" border="true" style="overflow-y: hidden;overflow-x: hidden;">
+    <table style="width:100%; background-color: #ebeadb">
+        <tr>
+			<td class="" width="25%" style="text-align:center">管种</td>
+            <td class="" width="25%" style="text-align:center">埋深</td>
+            <td class="" width="25%" style="text-align:center">数量</td>
+            <td style="text-align:center">长度(km)</td>
+        </tr>
+    </table>
+    <div id="resultDiv"></div>
+</div>
+<div region="south" border="false" style="height: 28px;margin-top:10px;text-align:right">
+    <button id="importExcelBtn" disabled>导出</button>
+    <button id="sBtn" disabled>统计</button>
+</div>
+
+<script type="text/javascript" src="../../util/jquery.js"></script>  <script type="text/javascript" src="../../util/CustomFcn.js"></script>
+<script type="text/javascript" src="../../util/jquery.xml2json.js"></script>
+<script type="text/javascript" src="../../js/statistics.js"></script>  
+<script type="text/javascript" src="../../js/common.js"></script>  
+<script type="text/javascript" src="../../js/lib/json.js"></script>
+ <script type="text/javascript" src="../../js/exportExcel.js"></script>
+<script type="text/javascript">
+	var earth = null; //地球对象
+	var allDepthRangeList = []; //所有管线图层的埋深统计范围
+	$(function(){	
+		earth = parent.earth;
+		var divHeight = $("#dlgResult",parent.document).height() - 420;
+		$("#resultDiv").height(divHeight);
+        //var projectId = parent.SYSTEMPARAMS.project;
+        StatisticsMgr.initProjectList($("select#projectList"));// 初始化“阶段”下拉列表
+        parent.SYSTEMPARAMS.project = $("select#projectList").val();
+        parent.SystemSetting.getProjectConfig();
+        StatisticsMgr.initPipelineList($("select#projectList").val(), $("#pipeListDiv"), function(){
+            //为管线的checkbox添加onclick事件 - 显示统计范围列表
+            $(":checkbox").click(function(){
+                showDepthRangeList();
+            });
+        });//初始化管线图层列表
+        $("select#projectList").change(function () {
+            StatisticsMgr.initPipelineList($("select#projectList").val(), $("#pipeListDiv"), function(){
+                //为管线的checkbox添加onclick事件 - 显示统计范围列表
+                $(":checkbox").click(function(){
+                    showDepthRangeList();
+                });
+            });
+            parent.SYSTEMPARAMS.project = $("select#projectList").val();
+            parent.SystemSetting.initSystemParam();
+        });
+        showDepthRangeList();
+		StatisticsMgr.addSelectAllEvent($("#selectAllBtn"), showDepthRangeList); //为【全选】按钮添加onclick功能事件
+		StatisticsMgr.addInvSelectEvent($("#InvSelectBtn"), showDepthRangeList); //为【反选】按钮添加onclick功能事件
+		StatisticsMgr.addClearSelectEvent($("#clearSelectBtn"), showDepthRangeList); //为【清空】按钮添加onclick功能事件		
+		
+		/**
+		 * 功能：“段数”输入框的onchange事件
+		 */
+		$("#statPartNum").keyup(function(){ //为【段数】编辑框添加onchange()功能事件
+	    	if(validation() == false){
+	    		return;
+	    	}		
+			var rangeTable = $("#depthRangeDiv table");
+			if(rangeTable[0] == null){
+				return;
+			}
+			var rowsNum = rangeTable[0].rows.length;
+			if(rowsNum == 0){
+				return;
+			}
+			var maxValue = rangeTable[0].rows[rowsNum-1].cells[0].innerHTML;
+			var minValue = rangeTable[0].rows[0].cells[0].innerHTML;
+			minValue = parseFloat(minValue);
+			maxValue = parseFloat(maxValue);
+	    	var rangeList = getDepthRangeListByMaxAndMin(minValue, maxValue);
+			StatisticsMgr.showRangeList($("#depthRangeDiv"), rangeList);
+		});
+		
+		/**
+		 * 功能：埋深范围列表的onclick事件
+		 */
+		$("#depthRangeDiv").click(function(){
+			var rangeTable = $("#depthRangeDiv table");
+			if(rangeTable.length == 0){
+				return;
+			}
+			var selectIndex = rangeTable[0].selectIndex;
+			if(selectIndex != null){ //是否一行埋深范围被选中
+				$("#upLimitBtn").attr("disabled", false);
+				$("#downLimitBtn").attr("disabled", false);
+				$("#addRowBtn").attr("disabled", false);
+			}
+		});
+		
+		/**
+		 * 功能：统计范围列表的onclick事件
+		 */
+		$("#statisticsListTab").click(function(){
+			$("#deleteRowBtn").removeAttr("disabled");
+		});
+        function enabledBtn(){
+            var rangeTable = $("#statisticsListTab");
+            if(rangeTable[0].rows.length != 0){ //如果统计范围被全部删除，则【删除行】按钮不可用
+                $("#statisticsBtn").removeAttr("disabled");
+                $("#btnCircleSelect").removeAttr("disabled");
+                $("#btnPolygonSelect").removeAttr("disabled");
+            }
+        };
+				
+		/**
+		 * 功能：【上限】按钮onclick事件
+		 */
+		$("#upLimitBtn").click(function(){
+			var rangeTable = $("#depthRangeDiv table");
+			var selectIndex = rangeTable[0].selectIndex;
+			var rangeValue = rangeTable[0].rows[selectIndex].cells[0].innerHTML;
+			
+			var statTable = $("#statisticsListTab");
+			var selectedStatRow = statTable[0].selectIndex;
+			if(selectedStatRow == null){ //如果统计列表没有任何一行被选中，则添加一行数据
+				var minValue = rangeTable[0].rows[0].cells[0].innerHTML;
+				StatisticsMgr.appendStatisticsRangeRow(minValue, rangeValue, statTable);
+			}else{ //如果选中一行统计信息，则修改上限值
+				statTable[0].rows[selectedStatRow].cells[1].innerHTML = rangeValue;  //修改上限值
+			}
+            enabledBtn();
+		});
+		
+		
+		/**
+		 * 功能：【下限】按钮onclick事件
+		 */
+		$("#downLimitBtn").click(function(){
+			var rangeTable = $("#depthRangeDiv table");
+			var selectIndex = rangeTable[0].selectIndex;
+			var rangeValue = rangeTable[0].rows[selectIndex].cells[0].innerHTML;			
+			
+			var statTable = $("#statisticsListTab");
+			var selectedStatRow = statTable[0].selectIndex;
+			if(selectedStatRow == null){ //如果统计列表没有任何一行被选中，则添加一行数据
+				var rowsNum = rangeTable[0].rows.length;
+				var maxValue = rangeTable[0].rows[rowsNum-1].cells[0].innerHTML;
+				StatisticsMgr.appendStatisticsRangeRow(rangeValue, maxValue, statTable);
+			}else{ //如果选中一行统计信息，则修改下限值
+				statTable[0].rows[selectedStatRow].cells[0].innerHTML = rangeValue;  //修改下限值
+			}
+            enabledBtn();
+		});
+		
+		/**
+		 * 功能：【添加行】按钮onclick事件
+		 */
+		$("#addRowBtn").click(function(){
+			var rangeTable = $("#depthRangeDiv table");
+			var rowsNum = rangeTable[0].rows.length;
+			var maxValue = rangeTable[0].rows[rowsNum-1].cells[0].innerHTML;
+			var minValue = rangeTable[0].rows[0].cells[0].innerHTML;
+			StatisticsMgr.appendStatisticsRangeRow(minValue, maxValue, $("#statisticsListTab"));
+            enabledBtn();
+		});
+		
+		/**
+		 * 功能：【删除行】按钮onclick事件
+		 */
+		$("#deleteRowBtn").click(function(){
+			var rangeTable = $("#statisticsListTab");
+			var selectIndex = rangeTable[0].selectIndex;
+			rangeTable[0].deleteRow(selectIndex);
+			if(rangeTable[0].rows.length == 0){ //如果统计范围被全部删除，则【删除行】按钮不可用
+				$("#deleteRowBtn").attr("disabled", true);
+				$("#statisticsBtn").attr("disabled", true);
+                $("#btnCircleSelect").attr("disabled", true);
+                $("#btnPolygonSelect").attr("disabled", true);
+				rangeTable[0].selectIndex = null;
+				return;
+			}
+			if(selectIndex >= rangeTable[0].rows.length){ //如果被删除的为最后一行，则选择第一行
+				selectIndex = 0;
+			}
+			StatisticsMgr.selectSingleRow(rangeTable[0].rows[selectIndex].cells[0]); //选中下一行
+		});
+		
+		/**
+		 * 全部统计
+		 */
+		$("#statisticsBtn").click(function(){
+            earth.ShapeCreator.Clear();
+			diameterStatistics(null);
+		});
+        /**
+         * 圆域查询
+         */
+        $("#btnCircleSelect").click(function () {
+            earth.Event.OnCreateGeometry = onCreateCircle;
+            earth.ShapeCreator.Clear();
+            earth.ShapeCreator.CreateCircle();
+        });
+        /**
+         * 圆域查询回调函数
+         * @param pFeat
+         * @param geoType
+         */
+        var onCreateCircle = function (pFeat, geoType) {
+            diameterStatistics(pFeat);
+            earth.Event.OnCreateGeometry = function () {
+            };
+        };
+        /**
+         * 多边形查询
+         */
+        $("#btnPolygonSelect").click(function () {
+            earth.Event.OnCreateGeometry = onCreatePolygon;
+            earth.ShapeCreator.Clear();
+            earth.ShapeCreator.CreatePolygon();
+        });
+        /**
+         * 画多边形回调函数
+         * @param pFeat
+         * @param geoType
+         */
+        var onCreatePolygon = function (pFeat, geoType) {
+            if (pFeat.Count < 3) {
+                alert("无效的多边形");
+                return false;
+            }
+            diameterStatistics(pFeat);
+            earth.Event.OnCreateGeometry = function () {
+            };
+        };
+		/**
+		 * 功能：【导出Excel】按钮onclick事件
+		 */
+		$("#importExcelBtn").click(function(){
+            var exportExcel=new PageToExcel("exportTab",0,255,"export.xls");//table id , 第几行开始，最后一行颜色 ，保存的文件名
+            exportExcel.CreateExcel(false);
+            exportExcel.Exec();
+		});
+        var checkUpDownValue=function(){
+            var rangeTable = $("#statisticsListTab")[0];
+            for(var i=0; i<rangeTable.rows.length; i++){
+                var downValue = rangeTable.rows[i].cells[0].innerHTML;
+                var upValue = rangeTable.rows[i].cells[1].innerHTML;
+                if(downValue==""||upValue==""||isNaN(upValue)||isNaN(downValue)){
+                    alert("上限或者下限值输入不正确.");
+                    return false;
+                }else if(parseFloat(downValue)>parseFloat(upValue)){
+                    alert("上限必须大于等于下限值.");
+                    return false;
+                }
+            }
+            return true;
+        }
+		/**
+		 * 功能：埋深分段统计功能代码
+		 */
+		var diameterStatistics = function(pFeat){
+            if(!checkUpDownValue()) return;
+			classResList = [];
+			var rangeTable = $("#statisticsListTab")[0];
+			//要传递到chart统计的数据
+			var layers = [];
+			var fields = [{dataType:"埋深"}, {dataNum:"数量"}, {length:"长度"}];
+			var chartTitle = "埋深分段统计图";
+			$(":checkbox:checked").each(function(){
+				var layerId = $(this).val();
+				var layerName = $(this).next("label").html();
+				layers.push(layerName);
+
+				var classLayer = {
+					chartTitle:chartTitle,
+					layer:layers,
+					fields:fields,
+					dataList : [{layerName : layerName}]
+				};
+                var lengthCount=0;
+                var numCount=0;
+				for(var i=0; i<rangeTable.rows.length; i++){
+					var downValue = rangeTable.rows[i].cells[0].innerHTML;
+					var upValue = rangeTable.rows[i].cells[1].innerHTML;
+					var usSdeep = top.getName("US_SDEEP",1,true);
+                    var result=StatisticsMgr.statisticsParamQuery(layerId,pFeat,downValue,upValue,usSdeep);
+                    if(result!==null||result!=="error"){
+                        var json = $.xml2json(result);
+                        if(json){
+                            var totalLength=json.Item.length;
+                            totalLength=totalLength/1000;
+                            var dataType = downValue + "-" + upValue;
+                            var dataNum=json.Item.Times;
+                            classLayer.dataList.push({dataType: dataType, dataNum: dataNum, length: parseFloat(totalLength).toFixed(3)});
+                            lengthCount=parseFloat(lengthCount)+parseFloat(totalLength);
+                            numCount=parseFloat(numCount)+parseFloat(dataNum);
+                        }
+                    }
+				}
+                //小计
+                classLayer.dataList.push({dataType: "小计", dataNum: numCount, length: parseFloat(lengthCount).toFixed(3)});
+				classResList.push(classLayer);
+			});
+			StatisticsMgr.showClassificationResult4(classResList, $("#resultDiv"),3); //显示埋深分段统计结果
+			$("#importExcelBtn").attr("disabled",false); //恢复【导出Excel】按钮可用
+			$("#sBtn").attr("disabled",false);
+            addExportTitle();
+		};
+        var addExportTitle=function(){
+            var cols=["图层","埋深","数量","长度(km)"];
+            var rangeTable = document.getElementById("exportTab");
+            var newTr=rangeTable.insertRow(0);
+            newTr.style.display="none";
+            for(var i=0;i<cols.length;i++){
+                var td=newTr.insertCell();
+                td.innerHTML=cols[i];
+            }
+        }
+        $(window).unload(function () {
+            if(earth.ShapeCreator!=null){
+                earth.ShapeCreator.Clear();
+            }
+            clearHtmlBal();
+        });
+	});
+	
+	var classResList;
+	/**
+	 * 统计功能
+	 */
+    var htmlBal=null;
+	 $("#sBtn").die().live("click",function(){
+         clearHtmlBal();
+		var href = window.location.href;
+		var ary = href.split("/");
+		var currentName = ary[ary.length - 1];
+		var newHref = href.replace(currentName,"")
+		newHref += "chart.htm";
+
+	    var id = earth.Factory.CreateGuid();
+	    htmlBal = earth.Factory.CreateHtmlBalloon(id, "统计图");
+	    htmlBal.SetScreenLocation(0,0);
+	    htmlBal.SetRectSize(750,480);
+	    htmlBal.SetIsAddCloseButton(true);
+	    htmlBal.SetIsAddMargin(true);
+	    //htmlBal.SetIsTransparence(true);
+	    htmlBal.SetBackgroundAlpha(150);//这里怎么调整为半透明效果呢
+	    htmlBal.ShowNavigate(newHref);
+	    earth.Event.OnHtmlNavigateCompleted= function () {
+            if(htmlBal===null){
+                return;
+            }
+	    	var jsonStrData = JSON.stringify(classResList);
+		    setTimeout(function(){htmlBal.InvokeScript("getdata", jsonStrData);},100);
+		};
+		/*earth.Event.OnHtmlBalloonFinished= function () {
+	 		htmlBal.DestroyObject();
+	        earth.Event.OnHtmlBalloonFinished= function () {};
+	    };*/
+	});
+    /*
+     * 清除统计图页面
+     */
+    var clearHtmlBal=function(){
+        if (htmlBal != null) {
+            htmlBal.DestroyObject();
+            htmlBal = null;
+        }
+    };
+	/**
+	 * 功能：获取数组中的最大值
+	 * 参数：numberArr-数组列表
+	 * 返回：数组中的最大值
+	 */
+	var getMaxValue = function(numberArr){
+		if(numberArr == null){
+			return null;
+		}
+		if(numberArr.length == 0){
+			return null;
+		}
+		var maxValue = numberArr[0];
+		for(var i=1; i<numberArr.length; i++){
+			maxValue = Math.max(maxValue, numberArr[i]);
+		}
+		return maxValue;
+	};
+	
+	/**
+	 * 功能：获取数组中的最小值
+	 * 参数：numberArr-数组列表
+	 * 返回：数组中的最小值
+	 */
+	var getMinValue = function(numberArr){
+		if(numberArr == null){
+			return null;
+		}
+		if(numberArr.length == 0){
+			return null;
+		}
+		var minValue = numberArr[0];
+		for(var i=1; i<numberArr.length; i++){
+			minValue = Math.min(minValue, numberArr[i]);
+		}
+		return minValue;
+	};
+	
+	/**
+	 * 功能：根据图层Id，获取统计范围对象
+	 * 参数：layerId-管线的图层ID; depthRangeList-所有管线图层的统计范围;
+	 * 返回：指定图层的统计范围对象
+	 */
+	var getDepthRangeById = function(layerId, depthRangeList){
+		var depth = null; 
+		for(var i=0; i<depthRangeList.length; i++){
+			if(layerId == depthRangeList[i].layerId){
+				depth = depthRangeList[i];
+				break;
+			}
+		}
+		return depth;
+	};
+	
+	/**
+	 * 功能：验证“段数”输入值是否有效
+	 * 参数：无
+	 * 返回：是否有效（true为有效，false为无效）
+	 */
+	var validation = function(){
+		var partNumObj = $("#statPartNum");
+		var partNum = partNumObj.val();
+		if(partNum == ""){
+			alert("请输入段数");
+			partNumObj.focus();
+			return false;
+		}
+		partNum = Number(partNum);
+		if(isNaN(partNum) == true){
+			alert("段数值无效");
+			partNumObj.select();
+			partNumObj.focus();
+			return false;
+		}
+		
+		if(partNum < 1){
+			alert("段数不能小于1");
+			partNumObj.val("1");
+			partNumObj.select();
+			partNumObj.focus();
+			return false;
+		}
+		return true;
+	};
+	
+	/**
+	 * 功能：根据最大值和最小值获取埋深范围
+	 * 参数：minValue - 最小值； maxValue - 最大值
+	 * 返回：埋深范围
+	 */
+	var getDepthRangeListByMaxAndMin = function(minValue,maxValue){
+		var rangeList = [];
+		if(minValue != null && maxValue != null){
+			var disDepth = maxValue - minValue;
+			var partNum = parseInt($("#statPartNum").val());
+			var unitDepth = disDepth/partNum;
+			rangeList.push(minValue.toFixed(2));
+			for(var i=1; i<partNum; i++){
+				var depthValue = parseFloat((minValue + unitDepth * i).toFixed(3));
+				rangeList.push(depthValue.toFixed(2));
+			}
+			rangeList.push(maxValue.toFixed(2));
+		}
+		return rangeList;
+	};
+		    
+	/**
+	 * 功能：获取被选中的管线图层的统计范围
+	 * 参数：depthRangeList - 所有管线图层的统计范围
+	 * 返回：被选中的管线图层的统计范围
+	 */
+	var getSelectDepthRangeList = function(){
+		var minValue = null;
+		var maxValue = null;
+		var queryTableType = 1; //线表搜索
+		$(":checkbox:checked").each(function(){
+			var layerId = $(this).val();
+			var depthRange = getDepthRangeById(layerId, allDepthRangeList); //先从缓存数组中查找图层的埋深范围
+			if(depthRange == null){ //如果缓存数组中不存在该图层的埋深范围，则从GISServer服务中查找，并将查找结果保存到缓存数组中，以便下次直接使用
+				var usSdeep = top.getName("US_SDEEP",1,true);
+				var sdeepResult = StatisticsMgr.getValueRangeInfo(layerId, null, 4, queryTableType, usSdeep);
+				var sdeepValueList = StatisticsMgr.getValueRangeList(sdeepResult);
+				var minSdeep = getMinValue(sdeepValueList);
+				var maxSdeep = getMaxValue(sdeepValueList);				
+				var usEdeep = top.getName("US_EDEEP",1,true);
+				var edeepResult = StatisticsMgr.getValueRangeInfo(layerId, null, 4, queryTableType, usEdeep);
+				var edeepValueList = StatisticsMgr.getValueRangeList(edeepResult);
+				var minEdeep = getMinValue(edeepValueList);
+				var maxEdeep = getMaxValue(edeepValueList);
+		
+				depthRange = {
+					layerId : layerId,
+					minValue : Math.min(minSdeep, minEdeep),
+					maxValue : Math.max(maxSdeep, maxEdeep)
+				};
+				allDepthRangeList.push(depthRange); //将查找结果保存到缓存数组中
+			}
+			if(minValue == null){
+				minValue = depthRange.minValue;
+			}else{
+				minValue = Math.min(minValue, depthRange.minValue);
+			}
+			if(maxValue == null){
+				maxValue = depthRange.maxValue;
+			}else{
+				maxValue = Math.max(maxValue, depthRange.maxValue);
+			}
+		});
+		
+		var rangeList = getDepthRangeListByMaxAndMin(minValue, maxValue);
+		return rangeList;
+	};
+	
+	/**
+	 * 功能：显示被选中的管线图层的统计范围
+	 * 参数：无
+	 * 返回：无
+	 */
+	var showDepthRangeList = function(){
+		if(validation() == false){
+			return;
+		}
+		var rangeList = getSelectDepthRangeList();
+		StatisticsMgr.showRangeList($("#depthRangeDiv"), rangeList);
+		$("#upLimitBtn").attr("disabled", true);
+		$("#downLimitBtn").attr("disabled", true);
+		$("#addRowBtn").attr("disabled", true);
+		
+		if(rangeList.length == 0){
+			//$("#deleteRowBtn").removeAttr("disabled");
+			//$("#statisticsBtn").removeAttr("disabled");
+			$("#statisticsListTab").html("");
+			$("#statisticsListTab")[0].selectIndex = null;
+		}
+	};
+		
+</script>
+</body>
+</html>

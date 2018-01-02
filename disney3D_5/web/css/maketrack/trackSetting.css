@@ -1,0 +1,12 @@
+/**
+ * User: wyh
+ * Date: 12-12-15
+ * Time: 下午5:05
+ * Desc: 
+ */
+html,body{ text-align: center; padding: 5px 5px; overflow: hidden;}
+input { width: 150px; margin-right: 10px;}
+table{ width: 100%;}
+.col1 { width: 100px; }
+.col2 { text-align: left; }
+button { width: 75px; height: 30px; margin: 5px 10px; }

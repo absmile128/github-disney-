@@ -1,0 +1,943 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+	<meta http-equiv="Content-Type" content="textml; charset=UTF-8" />
+    <title>三维位置比对</title>
+    <link rel="stylesheet" href="../../css/common.css"/>
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css" />
+    <style type="text/css">
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+        table#tblResult>tbody>tr {
+            cursor: pointer;
+        }
+
+        table#tblResult td th {
+            text-align: center;
+            border-bottom: 1px solid #d3d3d3;
+        }
+        .col1 {
+            width: 75px;
+            text-align: center;
+            border-bottom: 1px solid #d3d3d3;
+        }
+
+        .col2 {
+            width: 125px;
+            text-align: center;
+            border-bottom: 1px solid #d3d3d3;
+        }
+
+        .col3 {
+            width: 75px;
+            text-align: center;
+            border-bottom: 1px solid #d3d3d3;
+        }
+        .pickCol {
+            width: 275px;
+            text-align: center;
+            border-bottom: 1px solid #d3d3d3;
+        }
+
+        #tab {
+            width: 100%;
+        }
+
+
+        .bgRed {
+            text-align: center;
+            background-color: red;
+        }
+        .bg{
+            text-align: center;
+        }
+        .chk {
+            text-align: center;
+            width: 40px;
+            border-bottom: 1px solid #d3d3d3;
+        }
+        .w60{
+            width: 175px;
+            text-align: left;
+            border-bottom: 1px solid #d3d3d3;
+
+        }
+        #divPipeLineTypeList {
+            overflow-y: auto;
+        }
+
+        #divPipeLineTypeList div {
+            /*width: 85px;*/
+            display: inline-block;
+            min-width: 85px;
+        }
+        #txtBufferDist{
+            width:85px;
+        }
+    </style>
+
+</head>
+<body id="container" class="easyui-layout">
+<div region="north" border="false" style="height: 105px;width: 270px;">
+<div id="selectObjDiv">
+    <span>分析半径(米):</span>
+    <input class="textWidth" style="width:136px;" type="text" id="txtBufferDist" value="10"/>
+</div>
+<div id="bjDiv">
+    <span>报警阈值(米):</span>
+    <input class="textWidth" style="width:136px;" type="text" id="bjDist" value="10"/>
+</div>
+
+<div style="padding-top: 10px;text-align: center;">
+    <button id="addPipeline">添加</button>
+    <button id="startAnalysis" disabled>分析</button>
+    <button id="clearPipeline" disabled>清空</button>
+</div>
+<div style="clear: both;"></div>
+</div>
+<div region="center" border="true" style="margin-top:0px;">
+    <table id="tblResult" style="display:none">
+        <thead>
+            <tr>
+                <th class="col1">管线编号</th>
+                <th class="col2">管点编号</th>
+                <th class="col3">距离(米)</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    <table id="pickColResult" >
+        <thead>
+        <tr>
+            <th class="pickCol">管线编号</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+<div region="south" border="false" style="height: 40px;">
+    <div style="margin-top: 5px; float: right;margin-right: 0px;">
+        <button id="importExcelBtn" disabled style="float:right;margin-right: 0px;">导出</button>
+        <button id="showResult" name="showResult" style="float:right" disabled>平面图</button>
+    </div>
+</div>
+<script type="text/javascript" src="../../util/jquery.js"></script>
+<script type="text/javascript" src="../../util/easyui/jquery.easyui.js"></script>
+<script type="text/javascript" src="../../util/jquery.xml2json.js"></script>
+<script type="text/javascript" src="../../js/common.js"></script>
+<script type="text/javascript" src="../../js/statistics.js"></script>
+<!-- <script type="text/javascript" src="../../js/ApprovalMgr.js"></script> -->
+<script type="text/javascript">
+var earth=null;
+var importLine=[];
+var designLine=[] ;
+var selectLineArr =[];
+$(function () {
+    var pipeLineLayers = top.PIPELINELAYERS;
+    var strGuidList=[];
+    var GuidArray=[];
+    var currLayerGuid = null;
+    earth = top.earth;
+    var selectedObj = null;  // SEGeoPoints类型
+    var selectedObjStr = "";  // selectedObj的字符串表示：x1,y1,z1,x2,y2,z2
+    var bufPolygon = null;
+    var bufGeoPoints = null;
+    var pointKey=[];
+    var pipeLineList=[];
+    var highLightObjs = [];
+    var hasResult = false;
+    //ApprovalMgr.initApprovalEnvir();
+    /**
+     * 清除生成的缓冲区对象
+     */
+    var clearBuffer = function(){
+        var bufPolygon1;
+        if (bufferList.length !=0){
+            for(var i=0;i<bufferList.length;i++){
+                bufPolygon1=bufferList[i]
+                earth.DetachObject(bufPolygon1);
+            }
+
+            try{
+                earth.Factory.DestoryObject(bufPolygon1);
+            }catch(e){
+            }
+            bufPolygon1 = null;
+        }
+    };
+    var bufferList=[];
+    /**
+     * 判断已选管段是否在可连续管段之内 如果在 就不允许删除!
+     * @param  {[type]} array [description]
+     * @param  {[type]} key   [description]
+     * @return {[type]}       [description]
+     */
+    var removeEnabled = function(array, key){
+        var bKey = key.begin;
+        var eKey = key.end;
+        var b = 0;
+        var e = 0;
+        for (var i = array.length - 1; i >= 0; i--) {
+            var obj = array[i];
+            var beginKey = obj.begin;
+            var endKey = obj.end;
+            if(beginKey === bKey){
+                b++;
+            }
+            if(endKey === eKey){
+                e++;
+            }
+            if(beginKey === eKey){
+                b++;
+            }
+            if(endKey === bKey){
+                e++;
+            }
+        };
+        if(b === 2 && e === 2){
+            return false;
+        }else{
+            return true;
+        }
+    };
+    var startPoints=[];
+    var endPoints=[];
+    var isLine=true;
+    var pointCoords=null;
+    var pipeKeys = [];
+    var finallyCoords = [];
+    var keysAry = [];
+    var allPipePoints = [];
+    var keyObjDic = new ActiveXObject("Scripting.Dictionary");
+    var finallyObjDic = new ActiveXObject("Scripting.Dictionary");
+    var allCoordsKey =  new ActiveXObject("Scripting.Dictionary");
+    var onPickObjectEx = function (pObj) {
+        //获取拾取对象key
+        var objKey=pObj.GetKey();
+        for(var i = 0; i < keysAry.length; i++){
+            if(pipeKeys[i].key === objKey){
+                if(!removeEnabled(pipeKeys, pipeKeys[i])){
+                    earth.ToolManager.SphericalObjectEditTool.Browse();
+                    alert("该管段不允许删除!");
+                    return;
+                }
+                pipeKeys.splice(i, 1);
+            }
+            if(keysAry[i] === objKey){
+                var currentObj = keyObjDic.item(objKey);
+                currentObj.StopHighLight();
+                keysAry.splice(i, 1);
+
+                if(finallyObjDic.item(objKey)){
+                    var coordpts = finallyObjDic.item(objKey);
+                    for (var b = finallyCoords.length - 1; b >= 0; b--) {
+                        if(coordpts === finallyCoords[b]){
+                            finallyCoords.splice(b, 1);
+                        }
+                    };
+                }
+                //修改完finallyCoords后 需要修改allPipePoints数组 保证其是两头的坐标 以便进行下一组的坐标判断
+                if(finallyCoords[0]){
+                    allPipePoints = [finallyCoords[0][0], finallyCoords[finallyCoords.length - 1][1]];
+                }
+                //从显示栏里清除该条管段
+                //alert($("#tblResult tbody").children().length);
+                var childs = $("#tblResult tbody").children();
+                if(childs && childs.length){
+                    for(var h = 0; h < childs.length; h++){
+                        if(currentObj.guid === childs[h].value){
+                            document.getElementById("tblResult").deleteRow(h+1);
+                        }
+                    }
+                }
+                //鼠标恢复平移状态
+                earth.ToolManager.SphericalObjectEditTool.Browse();
+                return;
+            }
+        }
+        //alert(objKey);
+        pObj.Underground = true;
+
+        GuidArray.push(pObj.Guid);
+        pObj.Underground = true;
+        //pObj.ShowHighLight();
+        //earth.Event.OnPickObjectEx = function () {};
+        //earth.Query.FinishPick();
+
+        var parentLayerName = pObj.GetParentLayerName();
+        if (parentLayerName == "" || parentLayerName == null) {
+            alert("获得父层名称失败！");
+            return false;
+        }
+        var cArr=parentLayerName.split("=");
+        var cArr = cArr[1].split("_");
+        var layer = earth.LayerManager.GetLayerByGUID(cArr[0]);
+
+        targetPipeLineType = layer.PipeLineType;
+        var selectLayerType=earth.LayerManager.GetLayerByGUID(parent.pipeListVal).PipeLineType;
+        if(targetPipeLineType!=selectLayerType){//判断所选管段与选中阶段图层管线是否在同一图层
+            alert("所选管段与选中阶段图层管线不在同一图层！");
+            return;
+        }
+        var param = layer.QueryParameter;
+        var result = null, json = null;
+        var usKey = top.getName("US_KEY", 1, true);
+        param.Filter = "(and,equal,"+usKey+"," + pObj.GetKey() + ")";
+        param.QueryType = 17;  // SE_SpatialData
+        if (parentLayerName.indexOf("container") > -1){  // line
+            param.QueryTableType = 1;
+            result = layer.SearchFromGISServer();
+            var startKey = top.getName("US_SPT_KEY", 1, true);
+            var endKey =  top.getName("US_EPT_KEY", 1, true);
+            if (result != null) {
+                json = $.xml2json(result.GotoPage(0));
+                
+                if(json.Result.num == 1){
+                    //开始
+                    var coordsPts = [];
+                    var selectedObjStr = json.Result.Record.SHAPE;
+                    var usSize = json.Result.Record.US_SIZE;
+                    var coords = selectedObjStr.Polyline.Coordinates.split(",");
+                    //当前选中管线的坐标
+                    coordsPts.push(coords[0]+","+coords[1]+","+coords[2],coords[3]+","+coords[4]+","+coords[5]);
+                    selectedObj = earth.Factory.CreateGeoPoints();
+
+                    if(pipeKeys && pipeKeys.length){
+                        var keysLen = pipeKeys.length;
+                        var lastKey = pipeKeys[pipeKeys.length - 1];
+                        var tempObj;
+                        var isConnect = false;
+                        for(var j = 0; j < pipeKeys.length; j++){
+                            if(pipeKeys[j].begin === json.Result.Record[endKey] || pipeKeys[j].end === json.Result.Record[startKey]){
+                                tempObj = pipeKeys[j];
+                                isConnect = true;
+                            }
+                        }
+                        if(!isConnect){
+                            alert("请选中连续管段!");
+                            return;
+                        }
+                        if(json.Result.Record[endKey] === tempObj.begin || json.Result.Record[startKey] === tempObj.end){
+                            var tempCoord = [coords[0]+","+coords[1]+","+coords[2],coords[3]+","+coords[4]+","+coords[5]];
+                            finallyObjDic.item(objKey) = tempCoord;
+                            allCoordsKey.item(tempCoord) = objKey;
+                            //根据x与y进行判断即可 2014.2.11
+                            var allXY = allPipePoints[1].substring(0, allPipePoints[1].lastIndexOf(","));
+                            var coordsPtsXY = coordsPts[0].substring(0, coordsPts[0].lastIndexOf(","));
+                            //alert(allXY + " " + coordsPtsXY);
+                            if(allXY === coordsPtsXY){//第二根的起点等于第一根的终点
+                                finallyCoords.push(tempCoord);
+                            }else{
+                                finallyCoords.unshift(tempCoord);
+                            }
+                            //allPipePoints = coordsPts;
+                            var finallyLen = finallyCoords.length;
+                            allPipePoints = [finallyCoords[0][0], finallyCoords[finallyLen - 1][1]];
+                        }
+                    }
+                    //记录所有的起始编号与终点编号
+                    var eptKey = json.Result.Record[endKey];//终点编号
+                    var sptKey = json.Result.Record[startKey];//起点编号
+                    var keyObj = {begin:sptKey, end:eptKey, key:objKey};
+                    pipeKeys.push(keyObj);
+
+                    //每一次查询后的坐标数组
+                    var allPipePoints2 = [];
+                    //每一根管线都有起始点与终点
+                    for (var i = 0; i < coords.length; i += 3) {
+                        selectedObj.Add(coords[i], coords[i + 1], coords[i + 2]);
+                        allPipePoints2.push(coords[i] + "," + coords[i + 1] + "," + coords[i + 2]);
+                        allPipePoints.push(coords[i] + "," + coords[i + 1] + "," + coords[i + 2]);
+                    }
+                    //去掉重复的起始点数组
+                    var tempDic = new ActiveXObject("Scripting.Dictionary");
+                    //TODO:
+                    for(var v = 0; v < allPipePoints2.length; v++){
+                        tempDic.item(allPipePoints2[v]) = keyObj;
+                    }
+                    allPipePoints2 = [];
+                    var tKeys = tempDic.Keys().toArray();
+                    for(var i = 0; i < tKeys.length; i++){
+                        allPipePoints2.push(tKeys[i]);
+                    }
+                    if(finallyCoords.length === 0){
+                        finallyCoords.push(allPipePoints2);
+                        finallyObjDic.item(objKey) = allPipePoints2;
+                        allCoordsKey.item(allPipePoints2) = objKey;
+                    }
+                    pObj.HightLightIsFlash(false);
+                    pObj.ShowHighLight();
+                    keysAry.push(objKey);
+                    keyObjDic.item(objKey) = pObj;
+                    $("#clear").removeAttr("disabled");
+                    $("#checkBtn").removeAttr("disabled");
+                    $("#detailData").attr("disabled", false);
+                    //完毕!
+
+                    var coords = json.Result.Record.SHAPE.Polyline.Coordinates.split(",");
+                    selectedObj = earth.Factory.CreateGeoPoints();
+                    for (var i = 0; i < coords.length; i += 3) {
+                        selectedObj.Add(coords[i], coords[i + 1], coords[i + 2]);
+                        var vec3 = earth.Factory.CreateVector3();
+                        vec3.X=coords[i];
+                        vec3.Y=coords[i+1];
+                        vec3.Z=coords[i+2];
+                        selectLineArr.push(vec3);
+                        designLine.push(vec3.X+","+vec3.Y+","+0);
+                    }
+                }
+            }
+        }
+        var newLayerID = earth.LayerManager.GetLayerByGUID(cArr[0]).Guid;
+        if (parentLayerName.indexOf("container")== -1){//不是线
+            alert("选择对象为非管段，请重新选择!");
+            return;
+        }
+        if(currLayerGuid==null){
+            currLayerGuid=newLayerID;
+        }else if(newLayerID!=currLayerGuid){
+            earth.Query.FinishPick();
+            earth.ToolManager.SphericalObjectEditTool.Browse();
+            alert("所选管道不在同一图层!");
+            return;
+        }
+        $("#startAnalysis").attr("disabled",false);
+        $("#delPipeline").attr("disabled",false);
+        $("#clearPipeline").attr("disabled",false);
+        InsertObject(pObj,cArr[0]);
+        //selectLinePoints(pObj);
+        earth.Query.FinishPick();
+        earth.ToolManager.SphericalObjectEditTool.Browse();
+        validation();
+    };
+
+    /**
+     * 在搜索的结果集中根据key值确定具体的对象
+     * @param searchResult  搜索结果集
+     * @param key           对象的US_KEY值
+     * @return {*}          返回匹配的对象
+     */
+    var filterByKey = function(searchResult, key){
+        var obj = null;
+        if (searchResult.RecordCount === 0){
+            return null;
+        }
+        searchResult.GotoPage(0);
+        for (var i = 0; i < searchResult.RecordCount; i++){
+            obj = searchResult.GetLocalObject(i);
+            if (null == obj) continue;
+            if (obj.Name == key){
+                obj.Underground = true;  // SEObjectFlagType.ObjectFlagUnderground  // SERenderStateType.RenderStateDepthBias
+                break;
+            }
+        }
+        return obj;
+    };
+    /**
+     * 高亮闪烁显示
+     * 作为表格的行的双击事件处理函数，其可见范围需在window全局作用域！
+     * @param layerID  图层ID
+     * @param type     对象类型：point / line
+     * @param key      对象的US_KEY值
+     */
+    window.highlightObject = function (layerID, type, key) {
+        var layer = earth.LayerManager.GetLayerByGUID(layerID);
+        var i = 0;
+        var subLayer = null;
+        var searchResult = null;
+        var obj = null;
+        for (i = 0; i < layer.GetChildCount(); i++) {
+            subLayer = layer.GetChildAt(i);
+            if (type === "point") {
+                if (subLayer.LayerType === "Container") continue;
+            } else if (type === "line") {
+                if (subLayer.LayerType !== "Container") continue;
+            }
+
+            var dt = subLayer.LocalSearchParameter.ReturnDataType;
+            subLayer.LocalSearchParameter.ClearSpatialFilter();
+            // subLayer.LocalSearchParameter.ReturnDataType = 0;//0 返回所有数据，1 返回xml数据，2 返回渲染数据
+            subLayer.LocalSearchParameter.ReturnDataType = parent.localSearchDataType.xml;
+            subLayer.LocalSearchParameter.PageRecordCount = 100;
+            subLayer.LocalSearchParameter.SetFilter(key, "");
+            //subLayer.LocalSearchParameter.SetSpatialFilter(null);
+            subLayer.LocalSearchParameter.HasDetail = false;
+            subLayer.LocalSearchParameter.HasMesh = false;
+            searchResult = subLayer.SearchFromLocal();
+            subLayer.LocalSearchParameter.ReturnDataType = dt;
+
+            if (searchResult.RecordCount < 1) continue;
+            subLayer.LocalSearchParameter.ReturnDataType = parent.localSearchDataType.xml;
+            obj = filterByKey(searchResult, key);
+            subLayer.LocalSearchParameter.ReturnDataType = dt;
+            if (obj != null) {
+                var vecCenter = obj.SphericalTransform;
+                obj.SetKey(key);
+                obj.SetParentLayerName(layerID+"_"+subLayer.LayerType);
+                earth.GlobeObserver.GotoLookat(vecCenter.Longitude, vecCenter.Latitude, vecCenter.Altitude+50, 0.0, 89.0, 0, 4);
+                obj.ShowHighLight();
+            }
+        }
+    };
+
+    //插入管线数据到表格中
+    var InsertObject=function(obj,id){
+        var pipeLineType = earth.LayerManager.GetLayerByGUID(id).PipeLineType;
+        //var coords=earth.LayerManager.GetLayerByGUID(parentLayerName.split("_")[0]).LonLatRect;
+        var type="line";
+        var template = "<tr value='"+obj.Guid+"' ondblclick=highlightObject('"+id+"','"+type+"','"+obj.GetKey()+"')><td class='col1'>"+obj.GetKey()+"</td></tr>";
+        //$("#tblResult tbody").append(template);
+        $("#pickColResult tbody").append(template);
+    };
+
+    //清空管线
+    $("#clearPipeline").click(function(){
+        document.getElementById("pickColResult").style.display = "";
+        document.getElementById("tblResult").style.display = "none";
+        hasResult = false;
+        if($("#tblResult tbody").children().length==0 && $("#pickColResult tbody").children().length==0){
+            alert("对象列表为空，清空失败！");
+            return;
+        }
+        clearBuffer();
+        clearPolygons();
+        $("#tblResult>tbody").empty();
+        $("#pickColResult>tbody").empty();
+        currLayerGuid = null;
+        GuidArray.splice(0,GuidArray.length);//清空数组
+        GuidArray=[];
+        bufferList=[];
+        startPoints=[];
+        endPoints=[] ;
+        designLine = [];
+        $("#startAnalysis").attr("disabled",true);
+        $("#delPipeline").attr("disabled",true);
+        $("#clearPipeline").attr("disabled",true);
+        $("#importExcelBtn").attr("disabled",true);
+        $("#showResult").attr("disabled",true);
+
+        //添加
+        finallyCoords = [];
+        var keys = keyObjDic.Keys().toArray();
+        for(var i = 0; i < keys.length; i++){
+            var obj = keyObjDic.item(keys[i]);
+            if(obj){
+                obj.StopHighLight();
+            }
+        }
+        //clearBuffer();
+        pipeKeys = [];
+        keysAry = [];
+        keyObjDic = new ActiveXObject("Scripting.Dictionary");
+        finallyObjDic = new ActiveXObject("Scripting.Dictionary");
+        finallyCoords = [];
+        allPipePoints = [];
+
+        //停止高亮
+        stopHighLight();
+    });
+
+    var stopHighLight = function(){
+        if(highLightObjs && highLightObjs.length > 0){
+            for(var i = 0; i < highLightObjs.length; i++){
+                var obj = highLightObjs[i];
+                obj.StopHighLight();
+            }
+        }
+        highLightObjs = [];
+    };
+
+    var clearselectedBuffer = function(buffPolygon){
+        if (buffPolygon != null){
+            earth.DetachObject(buffPolygon);
+            try{
+                earth.Factory.DestoryObject(buffPolygon);
+            }catch(e){
+            }
+            buffPolygon = null;
+        }
+    };
+    //删除管线
+    $("#delPipeline").click(function(){
+        if($("#tblResult tbody").children().length==0){
+            alert("对象列表为空，删除失败！");
+            return;
+        }
+        var length=($("input[type=checkbox]:checked")).length;
+        if(length<1){
+            alert("请选中要删除的对象后，再进行此操作！");
+            return;
+        };
+
+        //earth.Paint.ClearHighlightObject();
+        $("input[type=checkbox]:checked").each(function(){ //由于复选框一般选中的是多个,所以可以循环输出选中的值
+            for(var i=0;i<GuidArray.length;i++){//从GuidArray删除被选中即将删除的guid
+                var guid=GuidArray[i];
+                if(guid==$(this).val()){
+                    GuidArray.splice(i,1);
+                    startPoints.splice(i,1);
+                    endPoints.splice(i,1) ;
+                    var buffpolygon=bufferList[i];
+                    bufferList.splice(i,1);
+                    clearselectedBuffer(buffpolygon);
+                }
+
+            }
+        });
+        $("#tblResult tbody>tr:has(:checked)").remove();
+        if($("#tblResult tbody").children().length==0){
+            $("#startAnalysis").attr("disabled",true);
+            $("#delPipeline").attr("disabled",true);
+            $("#clearPipeline").attr("disabled",true);
+        }
+    });
+    var groundAltitudeList=[];
+    var pipeLineAltitudeList=[];
+    var pipeLineObjectsList=[];
+    var strGuidList=[];
+    var clear=function(){
+        if (pipeLineObjectsList.length>0||groundAltitudeList.length > 0
+                || pipeLineAltitudeList.length > 0||strGuidList.length>0
+                || pointKey.length>0||pipeLineList.length>0) {
+            pipeLineObjectsList.splice(0, pipeLineObjectsList.length);
+            groundAltitudeList.splice(0, groundAltitudeList.length);
+            pipeLineAltitudeList.splice(0, pipeLineAltitudeList.length);
+            strGuidList.splice(0, strGuidList.length);
+            pointKey.splice(0, pointKey.length);
+            pipeLineList.splice(0, pipeLineList.length);
+            minGroundAltitude=0;
+            maxGroundAltitude=0;
+            minPipeLineAltitude=0;
+            maxPipeLineAltitude=0;
+            flag=true;
+            width=0;
+            flow=true;
+            IsConnect=true;
+        }
+    };
+    //添加管线
+    $("#addPipeline").click(function(){
+        //先判断是不是有分析结果 如果有则删除结果 重新开始选择
+        if(hasResult){
+            clearBuffer();
+            clearPolygons();
+            $("#tblResult>tbody").empty();
+            $("#pickColResult>tbody").empty();
+            document.getElementById("pickColResult").style.display = "";
+            document.getElementById("tblResult").style.display = "none";
+            hasResult = false;
+            currLayerGuid = null;
+            GuidArray.splice(0,GuidArray.length);//清空数组
+            GuidArray=[];
+            bufferList=[];
+            startPoints=[];
+            endPoints=[] ;
+            designLine = [];
+            //添加
+            finallyCoords = [];
+            var keys = keyObjDic.Keys().toArray();
+            for(var i = 0; i < keys.length; i++){
+                var obj = keyObjDic.item(keys[i]);
+                if(obj){
+                    obj.StopHighLight();
+                }
+            }
+            //clearBuffer();
+            pipeKeys = [];
+            keysAry = [];
+            keyObjDic = new ActiveXObject("Scripting.Dictionary");
+            finallyObjDic = new ActiveXObject("Scripting.Dictionary");
+            finallyCoords = [];
+            allPipePoints = [];
+
+            //停止高亮
+            stopHighLight();
+            $("#importExcelBtn").attr("disabled",true);
+            $("#showResult").attr("disabled",true);
+        }
+        var loadPath = earth.Environment.RootPath + "temp\\PipeData.xml";
+        earth.ToolManager.SphericalObjectEditTool.Browse();
+        earth.Event.OnPickObjectEx = onPickObjectEx;
+        earth.Query.PickObjectEx(24);
+
+    });
+    $("#txtBufferDist,#bjDist").keyup(function (){
+        validation();
+    });
+    var validation=function(){
+        var radius=$("#txtBufferDist").val();
+        var bj=$("#bjDist").val();
+        if(parent.regExp.test(radius)&&parent.regExp.test(bj)){
+            $("#startAnalysis").attr("disabled",false);
+        }else{
+            $("#startAnalysis").attr("disabled",true);
+        }
+    };
+    /**
+     * 清除生成的缓冲区对象
+     */
+    var polygons = [];
+    var clearPolygons = function () {
+        if (polygons && polygons.length) {
+            for (var i = polygons.length - 1; i >= 0; i--) {
+                var obj = polygons[i];
+                earth.DetachObject(obj);
+            };
+        }
+        polygons = [];
+    };
+
+    //开始分析
+    $("#startAnalysis").click(function(){
+        //如果有缓冲区对象 先清除之
+        document.getElementById("pickColResult").style.display = "none";
+        document.getElementById("tblResult").style.display = "";
+        clearBuffer();
+        clearPolygons();
+        //显示缓冲区部分
+        var pObj = earth.Factory.CreateGeoPoints();
+        var corrdTemp = [];
+        for (var i = 0; i < finallyCoords.length; i ++) {
+            var fAry = finallyCoords[i];
+            corrdTemp.push(fAry[0], fAry[1]);
+        }
+        var pointDic = new ActiveXObject("Scripting.Dictionary");
+        for (var i  = 0 ; i < corrdTemp.length; i++) {
+            var fObj = corrdTemp[i];
+            var fObjXY = fObj.substring(0, fObj.lastIndexOf(","));
+            if(pointDic.item(fObjXY)){
+                //重复的不处理
+            }else{
+                pointDic.item(fObjXY) = fObj;
+                var coordStrAry = fObj.split(",");
+                pObj.Add(coordStrAry[0], coordStrAry[1], coordStrAry[2]);
+            }
+        };
+        //获取中心线 参与后面的算法计算
+        var centerPolyline = earth.Factory.CreateVector3s();
+        if(pObj && pObj.Count){
+            for (var i = 0; i < pObj.Count; i++) {
+                var pt = pObj.GetPointAt(i);
+                centerPolyline.Add(pt.Longitude, pt.Latitude, pt.Altitude);
+            }
+        }
+        var bufferR = $("#txtBufferDist").val();
+        var bufPolygon;
+        var bufPoints = earth.GeometryAlgorithm.CreatePolygonFromPolylineAndWidthWithHead(pObj,bufferR,bufferR);
+        if(bufPoints){
+            var vec3s = earth.Factory.CreateVector3s();
+            for (var i = 0; i < bufPoints.Count; i++) {
+                var pt = bufPoints.GetPointAt(i);
+                vec3s.Add(pt.Longitude, pt.Latitude, pt.Altitude);
+            }
+            bufPolygon = earth.Factory.CreateElementPolygon(earth.Factory.CreateGUID(), "");
+            bufPolygon.BeginUpdate();
+            bufPolygon.SetExteriorRing(vec3s);   // SECoordinateUnit.Degree
+            bufPolygon.LineStyle.LineWidth = 1;
+            bufPolygon.LineStyle.LineColor = parseInt("0xFFFF0000");
+            bufPolygon.FillStyle.FillColor = parseInt("0x2500FF00");
+            bufPolygon.AltitudeType = 1;   // SEAltitudeType.ClampToTerrain
+            bufPolygon.EndUpdate();
+            earth.AttachObject(bufPolygon);
+            polygons.push(bufPolygon);
+            bufferList.push(bufPolygon);
+        }
+        clear();
+        var guid="";
+        var x=0;
+        var bjDist = parseFloat($("#bjDist").val());
+        if(isNaN(bjDist)){
+            alert("请检查报警阈值是否正确");
+            return ;
+        }
+        if(bufferList.length<1){
+            return;
+        }
+        $("#tblResult>tbody").empty();
+
+        //计算部分
+        var loadPath = earth.Environment.RootPath + "temp\\PipeData.xml";
+        var PipeDataXml = earth.UserDocument.LoadXmlFile(loadPath);
+        var PipeDataDoc =loadXMLStr(PipeDataXml);
+        var pipelineNodes = PipeDataDoc.getElementsByTagName("PipelineElement");
+        var pipeline = PipeDataDoc.getElementsByTagName("Pipeline");
+        for(var i = 0; pipeline != null && i < pipeline.length; i++){
+            var pipenodes=pipeline[i];
+            guid=pipenodes.getAttribute("id");
+        }
+        for(var m = 0; pipelineNodes != null && m < pipelineNodes.length; m++){
+            var pipelineNode = pipelineNodes[m];
+            var specification = pipelineNode.selectSingleNode("Specification").text;
+            var pipeLineName = pipelineNode.getAttribute("name");
+            var type = pipelineNode.selectSingleNode("PipeType").text;
+            var pipelineId = pipelineNode.getAttribute("id");
+            var nodeName=pipelineNode.selectSingleNode("NodeId").text;
+            var nodeNameEnd = pipelineNode.selectSingleNode("NodeIdEnd").text;
+            var lid=pipelineNode.getAttribute("pipeId");
+            var coordinateStr = pipelineNode.selectSingleNode("Coordinates").text;
+            var coordinateArr = coordinateStr.split(",");
+            var vec3s = earth.Factory.CreateVector3s();
+            for(var k = 0; k < coordinateArr.length; k = k + 3){
+                vec3s.Add(coordinateArr[k], coordinateArr[k+1], coordinateArr[k+2]);
+            }
+            //获取每一个导入管线的管点坐标
+            for(var j=0;j<vec3s.count;j++){
+                var vec3q=vec3s.Items(j);
+                //获取缓冲面
+                var polygon = bufPolygon.GetPolygon();
+                //判断点是否在缓冲面上
+                var lineOrSide=earth.PolygonAlgorithm.PointPolyRelationship(vec3q, polygon, 0.000001);
+                var spaceDistance = 0;
+
+                //点到折线的距离
+                var geoPt = earth.Factory.CreateGeoPoint();
+                geoPt.Longitude = vec3q.X;
+                geoPt.Latitude = vec3q.Y;
+                geoPt.Altitude = vec3q.Z;
+
+                if(lineOrSide==2){
+                    //点在多边形外部
+                    importLine[x]=[vec3q.X,vec3q.Y,-2];
+                    x++;
+                    var layerGuid=currLayerGuid.split("_")[0];
+                    var layer=earth.LayerManager.GetLayerByGUID(layerGuid);
+                    var nodeNm =nodeName;
+                    var template="";//<td class='chk'  ondblclick=highlightPipeLine('"+pipelineId+"'></td>
+                    template = "<tr><td class='col1'>"+lid+"</td><td class='col2'>"+nodeNm+"</td><td class='col3'>"+"-"+"</td></tr>";
+                    $("#tblResult tbody").append(template);
+                }else if(lineOrSide==0||lineOrSide==1){
+                    //点在多边形内部或者边缘上
+                    var spaceDistance=earth.GeometryAlgorithm.CalculatePointPolylineSpaceDistance(centerPolyline, geoPt).Length;
+                    spaceDistance = spaceDistance.toFixed(3);
+                    var length=$("#txtBufferDist").val();
+                    var nName="";
+                    if(j===vec3s.count-1){
+                        nName = nodeNameEnd;
+                    }else{
+                        nName = nodeName;
+                    }
+                    var template ="";
+                    if(parseFloat(spaceDistance) <= bjDist){
+                        importLine[x]=[vec3q.X,vec3q.Y, 0];
+                        template=' <tr class="bg"  ondblclick=highlightPipeLine("'+pipelineId+'")><td class="col1">'+lid+'</td><td class="col2">'+nName+'</td><td class="col3">'+spaceDistance+'</td></tr>';
+                    }else{
+                        template=' <tr class="bgRed" ondblclick=highlightPipeLine("'+pipelineId+'")' +
+                                '><td class="col1">'+lid+'</td><td class="col2">'+nName+'</td><td class="col3">'+spaceDistance+'</td></tr>';
+                        importLine[x]=[vec3q.X,vec3q.Y, -1];
+                    }
+                    x++;
+                    $("#tblResult tbody").append(template);
+                }
+            }
+        }
+        $("#importExcelBtn").attr("disabled",false);
+        $("#showResult").attr("disabled",false);
+        var childs = $("#tblResult tbody").children();
+        if(childs && childs.length){
+            hasResult = true;
+        }
+    });
+
+    window.highlightPipeLine = function(id){
+        var selectedPipeDataObj = top.ApprovalMgr.getPipeDataById(id);
+        if(selectedPipeDataObj == null){
+            return;
+        }
+        var pipeDataNode = lookupNodeById(top.pipeDataDoc,id);
+        //selectedPipeDataObj.ShowHighLight();
+        if("ShowHighLight" in selectedPipeDataObj){
+            selectedPipeDataObj.ShowHighLight();
+        }
+        var lineCoordinate = pipeDataNode.selectSingleNode("Coordinates").text;
+        var lineCoordArr = lineCoordinate.split(",");
+        var lon = (parseFloat(lineCoordArr[0]) + parseFloat(lineCoordArr[3])) * 0.5;
+        var lat = (parseFloat(lineCoordArr[1]) + parseFloat(lineCoordArr[4])) * 0.5;
+        var alt = (parseFloat(lineCoordArr[2]) + parseFloat(lineCoordArr[5])) * 0.5;
+        earth.GlobeObserver.FlytoLookat(lon, lat, alt, 0, 60, 0, 100, 2);
+    };
+    /**
+     * 功能：【导出Excel】按钮onclick事件
+     */
+    $("#importExcelBtn").click(function(){
+        var tabObj = $("#tblResult>tbody")[0];
+        var columns = ["管线编号","管点编号","三维空间距离"];
+        StatisticsMgr.importExcelByTable(tabObj,columns);
+    });
+    $(window).unload(function (){
+        hasResult = false;
+        clearBuffer();
+        clearPolygons();
+        $("#tblResult tbody").html("");
+        currLayerGuid = null;
+        GuidArray.splice(0,GuidArray.length);//清空数组
+        GuidArray=[];
+        bufferList=[];
+        startPoints=[];
+        endPoints=[] ;
+        designLine = [];
+        $("#startAnalysis").attr("disabled",true);
+        $("#delPipeline").attr("disabled",true);
+        $("#clearPipeline").attr("disabled",true);
+
+        //添加
+        finallyCoords = [];
+        var keys = keyObjDic.Keys().toArray();
+        for(var i = 0; i < keys.length; i++){
+            var obj = keyObjDic.item(keys[i]);
+            if(obj){
+                obj.StopHighLight();
+            }
+        }
+        //clearBuffer();
+        pipeKeys = [];
+        keysAry = [];
+        keyObjDic = new ActiveXObject("Scripting.Dictionary");
+        finallyObjDic = new ActiveXObject("Scripting.Dictionary");
+        finallyCoords = [];
+        allPipePoints = [];
+
+        //停止高亮
+        stopHighLight();
+    });
+
+    $("#showResult").click(function(){
+        createVerSectionChat();
+    });
+
+    window.getParams = function(){
+        var params = {
+            importLineList:importLine,
+            designLineList:designLine,
+            isPloyGon:false
+        };
+        return params;
+    };
+
+    function createVerSectionChat() {
+        newWin=window.open("approval3DShow.html","_blank","height=680,width=1050,top=100,left=200,toolbar=no,menubar=no,scrollbars=no, resizable=no,location=no,status=no");
+    }
+
+    //判断元素是否在数组
+    function isInArray(Arr, itm) {
+        if(Arr==null){
+            return;
+        }
+        for ( var j = 0; j < Arr.length; j++) {
+            var key = Arr[j];
+            if (key == itm) {
+                // alert("所选管线是连续的");
+                return true;
+            }
+        }
+        return false;
+    }
+});
+
+</script>
+</body>
+</html>

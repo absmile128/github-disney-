@@ -1,0 +1,54 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+
+		<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+		<meta http-equiv="Content-Type" content="textml; charset=UTF-8" />
+		<title>上海国际旅游度假区地下管线审批系统</title>
+		<!--                       CSS                       -->
+		<!-- jQeury EasyUI Style sheet -->
+		<link rel="stylesheet" type="text/css" href="css/easyui/gray/easyui.css"/>
+	    <link rel="stylesheet" type="text/css" href="css/easyui/icon.css"/>
+	    <link rel="stylesheet" type="text/css" href="util/zTreeStyle/zTreeStyle.css"/>
+        <!--		 Main Style sheet -->
+	    <link rel="stylesheet" type="text/css" href="css/common.css"/>
+	    <link rel="stylesheet" type="text/css" href="css/reset.css"/>
+		<!-- BreadCrumbs button in TopMenu Style sheet -->
+	    <link rel="stylesheet" type="text/css" href="css/breadcrumbs.css"/>
+	    <link rel="stylesheet" type="text/css" href="css/main.css"/>
+
+		<!--                       Javascripts                       -->
+		<!--          jQuery        -->
+		<script type="text/javascript" src="util/jquery.js"></script>
+		<script type="text/javascript" src="util/easyui/jquery.easyui.js"></script>
+		<script type="text/javascript" src="util/zTreeStyle/jquery.ztree.js"></script>
+		<script type="text/javascript" src="util/jquery.xml2json.js"></script>
+		
+
+		<!-- 不连接政务网时不加载以上文件，以免造成页面初始化过慢
+		坐标转换异步调用初始化
+		<script type='text/javascript' src='http://10.108.3.24:8080/sh2wgs84ProxyNew/dwr/engine.js'></script>
+		<script type='text/javascript' src='http://10.108.3.24:8080/sh2wgs84ProxyNew/dwr/util.js'></script>
+		<script type='text/javascript' src='http://10.108.3.24:8080/sh2wgs84ProxyNew/dwr/interface/sh2wgs.js'></script>
+ -->
+	</head>
+	<body >
+	
+		<script type="text/javascript">
+			var setCookie = function(name, value, hour) {
+				if(isNaN(hour) || hour < 0){
+					hour = 0;
+				}
+				var exp = new Date();
+				exp.setTime(exp.getTime() + hour * 60 * 60 * 1000);
+				document.cookie = name + "=" + escape(value) + ";expires=" + exp.toGMTString();
+			}		
+			setCookie("userName","qqqq",24);
+			url="http://10.67.207.114/1116/test1.html";
+		//	url="http://10.67.207.114/disney3D_5/test1.html";
+			alert(url);
+                top.location.assign(url);
+			
+					
+		</script>	
+	</body>
+</html>

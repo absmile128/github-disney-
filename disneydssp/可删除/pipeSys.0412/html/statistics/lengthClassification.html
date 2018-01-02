@@ -1,0 +1,329 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" >
+	<meta http-equiv="Content-Type" content="textml; charset=UTF-8" />
+    <title>管径分类</title>
+    <link rel="stylesheet" href="../../css/common.css" />
+    <link rel="stylesheet" href="../../css/easyui/gray/easyui.css" />
+    <link rel="stylesheet" href="../../css/easyui/icon.css" />
+	<style type="text/css">
+		body {
+			margin: 0px;
+			padding: 0px;
+			font-size: 12px;
+		}
+		#projectList {
+            width: 160px;
+            margin: 2px 0px;
+        }
+		#pipeListDiv{
+			width: 150px;
+			height: 100px;
+			border: 1px double #7f9db9;
+			overflow: auto;
+			text-align: left;
+		}
+		
+		#resultDiv{
+			width: 100%;
+			overflow: auto;
+		}	
+		button{
+			width: 50px;
+			height: 22px;
+			margin:0 0 15px 0;
+		}
+	</style>
+</head>  
+<body id="container" class="easyui-layout" >
+<div region="north" border="false" style="width: 255px;overflow:hidden;">
+    <fieldset style="margin: 0;">
+        <legend>参数设置</legend>
+        <div style="width:100%; height:25px;padding-left:30px;margin-bottom:5px;">
+            <label>选择工程:</label>
+            <select id="projectList" style="width:140px;"></select>
+        </div>
+        <div id="pipeListDiv" style="height: 100px; width:130px;border:1px solid silver;float:left;margin-left:25px;"></div>
+        <div style="height: 100px; width:70px; float: right;text-align: center;padding-top: 10px;margin-right:10px;">
+            <button id="selectAllBtn" >全选</button>
+            <button id="InvSelectBtn">反选</button>
+            <button id="clearSelectBtn" >清空</button>
+        </div>
+        <div style="clear: both;"></div>
+	<!--<div>
+		<label>行政区划统计:</label><select id="districtList" name="districtList"></select>&nbsp;&nbsp;<button class="smallBtn" id="districtAreaBtn">统计</button>
+		</div>-->
+        <div style="padding-top: 5px;text-align: center; overflow:hidden; padding-left:30px;">
+            <button id="allAreaBtn" style="float:left; margin-left:13px;" disabled>全部</button>&nbsp;
+            <button id="btnCircleSelect" style="float:left; margin-left:8px;" disabled>圆域</button>&nbsp;
+            <button id="cusAreaBtn" style="float:left; margin-left:8px;" disabled>多边形</button>
+        </div>
+    </fieldset>
+</div>
+<div class="center" region="center" border="true" style="overflow-y: hidden;overflow-x: hidden;">
+    <table style="width:100%; background-color: #ebeadb">
+        <tr>
+			<td class="" width="35%" style="text-align:center">管种</td>
+			<td class="" width="30%" style="text-align:center">数量</td>
+            <td class="" width="" style="text-align:center">总长度(km)</td>
+        </tr>
+    </table>
+    <div id="resultDiv"></div>
+</div>
+<div region="south" border="false" style="height: 28px;margin-top:10px;text-align:right">
+    <button id="importExcelBtn" disabled>导出</button>
+    <button id="sBtn" disabled>统计</button>
+</div>
+	
+	<script type="text/javascript" src="../../util/jquery.js"></script> 
+    <script type="text/javascript" src="../../util/CustomFcn.js"></script>
+    <script type="text/javascript" src="../../util/jquery.xml2json.js"></script>
+    <script type="text/javascript" src="../../js/statistics.js"></script>
+    <script type="text/javascript" src="../../js/common.js"></script>
+    <script type="text/javascript" src="../../js/lib/json.js"></script>
+    <script type="text/javascript" src="../../js/exportExcel.js"></script>
+<script type="text/javascript">
+	var earth = null;
+//	var districtNameList = null;
+	$(function(){	
+		earth = parent.earth;	
+		var divHeight = $("#dlgResult",parent.document).height() - 282;
+		$("#resultDiv").height(divHeight);
+        //var projectId = parent.SYSTEMPARAMS.project;
+        StatisticsMgr.initProjectList($("select#projectList"));// 初始化“阶段”下拉列表
+        StatisticsMgr.initPipelineList($("select#projectList").val(), $("#pipeListDiv")); //初始化管线图层列表
+        parent.SYSTEMPARAMS.project = $("select#projectList").val();
+        parent.SystemSetting.getProjectConfig();
+        $("select#projectList").change(function () {
+            StatisticsMgr.initPipelineList($("select#projectList").val(), $("#pipeListDiv")); //初始化管线图层列表
+            parent.SYSTEMPARAMS.project = $("select#projectList").val();
+            parent.SystemSetting.getProjectConfig();
+        });
+		/**
+		 * 功能：验证是否有checkbox被选中，如果没有任何一个checkbox被选中，则弹出提示信息
+		 */
+		var validation = function() {
+            if ($("#pipeListDiv :checkbox:checked").length == 0) {
+			//	alert("请先选择管线图层");
+                $("#allAreaBtn").attr("disabled", true);
+                $("#btnCircleSelect").attr("disabled", true);
+                $("#cusAreaBtn").attr("disabled", true);
+		//		return false;
+            } else {
+                $("#allAreaBtn").attr("disabled", false);
+                $("#btnCircleSelect").attr("disabled", false);
+                $("#cusAreaBtn").attr("disabled", false);
+		//		return true;
+           }
+        };	 
+
+		StatisticsMgr.addSelectAllEvent($("#selectAllBtn"), validation); //为【全选】按钮添加onclick功能事件
+        StatisticsMgr.addInvSelectEvent($("#InvSelectBtn"), validation); //为【反选】按钮添加onclick功能事件
+        StatisticsMgr.addClearSelectEvent($("#clearSelectBtn"), validation); //为【清空】按钮添加onclick功能事件
+        var classResList;
+        /**
+         * 全部查询
+         */
+        $("#allAreaBtn").click(function() {
+            earth.ShapeCreator.Clear();
+            createQuery(null);
+            hasData("resultDiv");
+        });
+
+        var hasData = function(divName) {
+            if ($("#" + divName).find("tr").length < 1) {
+                alert("分析结果为空");
+                earth.ShapeCreator.Clear();
+                $("#importExcelBtn").attr("disabled", true); //恢复【导出Excel】按钮可用
+                $("#sBtn").attr("disabled", true);
+            }
+        }
+        $("#pipeListDiv").click(function() {
+            validation();
+        })	
+        /**
+         * 多边形查询
+         */
+        $("#cusAreaBtn").click(function() {
+
+            earth.Event.OnCreateGeometry = function(p, t) {
+                if (p.Count < 3) {
+                    return;
+                }
+                createQuery(p);
+                hasData("resultDiv");
+                earth.Event.OnCreateGeometry = function() {};
+            };
+            earth.ShapeCreator.Clear();
+            earth.ShapeCreator.CreatePolygon();
+        });
+        /**
+         * 圆域查询
+         */
+        $("#btnCircleSelect").click(function() {
+            earth.Event.OnCreateGeometry = function(p, t) {
+                createQuery(p);
+                hasData("resultDiv");
+                earth.Event.OnCreateGeometry = function() {};
+            };
+            earth.ShapeCreator.Clear();
+            earth.ShapeCreator.CreateCircle();
+        });		
+		/**
+		 * 功能："项目"下拉列表的onchange事件
+		 */
+/*		$("select#projectList").change(function(){
+			var projectId = $("select#projectList").val();
+			StatisticsMgr.initPipelineList(projectId, $("#pipeListDiv"));//初始化管线图层列表
+//            districtNameList = StatisticsMgr.initDistrictNameList($("select#districtList"),projectId);//初始化管线图层列表
+            if(districtNameList == null || districtNameList.length == 0){
+                $("button#districtAreaBtn").attr("disabled",true);
+            } else {
+                $("button#districtAreaBtn").removeAttr("disabled");
+            }
+		});*/
+		//初始化行政区域列表和管线列表。
+		var initProjectId =	$("select#projectList").val();
+		if(initProjectId == null || initProjectId == ""){
+			$("button").attr("disabled",true);
+		}else{
+			$("select#projectList").trigger("change");
+
+		}
+        var createQuery = function(p) {
+            //var cf="US_SIZE";
+            var field = top.getName("US_PMATER", 1, true);
+            classResList = StatisticsMgr.fieldClassification(p, field, 1, null, null, "管线长度统计图");
+            StatisticsMgr.showClassificationResult5(classResList, $("#resultDiv"), 3); //显示特征分类汇总结果
+            $("#importExcelBtn").attr("disabled", false); //恢复【导出Excel】按钮可用
+            $("#sBtn").attr("disabled", false);
+            //addExportTitle();
+        };		
+
+		
+		
+		/**
+		 * 功能：根据指定的行政区域ID获取行政区域名称信息
+		 */
+/*		var getDistrictItemObject = function(districtId){
+			var districtItemObj = null;
+			for(var i = 0; i < districtNameList.length; i++){
+				if(districtNameList[i].districtId == districtId){
+					districtItemObj = districtNameList[i];
+					break;
+				}
+			}
+			return districtItemObj;
+		};		*/
+				
+		/**
+		 * 功能：行政区划【统计】按钮onclick事件
+		 */
+		$("#districtAreaBtn").click(function(){
+			var flag = validation();
+			if(flag == false){
+				return;
+			}
+			var districtId = $("#districtList").val();
+//			var districtItemObj = getDistrictItemObject(districtId);
+/*			if(districtItemObj == null){
+				return;
+			}
+			var buffer = districtItemObj.districtBuffer;*/
+			lengthClassification(buffer);//特征分类汇总
+		});
+		
+		/**
+		 * 功能：【导出Excel】按钮onclick事件
+		 */
+		$("#importExcelBtn").click(function(){
+			var tabObj = $("#resultDiv table")[0];		
+			var columns = ["管种","数量","总长度"];
+			StatisticsMgr.importExcelByTable(tabObj,columns);
+		});
+		
+
+		
+		/**
+		 * 功能：管径分类汇总功能代码
+		 */
+		var lengthClassification = function(spatial){
+			var classResList = [];
+			$(":checkbox:checked").each(function(){
+				var layerId = $(this).val();
+				var layerName = $(this).next("label").html();
+								
+				StatisticsMgr.initPipeConfigDoc(layerId, false, true); //不初始化编码映射文件对象, 初始化空间坐标转换对象
+				var queryTableType = 1; //线表搜索
+				var filter = "";
+				var valueRes = StatisticsMgr.getPipelineInfo(layerId+"_container", filter, 17, queryTableType, spatial);//线表搜索使用Container子层
+				var totalLength = StatisticsMgr.getTotalLength(valueRes);
+				classResList.push({dataType: layerName, dataLen: totalLength});
+			});
+			StatisticsMgr.showLengthStatisticsResult(classResList, $("#resultDiv"),2); //显示长度统计结果
+			$("#importExcelBtn").attr("disabled",false);
+		};
+        /**
+         * 统计功能
+         */
+        var htmlBal = null;
+        $("#sBtn").die().live("click", function() {
+            clearHtmlBal();
+            var href = window.location.href;
+            var ary = href.split("/");
+            var currentName = ary[ary.length - 1];
+            var newHref = href.replace(currentName, "")
+            newHref += "chart_len.htm";
+
+            var id = earth.Factory.CreateGuid();
+            htmlBal = earth.Factory.CreateHtmlBalloon(id, "统计图");
+            htmlBal.SetScreenLocation(0, 0);
+            htmlBal.SetRectSize(750, 480);
+            htmlBal.SetIsAddCloseButton(true);
+            htmlBal.SetIsAddMargin(true);
+            //htmlBal.SetIsTransparence(true);
+            htmlBal.SetBackgroundAlpha(150); //这里怎么调整为半透明效果呢
+            htmlBal.ShowNavigate(newHref);
+            earth.Event.OnHtmlNavigateCompleted = function() {
+                var jsonStrData = JSON.stringify(classResList);
+                setTimeout(function() {
+                    htmlBal.InvokeScript("getdata", jsonStrData);
+                }, 100);
+            };
+            /* earth.Event.OnHtmlBalloonFinished= function () {
+            htmlBal.DestroyObject();
+            earth.Event.OnHtmlBalloonFinished= function () {};
+        };*/
+        });
+        /*
+         * 清楚统计图
+         */
+        var clearHtmlBal = function() {
+                if (htmlBal != null) {
+                    htmlBal.DestroyObject();
+                    htmlBal = null;
+                }
+            }
+        /**
+         * 功能：【导出Excel】按钮onclick事件
+         */
+        /*$("#importExcelBtn").click(function() {
+            var exportExcel = new PageToExcel("exportTab", 0, 255, "export.xls"); //table id , 第几行开始，最后一行颜色 ，保存的文件名
+            exportExcel.CreateExcel(false);
+            exportExcel.Exec();
+        });*/
+		/**
+         * 窗口关闭事件
+         */
+        $(window).unload(function() {
+            if (earth.ShapeCreator != null) {
+                earth.ShapeCreator.Clear();
+            }
+            //clearHtmlBal();
+        });		
+		
+	});
+</script>
+</body>
+</html>
